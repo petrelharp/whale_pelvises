@@ -13,9 +13,12 @@ mytree<-read.nexus(file=paste(path, tree_file, sep=""))
 #x_axis='body_length'
 #y_axis='rib_volume'
 
+simple.lm <- with(mydata, lm( log10(rib_volume) ~ log10(body_length) ) )
+
 color_choices <- rainbow(nlevels(mydata$species))
 with(mydata, plot(body_length, rib_volume, log='xy', col=color_choices[species], main="RIB, FEMALES" ) ) 
 legend("topleft", levels(mydata$species), pch=1, col=color_choices, cex=0.5, bty="n")
+abline(coef(simple.lm)[1],coef(simple.lm)[2],lty=2,col='blue')
 
 within_length <- .01
 
@@ -45,29 +48,33 @@ stopifnot( setequal( rownames(newdata), newtree$tip.label ) )
 # fit model where y ~ a x + b + eps
 #  where eps is N(0,Sigma)
 #  and Sigma is specified between species by treecor times sigma2
+x <- log10(newdata$body_length)
+y <- log10(newdata$rib_volume)
 downweight <- TRUE
 pendant.edges <- (newtree$edge[,2] <= nrow(newdata)) & (newtree$edge.length == within_length)
-d <- nrow(mydata)
-sqrt_nsamples <- sqrt(table(mydata$species)[mydata$species])
+d <- nrow(newdata)
+sqrt_nsamples <- sqrt(table(newdata$species)[newdata$species])
 loglik <- function (params) {
     a <- params[1]  # slope 
     b <- params[2]  # intercept
-    sigma <- params[3]  # variance
+    sigma <- params[3]  # SD
     newtree$edge.length[pendant.edges] <- params[4]  # pendant edge length
     new_corstr <- corBrownian(phy=newtree)
     cor_matrix <- corMatrix(Initialize(new_corstr,newdata))
     if (downweight) { cor_matrix <- cor_matrix / outer(sqrt_nsamples,sqrt_nsamples,"*") }
-    cov_chol <- chol(cor_matrix*sigma,pivot=TRUE)
-    x <- log10(mydata$rib_volume) - b - (a * log10(mydata$body_length))
-    z <- sum( (solve(cov_chol) %*% x )^2 )/ (2*sigma)
+    cov_chol <- chol(cor_matrix,pivot=TRUE)*sigma
+    resids <- (y - b - (a * x))
+    z <- sum( (solve(cov_chol) %*% resids )^2 )/ 2
     logdet <- log(prod(diag(cov_chol)^2))
     ans <- z + (d/2)*logdet
     # if (!is.numeric(ans) | is.na(ans) | !is.finite(ans) ) { browser() }
     return( ans )
 }
 
-initvals <- c(0,-0.1,var(mydata$rib_volume),within_length)
-ans <- optim( par=initvals, fn=loglik, lower=c(-Inf,-Inf,0,within_length/10), method="L-BFGS-B", control=list(parscale=c(.01,.1,.01,.01)) )
+initvals <- c(coef(simple.lm)[2],coef(simple.lm)[1],sqrt(var(resid(simple.lm))),within_length)
+ans <- optim( par=initvals, fn=loglik, lower=c(-Inf,-Inf,sqrt(var(resid(simple.lm)))/10,within_length/10), method="L-BFGS-B", control=list(parscale=abs(initvals),trace=3,maxit=1000) )
+
+stopifnot(ans$convergence==0)
 
 # ok, plot
 
