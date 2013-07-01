@@ -1,8 +1,7 @@
-###PETER: just change this path to wherever you put 42_rib.FEMALES.combined.residuals and consensusTree_9species.txt
-#everything should run fine after that.
+###PETER: just change this path, everything should run fine after that.
 path="./"
-data_file="42_rib.FEMALES.combined.residuals"
-tree_file="consensusTree_9species.txt"
+data_file="30_rib_volume.FEMALES.Rin"
+tree_file="consensusTree_10_species.txt"
 
 require(MASS)
 library(ape)
@@ -11,8 +10,11 @@ library(nlme)
 mydata<-read.table(file=paste(path, data_file, sep=""), header=TRUE)
 mytree<-read.nexus(file=paste(path, tree_file, sep=""))
 
+#x_axis='body_length'
+#y_axis='rib_volume'
+
 color_choices <- rainbow(nlevels(mydata$species))
-with(mydata, plot(residual_testis, residual_rib_volume, col=color_choices[species], main="RIB, FEMALES, COMBINED" ) ) 
+with(mydata, plot(body_length, rib_volume, log='xy', col=color_choices[species], main="RIB, FEMALES" ) ) 
 legend("topleft", levels(mydata$species), pch=1, col=color_choices, cex=0.5, bty="n")
 
 within_length <- .01
@@ -56,7 +58,7 @@ loglik <- function (params) {
     cor_matrix <- corMatrix(Initialize(new_corstr,newdata))
     if (downweight) { cor_matrix <- cor_matrix / outer(sqrt_nsamples,sqrt_nsamples,"*") }
     cov_chol <- chol(cor_matrix*sigma,pivot=TRUE)
-    x <- mydata$residual_rib_volume - b - (a * mydata$residual_testis)
+    x <- log10(mydata$rib_volume) - b - (a * log10(mydata$body_length))
     z <- sum( (solve(cov_chol) %*% x )^2 )/ (2*sigma)
     logdet <- log(prod(diag(cov_chol)^2))
     ans <- z + (d/2)*logdet
@@ -64,12 +66,19 @@ loglik <- function (params) {
     return( ans )
 }
 
-initvals <- c(0,-0.1,var(mydata$residual_rib_volume),within_length)
+initvals <- c(0,-0.1,var(mydata$rib_volume),within_length)
 ans <- optim( par=initvals, fn=loglik, lower=c(-Inf,-Inf,0,within_length/10), method="L-BFGS-B", control=list(parscale=c(.01,.1,.01,.01)) )
 
 # ok, plot
 
-# with(newdata, points( tapply(residual_testis,species,mean), tapply(residual_rib_volume,species,mean), pch=20, col=color_choices, cex=2 ) )
+# with(newdata, points( tapply(body_length,species,mean), tapply(rib_volume,species,mean), pch=20, col=color_choices, cex=2 ) )
 abline(ans$par[2],ans$par[1])
 mtext(paste("(V)=", round(ans$par[1], digits=8), "*(L)+", round(ans$par[2], digits=8), sep=""))
 
+slope=ans$par[1]
+intercept=ans$par[2]
+
+#fitted_values=
+
+slope
+intercept
