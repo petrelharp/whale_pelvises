@@ -5,8 +5,8 @@ rm(list=ls())
 argument_list<-list(
     path="./",
     outpath="./",
-    data_file="30_pelvic_volume.MALES.Rin",
-    tree_file="consensusTree.pelvic.MALES.tree",
+    data_file="30_pelvic_volume.FEMALES.Rin",
+    tree_file="consensusTree.pelvic.FEMALES.tree",
     x_variable="body_length",
     y_variable="pelvic_volume",
     logify="TRUE",
@@ -73,15 +73,20 @@ stopifnot( setequal( rownames(newdata), newtree$tip.label ) )
 x <- if (logify) { log10(newdata[,x_variable]) } else { newdata[,x_variable] }
 y <- if (logify) { log10(newdata[,y_variable]) } else { newdata[,y_variable] }
 
+sigma_guess <- sqrt(var(resid(simple.lm))) 
+pendant_guess <- within_length
+
 downweight <- TRUE
-pendant.edges <- (newtree$edge[,2] <= nrow(newdata)) & (newtree$edge.length == within_length)
+pendant_edges <- (newtree$edge[,2] <= nrow(newdata)) 
+orig_lengths <- newtree$edge.length[pendant_edges]
+orig_lengths[orig_lengths==within_length] <- 0
 d <- nrow(newdata)
 sqrt_nsamples <- sqrt(table(newdata$species)[newdata$species])
 loglik <- function (params) {
     a <- params[1]  # slope 
     b <- params[2]  # intercept
     sigma <- params[3]  # SD
-    newtree$edge.length[pendant.edges] <- params[4]  # pendant edge length
+    newtree$edge.length[pendant_edges] <- orig_lengths + params[4]  # pendant edge length
     new_corstr <- corBrownian(phy=newtree)
     cor_matrix <- corMatrix(Initialize(new_corstr,newdata))
     if (downweight) { cor_matrix <- cor_matrix / outer(sqrt_nsamples,sqrt_nsamples,"*") }
@@ -90,17 +95,48 @@ loglik <- function (params) {
     z <- sum( (solve(cov_chol) %*% resids )^2 )/ 2
     logdet <- sum(log(diag(cov_chol)^2))
     ans <- z + (d/2)*logdet
-    if (!is.numeric(ans) | is.na(ans) | !is.finite(ans) ) { browser() }  ##THis was initially commented out
+    # if (!is.numeric(ans) | is.na(ans) | !is.finite(ans) ) { browser() }  ## Uncomment this for debugging.
     return( ans )
 }
 
-initvals <- c( coef(simple.lm)[2], coef(simple.lm)[1], sqrt(var(resid(simple.lm)))/4, within_length )
-ans <- optim( par=initvals, fn=loglik, lower=c(-Inf,-Inf,sqrt(var(resid(simple.lm)))/10,within_length/10), method="L-BFGS-B", control=list(parscale=abs(initvals),trace=3,maxit=1000) )
+# do grid search to pick good starting points for variance parameters
+sigma_fac <- .9 * sigma_guess
+pendant_fac <- .9 * pendant_guess
+for (k in 1:3) {
+    vargrid <- expand.grid( sigma=sigma_guess+seq(-sigma_fac,3*sigma_fac,length.out=20), pendant=pendant_guess+seq(-pendant_fac,20*pendant_fac,length.out=20) )
+    vargrid$loglik <- apply( vargrid,1,function (x) loglik( c(rev(coef(simple.lm)),x) ) )
+    if (interactive()) { with( vargrid, plot( sigma, pendant, cex=3/(1+loglik-min(loglik)) ) ) }
+    best_guess <- which.min( vargrid$loglik )
+    sigma_guess <- vargrid$sigma[best_guess]
+    pendant_guess <- vargrid$pendant[best_guess]
+    if ( sigma_guess < max(vargrid$sigma) & sigma_guess > min(vargrid$sigma) ) { 
+        sigma_fac <- min( sigma_fac/5, .9*sigma_guess ) 
+    } else {
+        sigma_fac <- .9*sigma_guess 
+    }
+    if ( pendant_guess < max(vargrid$pendant) & pendant_guess > min(vargrid$pendant) ) { 
+        pendant_fac <- min( pendant_fac/5, .9*pendant_guess ) 
+    } else {
+        pendant_fac <- .9*pendant_guess 
+    }
+}
+
+initvals <- c( coef(simple.lm)[2], coef(simple.lm)[1], sigma_guess, pendant_guess )
+parscale <- abs(initvals)
+ans <- optim( par=initvals, fn=loglik, lower=c(-Inf,-Inf,initvals[3],initvals[4]), method="L-BFGS-B", 
+    control=list(parscale=abs(initvals)/10,fnscale=max(1,abs(loglik(initvals))),trace=1,maxit=1000) )
+if (ans$convergence==52) {
+    ans <- optim( par=initvals, fn=loglik, lower=c(-Inf,-Inf,initvals[3],initvals[4]), method="L-BFGS-B", 
+        control=list(parscale=abs(initvals)/100,fnscale=max(1,abs(loglik(initvals))),trace=1,maxit=1000) )
+}
 ans #output the output
 
 stopifnot(ans$convergence==0)
 
 # ok, plot
+anstree <- newtree
+anstree$edge.length[pendant_edges] <- orig_lengths + ans$par[4]
+plot(anstree)
 
 # with(newdata, points( tapply(body_length,species,mean), tapply(rib_volume,species,mean), pch=20, col=color_choices, cex=2 ) )
 color_choices <- rainbow(nlevels(mydata$species))
