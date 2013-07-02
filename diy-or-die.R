@@ -1,22 +1,44 @@
-###PETER: just change this path, everything should run fine after that.
-path="./"
-data_file="30_rib_volume.FEMALES.Rin"
-tree_file="consensusTree_10_species.txt"
+#PETER - there is no more variable called path.  Write in full paths to data_file and tree_file below.  
+rm(list=ls())
+#this is just for testing... 
+#males, pelvics: 
+argument_list<-list(
+    path="./",
+    outpath="./",
+    data_file="30_pelvic_volume.MALES.Rin",
+    tree_file="consensusTree.pelvic.MALES.tree",
+    x_variable="body_length",
+    y_variable="pelvic_volume",
+    logify="TRUE",
+    main_title="MALES,pelvic",
+    outfile="47.males"
+)
+argument_list[c("data_file","tree_file")] <- paste(argument_list$path,argument_list[c("data_file","tree_file")],sep='')
+argument_list['outfile'] <- paste(argument_list$outpath,argument_list['outfile'],sep='')
+
+#then parse them... 
+attach(argument_list)
 
 require(MASS)
 library(ape)
 library(nlme)
 
-mydata<-read.table(file=paste(path, data_file, sep=""), header=TRUE)
-mytree<-read.nexus(file=paste(path, tree_file, sep=""))
+mydata<-read.table(file=data_file, header=TRUE)
+mytree<-read.nexus(file=tree_file)
 
-#x_axis='body_length'
-#y_axis='rib_volume'
-
-simple.lm <- with(mydata, lm( log10(rib_volume) ~ log10(body_length) ) )
-
+################################################################
+#for grabbing (and plotting) some initial values... 
+if(logify){
+	simple.lm <- with(mydata, lm( log10(mydata[,y_variable]) ~ log10(mydata[,x_variable]) ) )
+	} else {
+	simple.lm <- with(mydata, lm( (mydata[,y_variable]) ~ (mydata[,x_variable]) ) )
+	}
 color_choices <- rainbow(nlevels(mydata$species))
-with(mydata, plot(body_length, rib_volume, log='xy', col=color_choices[species], main="RIB, FEMALES" ) ) 
+if(logify){
+	with(mydata, plot(mydata[,x_variable], mydata[,y_variable], log='xy', col=color_choices[species], main=main_title ) ) 
+	} else {
+	with(mydata, plot(mydata[,x_variable], mydata[,y_variable], col=color_choices[species], main=main_title ) ) 
+	}
 legend("topleft", levels(mydata$species), pch=1, col=color_choices, cex=0.5, bty="n")
 abline(coef(simple.lm)[1],coef(simple.lm)[2],lty=2,col='blue')
 
@@ -48,8 +70,20 @@ stopifnot( setequal( rownames(newdata), newtree$tip.label ) )
 # fit model where y ~ a x + b + eps
 #  where eps is N(0,Sigma)
 #  and Sigma is specified between species by treecor times sigma2
-x <- log10(newdata$body_length)
-y <- log10(newdata$rib_volume)
+if(logify){
+	#x <- log10(newdata$body_length)
+	x <- log10(newdata[,x_variable])
+	} else {
+	x <- (newdata[,x_variable])
+	}
+
+if(logify){
+	#y <- log10(newdata$rib_volume)
+	y <- log10(newdata[,y_variable])
+	} else {
+	y <- (newdata[,y_variable])
+	}	
+
 downweight <- TRUE
 pendant.edges <- (newtree$edge[,2] <= nrow(newdata)) & (newtree$edge.length == within_length)
 d <- nrow(newdata)
@@ -65,27 +99,43 @@ loglik <- function (params) {
     cov_chol <- chol(cor_matrix,pivot=TRUE)*sigma
     resids <- (y - b - (a * x))
     z <- sum( (solve(cov_chol) %*% resids )^2 )/ 2
-    logdet <- log(prod(diag(cov_chol)^2))
+    logdet <- sum(log(diag(cov_chol)^2))
     ans <- z + (d/2)*logdet
-    # if (!is.numeric(ans) | is.na(ans) | !is.finite(ans) ) { browser() }
+    if (!is.numeric(ans) | is.na(ans) | !is.finite(ans) ) { browser() }  ##THis was initially commented out
     return( ans )
 }
 
-initvals <- c(coef(simple.lm)[2],coef(simple.lm)[1],sqrt(var(resid(simple.lm))),within_length)
+initvals <- c( coef(simple.lm)[2], coef(simple.lm)[1], sqrt(var(resid(simple.lm)))/4, within_length )
 ans <- optim( par=initvals, fn=loglik, lower=c(-Inf,-Inf,sqrt(var(resid(simple.lm)))/10,within_length/10), method="L-BFGS-B", control=list(parscale=abs(initvals),trace=3,maxit=1000) )
+ans #output the output
 
 stopifnot(ans$convergence==0)
 
 # ok, plot
 
 # with(newdata, points( tapply(body_length,species,mean), tapply(rib_volume,species,mean), pch=20, col=color_choices, cex=2 ) )
+color_choices <- rainbow(nlevels(mydata$species))
+
+pdf(file=paste(outfile, ".", y_variable, ".pdf", sep=""))
+with(mydata, plot(mydata[,x_variable], mydata[,y_variable], xlab=x_variable, ylab=y_variable, log=if (logify){'xy'}else{''}, col=color_choices[species], main=main_title ) )
+mtext(paste(if(logify){"log10 "}else{''}, y_variable, "=", if(logify){"log10 "}else{''}, round(ans$par[1], digits=8), "*", x_variable, "+", round(ans$par[2], digits=8), sep=""))
+legend("topleft", levels(mydata$species), pch=1, col=color_choices, cex=0.5, bty="n")
 abline(ans$par[2],ans$par[1])
-mtext(paste("(V)=", round(ans$par[1], digits=8), "*(L)+", round(ans$par[2], digits=8), sep=""))
+abline(coef(simple.lm)[1],coef(simple.lm)[2],col='blue',lty=2)
+dev.off()
 
-slope=ans$par[1]
-intercept=ans$par[2]
+if(logify){
+	#calculate residuals by hand... 
+	expected_values<-ans$par[1]*log10(mydata[,x_variable])+ans$par[2]
+	expected_values<-10**expected_values
+	#points(mydata$body_length, expected_values, col='black', pch=19)
+	myresiduals<-log10(mydata[,y_variable]-log10(expected_values))
+} else {
+	expected_values<-ans$par[1]*(mydata[,x_variable])+ans$par[2]
+	myresiduals<-(mydata[,y_variable]-(expected_values))
+}
 
-#fitted_values=
+#add residuals into data and output as a table... 
+mydata[,paste(y_variable, "_residuals", sep="")]<-myresiduals
+write.table(mydata, file=paste(outfile, ".", y_variable, ".residuals", sep=""), quote=FALSE, row.names=FALSE, sep="\t", append=FALSE)
 
-slope
-intercept
