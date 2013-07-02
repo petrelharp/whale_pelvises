@@ -70,19 +70,8 @@ stopifnot( setequal( rownames(newdata), newtree$tip.label ) )
 # fit model where y ~ a x + b + eps
 #  where eps is N(0,Sigma)
 #  and Sigma is specified between species by treecor times sigma2
-if(logify){
-	#x <- log10(newdata$body_length)
-	x <- log10(newdata[,x_variable])
-	} else {
-	x <- (newdata[,x_variable])
-	}
-
-if(logify){
-	#y <- log10(newdata$rib_volume)
-	y <- log10(newdata[,y_variable])
-	} else {
-	y <- (newdata[,y_variable])
-	}	
+x <- if (logify) { log10(newdata[,x_variable]) } else { newdata[,x_variable] }
+y <- if (logify) { log10(newdata[,y_variable]) } else { newdata[,y_variable] }
 
 downweight <- TRUE
 pendant.edges <- (newtree$edge[,2] <= nrow(newdata)) & (newtree$edge.length == within_length)
