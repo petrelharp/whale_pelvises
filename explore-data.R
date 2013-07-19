@@ -67,6 +67,21 @@ legend("topleft",legend=levels(bones$genus),col=genuscolors,pch=20)
 par(opar)
 dev.off()
 
+pdf(file="species-genus-side-comparisons.pdf",width=10,height=8,pointsize=10)
+layout(matrix(c(1,2,3,3),nrow=2),widths=c(5,1))
+for (thisbone in c("pelvic","rib")) {
+    plot( shape_difference ~ comparison, data=shapediff, subset=(bone1==bone2 & bone1==thisbone), main=thisbone )
+    points( shape_difference ~ I(genusadj + as.numeric(comparison)), pch=20, col=adjustcolor(c("red","black"),.4)[1+(side1==side2)], data=shapediff, subset=(bone1==bone2 & bone1==thisbone) )
+    plot( shape_difference ~ comparison, data=shapediff, subset=(bone1==bone2 & bone1==thisbone), main=thisbone, add=TRUE )
+}
+opar <- par(mar=c(5,0,4,0)+.1)
+plot(0,type='n',xaxt='n',yaxt='n',xlab='',ylab='')
+legend("topleft",legend=levels(bones$genus),col=genuscolors,pch=20)
+legend('bottomleft', legend=c('different sides','same side'), col=c('red','black'), pch=20 )
+par(opar)
+dev.off()
+
+
 pdf(file="shapediff-by-phylodist.pdf",width=10,height=8,pointsize=10)
 
 layout(matrix(c(1,2,3,3),nrow=2),widths=c(5,1))
