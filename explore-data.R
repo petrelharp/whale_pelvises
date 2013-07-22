@@ -1,6 +1,8 @@
 bones <- read.table("50_make_datamatrix.out", header=TRUE)
 shapediff <- read.table("51_pairwise_shapes.out", header=TRUE)
 species <- read.table("52_sexual_dimorphism.out", header=TRUE)
+# cat morphology_table_2013_June_27.txt | cut -f 1-7 -d '    ' > morphology_table_2013_June_27-plr.txt
+morphology <- read.table("morphology_table_2013_June_27-plr.txt", sep='\t', header=TRUE)
 
 allspecies <- sort( unique( c( levels(bones$species), levels(species$species) ) ) )
 bones$species <- factor( bones$species, levels=allspecies )
@@ -11,6 +13,9 @@ tmp <- data.frame(
 stopifnot( any( tapply( bones$bodylength, bones$species, var )>0, na.rm=TRUE ) )
 species$species <- factor( species$species, levels=allspecies )
 species <- merge( species, tmp, by="species", all.x=TRUE, all.y=TRUE )
+
+morphology$species <- factor( toupper(morphology$species), levels=allspecies )
+species <- merge( species, morphology, by='species', all.x=TRUE )
 
 specimens <- sort(levels(bones$specimen))
 bones$specimen <- factor( bones$specimen, levels=specimens )
