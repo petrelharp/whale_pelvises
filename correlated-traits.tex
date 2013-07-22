@@ -1,0 +1,252 @@
+\documentclass{article}
+\usepackage{fullpage}
+\usepackage{amsmath,amssymb}
+
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+
+\begin{document}
+
+\section{Description of the problem: correlated evolution}
+
+Suppose we have measured trait values in a number of individuals from each of several taxa related by a known phylogenetic tree.
+It is hypothesized that the evolutionary dynamics of some of these traits
+are affected by the values of some other traits,
+thus introducing correlation between them.
+The driving trait(s) may be observed or unobserved.
+The goal is to test this hypothesis,
+which we will aim to do by estimating the strength of that correlation
+in a Bayesian framework.
+Since we have measured multiple individuals within each species,
+we have two sorts of traits:
+measurements of traits of individuals, 
+and species-level traits.
+
+Concretely, we have the following information about a number of whales:
+species, sex,
+and the volume and shapes of the right and left pelvis and (smallest) rib bones.
+(Here ``shape'' is a high-dimensional measurement;
+we ignore the details, assuming only we have a sensible method for measuring shape differences,
+after removing size differences.)
+For each species, we have
+adult body length,
+breeding male testes volume,
+and size dimorphism ratio.
+(Here I say ``we have''; but note that actually some values are missing,
+a fact we will have to deal with.)
+
+Furthermore, we assume that it is sensible to quantify the strength of prezygotic sexual competition in each species,
+and hypothesize that the degree of competition affects testes volume, pelvic bone size, and speed of change of pelvic bone shape.
+Not all forms of prezygotic sexual competition are expected to work in this way;
+here we mean only the forms that are.
+An auxilliary hypothesis is that this strength of competition is negatively correlated with sexual size dimorphism,
+since size dimorphism is expected to indicate that sexual competition occurs in a different arena.
+
+In summary, the variables we consider are, for species (or, node in the tree) $i$:
+\begin{gather*}
+    L_i = \text{( mean adult male body length )}  \qquad   T_i = \text{(testes size)} \\
+    D_i = \text{(size dimorphism)} .
+\end{gather*}
+Dimorphism is female size over male size.
+Since the strength of sexual competition affects the evolution of other traits,
+and is unobserved in the data,
+it is better to associate a value of $C$ for each branch, rather than each taxon.
+So, for a branch $e$ in the tree, define
+\begin{gather*}
+    C_{e} = \text{( strength of sexual competition )}  .
+\end{gather*}
+We will take $C$ to be a real number, with smaller (perhaps negative) values of $C$ denoting less competition.
+For whale $j$ in species $i$, we have bones from both sides; so for $k \in \{\text{left},\text{right}\}$:
+\begin{gather*}
+    G_{ij} = \text{( sex )} \qquad  L_{ij} = \text{( body length )} \\
+    V^P_{ijk} = \text{( pelvic volume )} \qquad S^P_{ijk} = \text{( rib shape )} \\
+    V^R_{ijk} = \text{( rib volume )} \qquad S^R_{ijk} = \text{( rib shape )} 
+\end{gather*}
+Note this includes both observed and unobserved variables.
+Furthermore, write, for instance $V^P_i$ for the mean pelvic volume in species $i$.
+
+First we describe how the species-level variables evolve on the tree,
+namely, across a single branch.
+Write $L_r$ for the mean body length at the base of the branch, $L_t$ at the tip,
+and likewise for other variables;
+also let $\tau$ be the length of this branch.
+We have defined competition to take values on the branches, not the nodes;
+so first let $C_e$ denote the value of $C$ on this branch, 
+and assume this is related to the value on the parent branch $e'$ by
+\begin{align}
+    C_e &= C_{e'} + Z^C \\
+    Z^C &\sim N(0,\tau) .
+\end{align}
+Given the values at the base, the model is as follows:
+\begin{align}
+    L_t &= L_r \exp( Z^L ) \\
+    T_t &= T_r \exp( \delta Z^L + \beta_T Z^C ) \\
+    V^R_t &= V^R_r \exp( \delta Z^L + U^R ) \\
+    V^P_t &= V^P_r \exp( \delta Z^L + U^P + \beta_P Z^C ) \\
+    S^R_t &= S^R_r + Y^R \\
+    S^P_t &= S^P_r + Y^P \\
+    Z^L &\sim N(0,\sigma^2_L \tau) \\
+    U^R &\sim N(0,\sigma^2_R \tau) \\
+    U^P &\sim N(0,\sigma^2_P \tau) \\
+    Y^R &\sim N(0,\sigma^2_S \tau I_{k_S}) \\
+    Y^P &\sim N(0,(\sigma^2_S +\gamma_P C_e) \tau I_{k_S}) .
+\end{align}
+In words, the model is thus:
+Competition, averaged over the branch, evolves by random (Gaussian) increments.
+Length evolves multiplicitavely,
+so log length evolves as Brownian motion on the tree,
+with increments given by $Z^L$.
+A multiplicative change $a$ in length changes volumes by a factor of $a^\delta$ (so, $e^{\delta Z^L}$);
+in addition, there is independent evolution of each volume ($U$ terms).
+Furthermore, changes in strength of competition affect the volume of the testes and pelvic bones.
+Shape evolves as a $k_S$-dimensional Brownian motion (so changes are chi-squared),
+and the speed of pelvic shape depends on the strength of competition.
+In other words, if we let
+$(\zeta_1, \ldots, \zeta_4)$ be independent N(0,1),
+then we can sample across the edge by
+\begin{align}
+\begin{bmatrix}
+    \log L_t \\ \log T_t \\ \log V^R_t \\ \log V^P_t 
+\end{bmatrix}
+=
+\begin{bmatrix}
+    \log L_r \\ \log T_r \\ \log V^R_r \\ \log V^P_r 
+\end{bmatrix}
++
+\begin{bmatrix}
+    \sigma_L &  0  & 0  & 0  \\
+    \delta \sigma_L  &  \beta_T  & 0  &   0 \\
+    \delta \sigma_L  &  0        & \sigma_R  &   0 \\
+    \delta \sigma_L  &  \beta_P  & 0  &   \sigma_P 
+\end{bmatrix}
+\begin{bmatrix}
+    Z_1 \\ Z_2 \\ Z_3 \\ Z_4
+\end{bmatrix}
+\quad \begin{matrix}
+    \leftarrow Z^L \\
+    \leftarrow Z^C \\
+    \leftarrow U^R \\
+    \leftarrow U^P 
+\end{matrix}
+\end{align}
+
+
+Given the species-level values,
+and coding $G_{ij}$ as 0 (males) or 1 (females),
+the data are then
+\begin{align}
+    L_{ij} &= (1-(1-D_i)G_{ij}) L_i \exp( W^L_{ij} ) \\
+    V^R_{ijk} &= (1-(1-D_i)G_{ij}) V^R_i \exp( \delta W^L_{ij} + W^R_{ijk} ) \\
+    V^P_{ijk} &= (1-(1-D_i)G_{ij}) V^P_i \exp( \delta W^L_{ij} + W^P_{ijk} ) \\
+    S^R_{ijk} &= S^R_i + Y^R_{ijk} \\
+    S^P_{ijk} &= S^P_i + Y^P_{ijk} \\
+    W^L_{ij} &\sim N(0,\zeta^2_L) \\
+    W^R_{ij} &\sim N(0,\zeta^2_R) \\
+    W^P_{ij} &\sim N(0,\zeta^2_P) \\
+    Y^R_{ijk} &\sim N(0,\xi^2_R I_{k_S}) \\
+    Y^P_{ijk} &\sim N(0,\xi^2_P I_{k_S}) \\
+\end{align}
+Here $W^L$ fits the unobserved length of the whale in question,
+while $W^R$, $W^P$, and the shape differences can be thought of as measurement or developmental noise.
+Similar to before, if we let $W_1, W_2, \ldots$ be independent N(0,1), 
+then we can sample the individual observations of individual $j$, given the species, 
+and omitting the 
+$\log\left( 1-(1-D_i)G_{ij} \right)$ term from sex differences, by
+\begin{align}
+\begin{bmatrix}
+    \log L_{ij} \\
+    \log V_{ij1}^R \\ \log V_{ij2}^R  \\
+    \log V_{ij1}^P \\ \log V_{ij2}^P  
+\end{bmatrix}
+=
+\begin{bmatrix}
+    \log L_{i} \\
+    \log V_{i}^R \\ \log V_{i}^R  \\
+    \log V_{i}^P \\ \log V_{i}^P  
+\end{bmatrix}
++
+\begin{bmatrix}
+    \zeta_L  &   0 & 0  & 0  & 0 \\
+    \delta \zeta_L  &  \zeta_R  &  0  & 0 & 0 \\ 
+    \delta \zeta_L  &  0  & \zeta_R  & 0 & 0\\ 
+    \delta \zeta_L  & 0 & 0 &  \zeta_P  & 0  \\ 
+    \delta \zeta_L  & 0 & 0 &  0 & \zeta_P 
+\end{bmatrix}
+\begin{bmatrix}
+W_1 \\W_2 \\W_3 \\W_4 \\ W_5  \\ 
+\end{bmatrix}
+\quad \begin{matrix}
+    \leftarrow W^L_{ij}  \\
+    \leftarrow W^R_{ij1}  \\
+    \leftarrow W^R_{ij2}  \\
+    \leftarrow  W^P_{ij1} \\ 
+    \leftarrow  W^P_{ij2} 
+\end{matrix}
+\end{align}
+and different individuals are independent, given the species values.
+
+Parameters are thus: 
+\begin{align}
+    \theta = (
+    \beta_T,
+    \beta_P,
+    \gamma_P,
+    \delta,
+    \sigma^2_L, 
+    \sigma^2_R, 
+    \sigma^2_P, 
+    \sigma^2_S,
+    k_S,
+    \zeta^2_L,
+    \zeta^2_R,
+    \zeta^2_P,
+    \xi^2_R,
+    \xi^2_P
+    )
+\end{align}
+We only actually care about the first three.
+We can furthermore add additional $\beta_R$ and $\gamma_R$ terms, which we expect to be zero.
+
+\section{Implementation}
+
+First extend the phylogenetic tree to include each individual sample, by adding a ``twig'' for each sample
+to the tips that correspond to the species.
+Then the above describes the changes across each branch, 
+for $L$, $V$, and $S$,
+as well as changes across all branches except the twigs for $T$,
+and changes between branches, except the twigs, for $C$.
+With the exception of shape changes, everything, appropriately transformed, 
+is multivariate normal.
+This suggests first fitting the model without $S$;
+then using the posterior on $C$ to fit evolution of $S$.
+
+To implement this, define the data vector, indexed by nodes $t$ in the tree, to be
+\begin{align}
+    X^L_t &= \log L_t \\
+    X^T_t &= \log T_t \\
+    X^P_t &= \log V^P_t \\
+    X^R_t &= \log V^R_t .
+\end{align}
+For species, nodes ($t=i$) we observe
+\begin{align}
+    X^L_i &= \log L_i \\
+    X^T_i &= \log T_i ,
+\end{align}
+with $X^P_i$ and $X^R_i$ unobserved.
+and for individuals we observe ($t={ijk}$), normalized by size dimorphism:
+\begin{align}
+    X^L_{ijk} &= \log L_{ij} \\
+    X^P_{ijk} &= \log ( V^P_{ijk} / (1-(1-D_i)G_{ij}) ) \\
+    X^R_{ijk} &= \log ( V^R_{ijk} / (1-(1-D_i)G_{ij}) ) ,
+\end{align}
+with $X^L_{ijk}$ and $X^T_{ijk}$ unobserved.
+Furthermore, associate to each note the value of $C$ on the edge leading to it,
+with $C_\rho=0$ at the root, and $C_{ijk}=0$ on the twigs.
+
+Above, we have described the covariance structure of changes along each branch.
+Since we assume changes to be independent across branches,
+the covariance structure of 
+
+
+
+\end{document}
