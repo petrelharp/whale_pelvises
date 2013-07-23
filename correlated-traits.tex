@@ -4,6 +4,7 @@
 
 \renewcommand{\P}{\mathbb{P}}
 \newcommand{\E}{\mathbb{E}}
+\DeclareMathOperator{\cov}{cov}
 
 \begin{document}
 
@@ -114,10 +115,10 @@ then we can sample across the edge by
 \end{bmatrix}
 +
 \begin{bmatrix}
-    \sigma_L &  0  & 0  & 0  \\
-    \delta \sigma_L  &  \beta_T  & 0  &   0 \\
-    \delta \sigma_L  &  0        & \sigma_R  &   0 \\
-    \delta \sigma_L  &  \beta_P  & 0  &   \sigma_P 
+    \sigma_L \tau &  0  & 0  & 0  \\
+    \delta \sigma_L \tau  &  \beta_T \tau  & 0  &   0 \\
+    \delta \sigma_L \tau  &  0        & \sigma_R \tau  &   0 \\
+    \delta \sigma_L \tau  &  \beta_P \tau  & 0  &   \sigma_P\tau  
 \end{bmatrix}
 \begin{bmatrix}
     Z_1 \\ Z_2 \\ Z_3 \\ Z_4
@@ -136,13 +137,15 @@ and coding $G_{ij}$ as 0 (males) or 1 (females),
 the data are then
 \begin{align}
     L_{ij} &= (1-(1-D_i)G_{ij}) L_i \exp( W^L_{ij} ) \\
-    V^R_{ijk} &= (1-(1-D_i)G_{ij}) V^R_i \exp( \delta W^L_{ij} + W^R_{ijk} ) \\
-    V^P_{ijk} &= (1-(1-D_i)G_{ij}) V^P_i \exp( \delta W^L_{ij} + W^P_{ijk} ) \\
+    V^R_{ijk} &= (1-(1-D_i)G_{ij}) V^R_i \exp( \delta W^L_{ij} + W^R_{ij} + (-1)^k Z^R_{ij} ) \\
+    V^P_{ijk} &= (1-(1-D_i)G_{ij}) V^P_i \exp( \delta W^L_{ij} + W^P_{ij} + (-1)^k Z^P_{ij} ) \\
     S^R_{ijk} &= S^R_i + Y^R_{ijk} \\
     S^P_{ijk} &= S^P_i + Y^P_{ijk} \\
     W^L_{ij} &\sim N(0,\zeta^2_L) \\
-    W^R_{ij} &\sim N(0,\zeta^2_R) \\
-    W^P_{ij} &\sim N(0,\zeta^2_P) \\
+    W^R_{ij} &\sim N(0,\zeta^2_{R}) \\
+    W^P_{ij} &\sim N(0,\zeta^2_{P}) \\
+    Z^R_{ij} &\sim N(0,\omega^2_{R}) \\
+    Z^P_{ij} &\sim N(0,\omega^2_{P}) \\
     Y^R_{ijk} &\sim N(0,\xi^2_R I_{k_S}) \\
     Y^P_{ijk} &\sim N(0,\xi^2_P I_{k_S}) \\
 \end{align}
@@ -167,20 +170,20 @@ $\log\left( 1-(1-D_i)G_{ij} \right)$ term from sex differences, by
 +
 \begin{bmatrix}
     \zeta_L  &   0 & 0  & 0  & 0 \\
-    \delta \zeta_L  &  \zeta_R  &  0  & 0 & 0 \\ 
-    \delta \zeta_L  &  0  & \zeta_R  & 0 & 0\\ 
-    \delta \zeta_L  & 0 & 0 &  \zeta_P  & 0  \\ 
-    \delta \zeta_L  & 0 & 0 &  0 & \zeta_P 
+    \delta \zeta_L  &  \zeta_R  &  \omega_R  & 0 & 0 \\ 
+    \delta \zeta_L  & \zeta_R   & - \omega_R & 0 & 0\\ 
+    \delta \zeta_L  & 0 & 0 &  \zeta_P  & \omega_P  \\ 
+    \delta \zeta_L  & 0 & 0 &  \zeta_P  & - \omega_P
 \end{bmatrix}
 \begin{bmatrix}
 W_1 \\W_2 \\W_3 \\W_4 \\ W_5  \\ 
 \end{bmatrix}
 \quad \begin{matrix}
     \leftarrow W^L_{ij}  \\
-    \leftarrow W^R_{ij1}  \\
-    \leftarrow W^R_{ij2}  \\
-    \leftarrow  W^P_{ij1} \\ 
-    \leftarrow  W^P_{ij2} 
+    \leftarrow W^R_{ij}  \\
+    \leftarrow Z^R_{ij}  \\
+    \leftarrow W^P_{ij} \\ 
+    \leftarrow Z^P_{ij} 
 \end{matrix}
 \end{align}
 and different individuals are independent, given the species values.
@@ -200,6 +203,8 @@ Parameters are thus:
     \zeta^2_L,
     \zeta^2_R,
     \zeta^2_P,
+    \omega^2_R,
+    \omega^2_P,
     \xi^2_R,
     \xi^2_P
     )
@@ -243,10 +248,32 @@ with $X^L_{ijk}$ and $X^T_{ijk}$ unobserved.
 Furthermore, associate to each note the value of $C$ on the edge leading to it,
 with $C_\rho=0$ at the root, and $C_{ijk}=0$ on the twigs.
 
-Above, we have described the covariance structure of changes along each branch.
-Since we assume changes to be independent across branches,
-the covariance structure of 
+Let $X_\rho$ denote the values at the root, 
+and for each edge $e$ from node $s$ to node $t$, let $dX_e = X_t - X_s$.
+Then if $\rho \to t$ is the set of edges leading from $\rho$ to $t$, 
+\begin{align}
+    X_t = X_\rho + \sum_{e \in \rho \to t} dX_e .
+\end{align}
+Each $dX_e$ is independent; we assume the values at the root are also;
+above, we have described the covariance matrix for each $dX_e$:
+we have written $dX_e = A Z$, with $Z$ independent N(0,1);
+hence 
+\begin{align}
+    \cov[dX_e] = A A^T .
+\end{align}
 
+Normalize the $X$ by sutracting off the mean across species: 
+$\tilde X_t = X_t - \frac{1}{n}\sum_i \frac{1}{n_i} \sum_{jk} X_{ijk}$.
+Then $\tilde X$ does not depend on $X_\rho$:
+\begin{align}
+    \tilde X_t = \sum_{e \in \rho \to t} dX_e - \frac{1}{n}\sum_{ijk} \sum_{e \in \rho \to ijk} dX_e .
+\end{align}
+and the covariance between two observations is just
+\begin{align}
+    \cov[\tilde X_s,\tilde X_t] &= \sum_{e \in \rho \to s \cap \rho \to t} \cov[dX_e] +  \frac{1}{n^2} \sum_{ijk} \sum_{e \in \rho \to ijk} \cov[ dX_e ] \\
+    &= \sum_e \left( \mathbf{1}_{e \in \rho \to s} \mathbf{1}_{e \in \rho \to t} + \frac{n_e}{n^2} \right) \cov[dX_e] ,
+\end{align}
+where $n$ is the number of samples, and $n_e$ is the number of samples below edge $e$.
 
 
 \end{document}

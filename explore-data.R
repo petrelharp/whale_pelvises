@@ -1,5 +1,5 @@
 bones <- read.table("50_make_datamatrix.out", header=TRUE)
-shapediff <- read.table("51_pairwise_shapes.out", header=TRUE)
+shapediff <- read.table("57_summarize_pairwise_distances.out", header=TRUE)
 species <- read.table("52_sexual_dimorphism.out", header=TRUE)
 # cat morphology_table_2013_June_27.txt | cut -f 1-7 -d '    ' > morphology_table_2013_June_27-plr.txt
 morphology <- read.table("morphology_table_2013_June_27-plr.txt", sep='\t', header=TRUE)
