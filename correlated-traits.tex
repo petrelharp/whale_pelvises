@@ -276,4 +276,29 @@ and the covariance between two observations is just
 where $n$ is the number of samples, and $n_e$ is the number of samples below edge $e$.
 
 
+We can be a bit more elegant and save some coding trouble, as follows.
+String together all the data into a vector $X$, somehow; 
+and all the independent Gaussians used above into a vector $Z$.
+In the above, we've described how to construct a matrix $A$ such that $X = AZ$.
+Then the covariance matrix of $X$ is $\cov[X] = \Sigma = A A^T$.
+This is convenient because the entries of $A$ are all monomials in the parameters, 
+with the exception of $\delta$, so there are two matrices $P$ and $Q$ such that
+if $\theta$ is the set of parameters excluding $\delta$, 
+and $\otimes$ denotes the component-wise product,
+\begin{align}
+    A &= ( P \theta ) \otimes ( \delta Q ) 
+\end{align}
+
+
+\paragraph{Shape:} the plan with shape is to leave it aside, 
+and afterwards see if faster shape changes associate with regions on the tree with larger posterior prob of competition.
+
+
+\section{Inference}
+
+So, we've reduced the model to a big multivariate normal distribution,
+where all the parameters are variances.
+Now we can put priors on the variances and MCMC to get the posterior distribution.
+
+
 \end{document}
