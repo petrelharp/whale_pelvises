@@ -43,9 +43,9 @@ here we mean only the forms that are.
 An auxilliary hypothesis is that this strength of competition is negatively correlated with sexual size dimorphism,
 since size dimorphism is expected to indicate that sexual competition occurs in a different arena.
 
-In summary, the variables we consider are, for species (or, node in the tree) $i$:
+In summary, the variables we observe are, for species (or, node in the tree) $i$:
 \begin{gather*}
-    L_i = \text{( mean adult male body length )}  \qquad   T_i = \text{(testes size)} \\
+    T_i = \text{(testes size)}, \\
     D_i = \text{(size dimorphism)} .
 \end{gather*}
 Dimorphism is female size over male size.
@@ -115,10 +115,10 @@ then we can sample across the edge by
 \end{bmatrix}
 +
 \begin{bmatrix}
-    \sigma_L \tau &  0  & 0  & 0  \\
-    \delta \sigma_L \tau  &  \beta_T \tau  & 0  &   0 \\
-    \delta \sigma_L \tau  &  0        & \sigma_R \tau  &   0 \\
-    \delta \sigma_L \tau  &  \beta_P \tau  & 0  &   \sigma_P\tau  
+    \sigma_L \sqrt{\tau} &  0  & 0  & 0  \\
+    \delta \sigma_L \sqrt{\tau}  &  \beta_T \sqrt{\tau}  & 0  &   0 \\
+    \delta \sigma_L \sqrt{\tau}  &  0        & \sigma_R \sqrt{\tau}  &   0 \\
+    \delta \sigma_L \sqrt{\tau}  &  \beta_P \sqrt{\tau}  & 0  &   \sigma_P\sqrt{\tau}  
 \end{bmatrix}
 \begin{bmatrix}
     Z_1 \\ Z_2 \\ Z_3 \\ Z_4
@@ -188,28 +188,32 @@ W_1 \\W_2 \\W_3 \\W_4 \\ W_5  \\
 \end{align}
 and different individuals are independent, given the species values.
 
-Parameters are thus: 
+Parameters, excluding those involving shape, are thus:
 \begin{align}
-    \theta = (
+    \theta_S = (
+    \sigma_L,
     \beta_T,
     \beta_P,
-    \gamma_P,
-    \delta,
-    \sigma^2_L, 
-    \sigma^2_R, 
-    \sigma^2_P, 
+    \sigma_R,
+    \sigma_P,
+    \zeta_L,
+    \zeta_R,
+    \omega_R,
+    \zeta_P,
+    \omega_P
+    ) ,
+\end{align}
+and those involving shape are:
+\begin{align}
+    \theta_I = (
     \sigma^2_S,
+    \gamma_P,
     k_S,
-    \zeta^2_L,
-    \zeta^2_R,
-    \zeta^2_P,
-    \omega^2_R,
-    \omega^2_P,
     \xi^2_R,
     \xi^2_P
     )
 \end{align}
-We only actually care about the first three.
+We only actually care about $\beta_T$, $\beta_P$, and $\gamma_P$.
 We can furthermore add additional $\beta_R$ and $\gamma_R$ terms, which we expect to be zero.
 
 \section{Implementation}
@@ -300,5 +304,6 @@ So, we've reduced the model to a big multivariate normal distribution,
 where all the parameters are variances.
 Now we can put priors on the variances and MCMC to get the posterior distribution.
 
+Note that the covariance matrices
 
 \end{document}
