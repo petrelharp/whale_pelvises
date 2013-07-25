@@ -1,4 +1,5 @@
-bones <- read.table("50_make_datamatrix.out", header=TRUE)
+# bones <- read.table("50_make_datamatrix.out", header=TRUE)
+bones <- read.table("62_add_centroids.out", header=TRUE)
 shapediff <- read.table("57_summarize_pairwise_distances.out", header=TRUE)
 species <- read.table("52_sexual_dimorphism.out", header=TRUE)
 # cat morphology_table_2013_June_27.txt | cut -f 1-7 -d '    ' > morphology_table_2013_June_27-plr.txt
