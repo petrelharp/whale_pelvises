@@ -88,6 +88,27 @@ legend('bottomleft', legend=c('different sides','same side'), col=c('red','black
 par(opar)
 dev.off()
 
+## identify problem bones
+if (FALSE) {
+    shapediff$genusadj <- genusadj
+
+    problems <- c("LACM_97405","USNM_572775")
+
+    plot( shape_difference ~ I(genusadj + as.numeric(comparison)), pch=20, col=adjustcolor(c("red","black"),.4)[1+(side1==side2)], data=shapediff, subset=(bone1==bone2 & bone1==thisbone) )
+    points( shape_difference ~ I(genusadj + as.numeric(comparison)), pch=20, col='green', data=shapediff, subset=(bone1==bone2 & bone1==thisbone & (specimen1%in%problems | specimen2%in%problems) ) )
+    with( subset(shapediff, (bone1==bone2 & bone1==thisbone)), identify( genusadj + as.numeric(comparison), shape_difference, labels=paste(specimen1,specimen2) ) )
+
+    # without problems
+    plot( shape_difference ~ I(genusadj + as.numeric(comparison)), pch=20, col=adjustcolor(c("red","black"),.4)[1+(side1==side2)], data=shapediff, subset=(bone1==bone2 & bone1==thisbone & ! ( specimen1 %in% problems | specimen2 %in% problems ) ) )
+
+    # who tends to have the most diffs with others?
+    sort( with( subset(shapediff,comparison=="intraspecific" & specimen1 != specimen2), 
+        tapply( shape_difference, specimen1, sum, na.rm=TRUE ) + tapply( shape_difference, specimen2, sum, na.rm=TRUE ) ) )
+    sort( with( subset(shapediff,comparison=="intragenus" & specimen1 != specimen2), 
+        tapply( shape_difference, specimen1, sum, na.rm=TRUE ) + tapply( shape_difference, specimen2, sum, na.rm=TRUE ) ) )
+
+}
+
 
 pdf(file="shapediff-by-phylodist.pdf",width=10,height=8,pointsize=10)
 
