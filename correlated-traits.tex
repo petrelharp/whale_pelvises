@@ -280,19 +280,20 @@ and the covariance between two observations is just
 where $n$ is the number of samples, and $n_e$ is the number of samples below edge $e$.
 
 
-We can be a bit more elegant and save some coding trouble, as follows.
-String together all the data into a vector $X$, somehow; 
-and all the independent Gaussians used above into a vector $Z$.
-In the above, we've described how to construct a matrix $A$ such that $X = AZ$.
-Then the covariance matrix of $X$ is $\cov[X] = \Sigma = A A^T$.
-This is convenient because the entries of $A$ are all monomials in the parameters, 
-with the exception of $\delta$, so there are two matrices $P$ and $Q$ such that
-if $\theta$ is the set of parameters excluding $\delta$, 
-and $\otimes$ denotes the component-wise product,
+There are two types of covariance matrices:
+those at the tips and those at internal edges.
+Internal edges all have the same covariance matrix $\Sigma_I$ multiplied by the branch length;
+so as in Revell \& Collar 2009, the covariance matrix between species nodes is $C \otimes \Sigma_I$,
+where $C_{ij}$ is the total time in the tree since the common ancestor of $i$ and $j$,
+and $\otimes$ is the Kronecker product.
+Those at the tips all have the same for $\Sigma_T$.
+So, if we extend the matrix $C$ to be indexed by samples, 
+so that $C_{s,t}$ gives the time in the tree between the species that $s$ and $t$ belong to;
+and let $T_{s,t} = 1$ if $s$ and $t$ are the same species, and 0 otherwise;
+then the full covariance matrix is
 \begin{align}
-    A &= ( P \theta ) \otimes ( \delta Q ) 
+    \Sigma = C \otimes \Sigma_I + T \otimes \Sigma_T .
 \end{align}
-
 
 \paragraph{Shape:} the plan with shape is to leave it aside, 
 and afterwards see if faster shape changes associate with regions on the tree with larger posterior prob of competition.
