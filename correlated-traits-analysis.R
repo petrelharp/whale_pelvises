@@ -8,6 +8,21 @@ species_tree<-read.nexus(file=tree_file)
 
 bones <- read.table("50_make_datamatrix.out", header=TRUE)
 
+species <- read.table("52_sexual_dimorphism.out", header=TRUE)
+# cat morphology_table_2013_June_27.txt | cut -f 1-7 -d '    ' > morphology_table_2013_June_27-plr.txt
+morphology <- read.table("morphology_table_2013_June_27-plr.txt", sep='\t', header=TRUE)
+allspecies <- sort( unique( c( levels(bones$species), levels(species$species) ) ) )
+bones$species <- factor( bones$species, levels=allspecies )
+tmp <- data.frame( 
+        species=allspecies,
+        bodylength=tapply( bones$bodylength, bones$species, mean )
+        )
+stopifnot( any( tapply( bones$bodylength, bones$species, var )>0, na.rm=TRUE ) )
+species$species <- factor( species$species, levels=allspecies )
+species <- merge( species, tmp, by="species", all.x=TRUE, all.y=TRUE )
+morphology$species <- factor( toupper(morphology$species), levels=allspecies )
+species <- merge( species, morphology, by='species', all.x=TRUE )
+
 # rearrange to have one entry per whale.
 whichbone <- factor( paste(bones$side, bones$bone, sep='.') )
 usevars <- setdiff(names(bones),c("side","bone"))
@@ -18,6 +33,10 @@ for (k in seq_along(by.bone)) {
 }
 whales <- by.bone[[1]]
 for (k in 2:length(by.bone)) { whales <- merge( whales, by.bone[[k]], all=TRUE ) }
+
+if (FALSE) { ## for testing
+    whales <- droplevels( subset( whales, species %in% c( "BALAENOPTERA_PHYSALUS", "BALAENOPTERA_MUSCULUS" ) ) )
+}
 
 # set up the tree
 within_length <- 1
@@ -39,8 +58,6 @@ for (sp in intersect(levels(whales$species),tree$tip.label)) {
 tree <- drop.tip( tree, setdiff( tree$tip.label, c(levels(whales$specimen),levels(whales$species)) ) )
 stopifnot( setequal( c(levels(whales$specimen),levels(whales$species)), tree$tip.label ) )
 stopifnot( all( tree$edge.length[ tree$edge[,2] %in% 1:Ntip(tree) ] %in% c(0,within_length) ) )
-
-bones <- read.table("50_make_datamatrix.out", header=TRUE)
 
 # pre-compute the number of times each edge's covariance matrix enters into the full covariance matrix
 # as well as the vector indicating where it goes
@@ -66,34 +83,34 @@ sample.nodes <- setdiff( 1:Ntip(tree), species.nodes )
 stopifnot( all( tree$edge.length[ tree$edge[,2] %in% species.nodes ] == 0 ) )
 stopifnot( all( tree$edge.length[ tree$edge[,2] %in% sample.nodes ] == within_length ) )
 stopifnot( ! ( rootnode %in% edge.indices ) )
-# # construct the (edges) x (tips) x (tips) array that says which branches lie between which tips
-# contributes.array <- array( FALSE, dim=c(Nedge(tree), Ntip(tree),Ntip(tree)) )
-# for (j in 1:Ntip(tree)) for (k in 1:Ntip(tree)) {
-#     jdesc <- descendants[,j] 
-#     kdesc <- descendants[,k] 
-#     contributes.array[,j,k][ match( which( ( jdesc | kdesc ) & ! ( jdesc & kdesc ) ), edge.indices ) ] <- TRUE
-# }
-# dimnames( contributes ) <- list( edge.indices, tree$tip.label, tree$tip.label )
-# pairwise distances between all nodes in the tree
+# pairwise lengths of shared internal branches leading to the root for all pairs of nodes in the tree
 treedist <- matrix( 0, nrow=Nnode(tree)+Ntip(tree), ncol=Nnode(tree)+Ntip(tree) )
 internal.lengths <- tree$edge.length
 internal.lengths[ tip.edges ] <- 0
 for (j in 1:nrow(treedist))  for (k in 1:ncol(treedist)) {
     jdesc <- descendants[,j] 
     kdesc <- descendants[,k] 
-    contributes <- match( which( ( jdesc | kdesc ) & ! ( jdesc & kdesc ) ), c(edge.indices,rootnode) )
+    contributes <- match( which( ( jdesc & kdesc ) ), c(edge.indices,rootnode) )
     treedist[j,k] <- sum( c(internal.lengths,0)[ contributes ] )
 }
-# and, "dists" along tips
+# and, in the tips
 tipdist <- matrix( 0, nrow=Nnode(tree)+Ntip(tree), ncol=Nnode(tree)+Ntip(tree) )
-for (j in 1:nrow(tipdist))  for (k in 1:ncol(tipdist)) {
-    if (j!=k) {
-        jdesc <- descendants[,j] 
-        kdesc <- descendants[,k] 
-        tipdist[j,k] <- sum( c(j,k) %in% sample.nodes )  # number of j,k that are sample tips
-    }
-}
-stopifnot( abs( cophenetic.phylo(tree) - (treedist+tipdist)[1:Ntip(tree),1:Ntip(tree)] ) < 1e-8 )
+diag(tipdist)[sample.nodes] <- 1
+
+# Get the data all together: [i,j] is j-th variable for i-th node in the tree
+# again: the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
+thedata <- matrix( c(NA), nrow=Nnode(tree)+Ntip(tree), ncol=6 )
+colnames(thedata) <- c("bodylength","actual_testes_mass_max","left.rib","right.rib","left.pelvic","right.pelvic")
+rownames(thedata) <- c( tree$tip.label, rep(NA,Nnode(tree)) )
+# species obs
+thedata[species.nodes,intersect(names(species),colnames(thedata))] <- as.matrix( species[match(rownames(thedata)[species.nodes],species$species),intersect(names(species),colnames(thedata))] )
+thedata[sample.nodes,intersect(names(whales),colnames(thedata))] <- as.matrix( whales[match(rownames(thedata)[sample.nodes],whales$specimen),intersect(names(whales),colnames(thedata))] )
+havedata <- !is.na(thedata)
+# normalize:
+data.means <- colMeans(thedata,na.rm=TRUE)
+data.sds <- sqrt(colMeans(sweep(thedata,2,data.means,"-")^2,na.rm=TRUE))
+thedata <- sweep( thedata, 2, data.means, "-" )
+thedata <- sweep( thedata, 2, data.sds, "/" )
 
 # associate P and Q with each internal branch of the tree:
 #  these parameters are: theta = sigmaL, betaT, betaP, sigmaR, sigmaP.
@@ -116,9 +133,6 @@ sample.Qmat <- c(0,1,1,1,1,0,0,0,0,0,0,0,0)
 
 # set up with some initial parameters
 # the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
-species.params <- c( sigmaL=.2, betaT=.1, betaP=.3, sigmaR=.25, sigmaP=.05 )
-sample.params <- c( zetaL=.1, zetaR=.1, omegaR=.1, zetaP=.1, omegaP=.2 )
-delta <- 1.2
 species.transmat <- Matrix( 
               c(1,0,0,0,
                 1,1,0,0,
@@ -127,16 +141,27 @@ species.transmat <- Matrix(
                 1,1,0,1,
                 1,1,0,1), nrow=6, byrow=TRUE, sparse=TRUE )
 sample.transmat <- Matrix( 
-              c(1,1,1,1,1,
+              c(1,0,0,0,0,
                 0,0,0,0,0,
                 1,1,1,0,0,
                 1,1,-1,0,0,
                 1,0,0,1,1,
                 1,0,0,1,-1), nrow=6, byrow=TRUE, sparse=TRUE )
+
+species.params <- c( sigmaL=.2, betaT=.1, betaP=.3, sigmaR=.25, sigmaP=.05 )
+sample.params <- c( zetaL=.1, zetaR=.15, omegaR=.05, zetaP=.12, omegaP=.05 )
+delta <- 1.2
 species.transmat@x <- as.vector( ( species.params[species.Pmat] ) * ( 1 + species.Qmat * (delta-1) ) )
 sample.transmat@x <- as.vector( ( sample.params[sample.Pmat] * sample.Pcoef ) * ( 1 + sample.Qmat * (delta-1) ) )
-species.covmat <- tcrossprod(species.transmat)
-sample.covmat <- tcrossprod(sample.transmat)
+species.covmat <- as.matrix( tcrossprod(species.transmat) )
+sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
 
 # construct full matrix
-fullmat <- kronecker( treedist, species.covmat ) + kronecker( tipdist, sample.covmat )
+fullmat <- kronecker( species.covmat, treedist ) + kronecker( sample.covmat, tipdist )  # variables are together
+colnames( fullmat ) <- rownames( fullmat ) <- outer( rownames(thedata), colnames(thedata), paste, sep='.' )
+# system.time( solve( fullmat[havedata,havedata], rep(1,sum(havedata)) ) )
+# .05
+
+fchol <- chol( fullmat[ havedata, havedata ], pivot=TRUE )
+
+## NORMALIZE BY SEXUAL DIMORPHISM
