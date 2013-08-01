@@ -116,9 +116,9 @@ then we can sample across the edge by
 +
 \begin{bmatrix}
     \sigma_L \sqrt{\tau} &  0  & 0  & 0  \\
-    \delta \sigma_L \sqrt{\tau}  &  \beta_T \sqrt{\tau}  & 0  &   0 \\
-    \delta \sigma_L \sqrt{\tau}  &  0        & \sigma_R \sqrt{\tau}  &   0 \\
-    \delta \sigma_L \sqrt{\tau}  &  \beta_P \sqrt{\tau}  & 0  &   \sigma_P\sqrt{\tau}  
+    \sigma_L \sqrt{\delta \tau}  &  \beta_T \sqrt{\tau}  & 0  &   0 \\
+    \sigma_L \sqrt{\delta \tau}  &  0        & \sigma_R \sqrt{\tau}  &   0 \\
+    \sigma_L \sqrt{\delta \tau}  &  \beta_P \sqrt{\tau}  & 0  &   \sigma_P\sqrt{\tau}  
 \end{bmatrix}
 \begin{bmatrix}
     Z_1 \\ Z_2 \\ Z_3 \\ Z_4
@@ -170,10 +170,10 @@ $\log\left( 1-(1-D_i)G_{ij} \right)$ term from sex differences, by
 +
 \begin{bmatrix}
     \zeta_L  &   0 & 0  & 0  & 0 \\
-    \delta \zeta_L  &  \zeta_R  &  \omega_R  & 0 & 0 \\ 
-    \delta \zeta_L  & \zeta_R   & - \omega_R & 0 & 0\\ 
-    \delta \zeta_L  & 0 & 0 &  \zeta_P  & \omega_P  \\ 
-    \delta \zeta_L  & 0 & 0 &  \zeta_P  & - \omega_P
+    \sqrt{\delta} \zeta_L  &  \zeta_R  &  \omega_R  & 0 & 0 \\ 
+    \sqrt{\delta} \zeta_L  & \zeta_R   & - \omega_R & 0 & 0\\ 
+    \sqrt{\delta} \zeta_L  & 0 & 0 &  \zeta_P  & \omega_P  \\ 
+    \sqrt{\delta} \zeta_L  & 0 & 0 &  \zeta_P  & - \omega_P
 \end{bmatrix}
 \begin{bmatrix}
 W_1 \\W_2 \\W_3 \\W_4 \\ W_5  \\ 

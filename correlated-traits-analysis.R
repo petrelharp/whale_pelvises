@@ -7,7 +7,7 @@ tree_file <- "consensusTree_ALL_CETACEA.tree"
 species_tree<-read.nexus(file=tree_file)
 
 bones <- read.table("50_make_datamatrix.out", header=TRUE)
-bones <- subset(bones, ! species %in% c("ORCINUS_ORCA") )
+bones <- droplevels( subset(bones, ! species %in% c("ORCINUS_ORCA") ) )
 
 species <- read.table("52_sexual_dimorphism.out", header=TRUE)
 # cat morphology_table_2013_June_27.txt | cut -f 1-7 -d '    ' > morphology_table_2013_June_27-plr.txt
@@ -113,7 +113,7 @@ data.means <- colMeans(thedata,na.rm=TRUE)
 data.sds <- sqrt(colMeans(sweep(thedata,2,data.means,"-")^2,na.rm=TRUE))
 thedata <- sweep( thedata, 2, data.means, "-" )
 thedata <- sweep( thedata, 2, data.sds, "/" )
-if (FALSE) {  # DO THIS
+if (FALSE) {  # DO THIS LATER
     # normalize by sexual dimorphism
     data.specimens <- match( rownames(thedata), whales$specimen )
     females <- ( whales$sex[ data.specimens ] == "F" )
@@ -190,7 +190,6 @@ llfun <- function (par) {
     fchol <- chol( fullmat[ havedata, havedata ] )
     return( (-1) * sum( backsolve( fchol, datavec )^2 )/2 + sum(log(diag(fchol))) ) 
 }
-
 
 
 #### TO-DO:
