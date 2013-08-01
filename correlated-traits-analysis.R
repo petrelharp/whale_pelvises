@@ -7,17 +7,19 @@ tree_file <- "consensusTree_ALL_CETACEA.tree"
 species_tree<-read.nexus(file=tree_file)
 
 bones <- read.table("50_make_datamatrix.out", header=TRUE)
+bones <- subset(bones, ! species %in% c("ORCINUS_ORCA") )
 
 species <- read.table("52_sexual_dimorphism.out", header=TRUE)
 # cat morphology_table_2013_June_27.txt | cut -f 1-7 -d '    ' > morphology_table_2013_June_27-plr.txt
 morphology <- read.table("morphology_table_2013_June_27-plr.txt", sep='\t', header=TRUE)
-allspecies <- sort( unique( c( levels(bones$species), levels(species$species) ) ) )
+allspecies <- sort( unique( levels(bones$species) ) )
 bones$species <- factor( bones$species, levels=allspecies )
 tmp <- data.frame( 
         species=allspecies,
         bodylength=tapply( bones$bodylength, bones$species, mean )
         )
 stopifnot( any( tapply( bones$bodylength, bones$species, var )>0, na.rm=TRUE ) )
+species <- subset( species, species %in% allspecies )
 species$species <- factor( species$species, levels=allspecies )
 species <- merge( species, tmp, by="species", all.x=TRUE, all.y=TRUE )
 morphology$species <- factor( toupper(morphology$species), levels=allspecies )
@@ -111,6 +113,16 @@ data.means <- colMeans(thedata,na.rm=TRUE)
 data.sds <- sqrt(colMeans(sweep(thedata,2,data.means,"-")^2,na.rm=TRUE))
 thedata <- sweep( thedata, 2, data.means, "-" )
 thedata <- sweep( thedata, 2, data.sds, "/" )
+if (FALSE) {  # DO THIS
+    # normalize by sexual dimorphism
+    data.specimens <- match( rownames(thedata), whales$specimen )
+    females <- ( whales$sex[ data.specimens ] == "F" )
+    data.species <- whales$species[match(data.specimens,whales$specimen)]
+    renorms <- species$sexual_size_dimorphism[match(data.species,species$species)]
+    for (x in c("bodylength",levels(whichbone))) {
+        whales[[x]][ whales$sex=="F" ] <- whales[[x]][ whales$sex=="F" ] / renorms[ whales$sex=="F" ]
+    }
+}
 
 # associate P and Q with each internal branch of the tree:
 #  these parameters are: theta = sigmaL, betaT, betaP, sigmaR, sigmaP.
@@ -162,6 +174,24 @@ colnames( fullmat ) <- rownames( fullmat ) <- outer( rownames(thedata), colnames
 # system.time( solve( fullmat[havedata,havedata], rep(1,sum(havedata)) ) )
 # .05
 
-fchol <- chol( fullmat[ havedata, havedata ], pivot=TRUE )
+fchol <- chol( fullmat[ havedata, havedata ] )
+datavec <- thedata[havedata]
 
+# return negative log-likelihood for gaussian:
+llfun <- function (par) {
+    species.params <- par[1:5]
+    sample.params <- par[5+1:5]
+    delta <- par[11]
+    species.transmat@x <- as.vector( ( species.params[species.Pmat] ) * ( 1 + species.Qmat * (delta-1) ) )
+    sample.transmat@x <- as.vector( ( sample.params[sample.Pmat] * sample.Pcoef ) * ( 1 + sample.Qmat * (delta-1) ) )
+    species.covmat <- as.matrix( tcrossprod(species.transmat) )
+    sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
+    fullmat <- kronecker( species.covmat, treedist ) + kronecker( sample.covmat, tipdist )  # variables are together
+    fchol <- chol( fullmat[ havedata, havedata ] )
+    return( (-1) * sum( backsolve( fchol, datavec )^2 )/2 + sum(log(diag(fchol))) ) 
+}
+
+
+
+#### TO-DO:
 ## NORMALIZE BY SEXUAL DIMORPHISM
