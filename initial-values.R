@@ -29,7 +29,7 @@ usevars <- setdiff(names(bones),c("side","bone"))
 by.bone <- tapply( 1:nrow(bones), whichbone, function (k) bones[k,,drop=FALSE] )
 for (k in seq_along(by.bone)) {
     by.bone[[k]] <- by.bone[[k]][usevars]
-    names(by.bone[[k]])[match("absolute_volume",names(by.bone[[k]]))] <- names(by.bone)[k]
+    names(by.bone[[k]])[match("centroid",names(by.bone[[k]]))] <- names(by.bone)[k]
 }
 whales <- by.bone[[1]]
 for (k in 2:length(by.bone)) { whales <- merge( whales, by.bone[[k]], all=TRUE ) }
@@ -49,8 +49,8 @@ species.lengths <- tapply(bones$bodylength,bones$species,mean,na.rm=TRUE)
 omit.species <- c("PHOCOENA_PHOCOENA",names(species.lengths[species.lengths>400]))
 deltas <- lapply( levels(bones$bone), function (thisbone) {
     with( subset(bones,bone==thisbone & ! species %in% omit.species ), {
-                plot( (absolute_volume) ~ (bodylength), col=species, log='xy', main=thisbone )
-                thislm <- lm( log(absolute_volume) ~ log(bodylength) + 0  )
+                plot( (centroid) ~ (bodylength), col=species, log='xy', main=thisbone )
+                thislm <- lm( log(centroid) ~ log(bodylength) + 0  )
                 # abline( coef(thislm)[1]/log(10), coef(thislm)[2] )
                 abline( 0, coef(thislm)[1] )
                 thislm } )
@@ -89,7 +89,7 @@ lvar.lm
 ###
 # estimate sigmaR, phylogenetic rib variance after accounting for length
 
-rib.length.lm <- with( subset(bones,bone=='rib'), lm( log(absolute_volume) ~ log(bodylength) ) )
+rib.length.lm <- with( subset(bones,bone=='rib'), lm( log(centroid) ~ log(bodylength) ) )
 rib.length.resids <- with( subset(bones,bone=='rib'), { x <- resid(rib.length.lm); names(x) <- species[-rib.length.lm$na.action]; x } )
 species.rib.length.resids <- tapply( rib.length.resids, names(rib.length.resids), mean, na.rm=TRUE )
 rib.resid.diffs <- treedists
@@ -111,7 +111,7 @@ rib.resid.lm
 ###
 # estimate sigmaP, phylogenetic pelvic variance after accounting for length
 
-pelvic.length.lm <- with( subset(bones,bone=='pelvic'), lm( log(absolute_volume) ~ log(bodylength) ) )
+pelvic.length.lm <- with( subset(bones,bone=='pelvic'), lm( log(centroid) ~ log(bodylength) ) )
 pelvic.length.resids <- with( subset(bones,bone=='pelvic'), { x <- resid(pelvic.length.lm); names(x) <- species[-pelvic.length.lm$na.action]; x } )
 species.pelvic.length.resids <- tapply( pelvic.length.resids, names(pelvic.length.resids), mean, na.rm=TRUE )
 pelvic.resid.diffs <- treedists
@@ -181,37 +181,37 @@ plot(bones$bodylength, length.resids,log='x')
 
 ####
 # estimate zetaR: within species, rib
-species.ribs <- with(subset(bones,bone=='rib'), tapply( absolute_volume, species, mean, na.rm=TRUE ) )
-rib.resids <- with(subset(bones,bone=='rib'), log(absolute_volume) - log(species.ribs[ match(species,names(species.ribs)) ]) )
+species.ribs <- with(subset(bones,bone=='rib'), tapply( centroid, species, mean, na.rm=TRUE ) )
+rib.resids <- with(subset(bones,bone=='rib'), log(centroid) - log(species.ribs[ match(species,names(species.ribs)) ]) )
 sqrt(var(rib.resids,na.rm=TRUE))
-with(subset(bones,bone=='rib'), plot(absolute_volume, rib.resids,log='x') )
+with(subset(bones,bone=='rib'), plot(centroid, rib.resids,log='x') )
 
 # zetaR = .144
 
 ###
 # and omegaR, within indivs, rib
-indiv.ribs <- with(subset(bones,bone=='rib'), tapply( absolute_volume, specimen, mean, na.rm=TRUE ) )
-rib.indiv.resids <- with(subset(bones,bone=='rib'), log(absolute_volume) - log(indiv.ribs[ match(specimen,names(indiv.ribs)) ]) )
+indiv.ribs <- with(subset(bones,bone=='rib'), tapply( centroid, specimen, mean, na.rm=TRUE ) )
+rib.indiv.resids <- with(subset(bones,bone=='rib'), log(centroid) - log(indiv.ribs[ match(specimen,names(indiv.ribs)) ]) )
 sqrt(var(rib.indiv.resids,na.rm=TRUE))
-with(subset(bones,bone=='rib'), plot( absolute_volume, rib.indiv.resids, log='x' ) )
+with(subset(bones,bone=='rib'), plot( centroid, rib.indiv.resids, log='x' ) )
 
 # omegaR = .036
 
 ####
 # and zetaP: pelvis
-species.pelvics <- with(subset(bones,bone=='pelvic'), tapply( absolute_volume, species, mean, na.rm=TRUE ) )
-pelvic.resids <- with(subset(bones,bone=='pelvic'), log(absolute_volume) - log(species.pelvics[ match(species,names(species.pelvics)) ]) )
+species.pelvics <- with(subset(bones,bone=='pelvic'), tapply( centroid, species, mean, na.rm=TRUE ) )
+pelvic.resids <- with(subset(bones,bone=='pelvic'), log(centroid) - log(species.pelvics[ match(species,names(species.pelvics)) ]) )
 sqrt(var(pelvic.resids,na.rm=TRUE))
-with(subset(bones,bone=='pelvic'), plot(absolute_volume, pelvic.resids,log='x') )
+with(subset(bones,bone=='pelvic'), plot(centroid, pelvic.resids,log='x') )
 
 # zetaP = .29
 
 ###
 # and omegaR, within indivs, rib
-indiv.pelvics <- with(subset(bones,bone=='pelvic'), tapply( absolute_volume, specimen, mean, na.rm=TRUE ) )
-pelvic.indiv.resids <- with(subset(bones,bone=='pelvic'), log(absolute_volume) - log(indiv.pelvics[ match(specimen,names(indiv.pelvics)) ]) )
+indiv.pelvics <- with(subset(bones,bone=='pelvic'), tapply( centroid, specimen, mean, na.rm=TRUE ) )
+pelvic.indiv.resids <- with(subset(bones,bone=='pelvic'), log(centroid) - log(indiv.pelvics[ match(specimen,names(indiv.pelvics)) ]) )
 sqrt(var(pelvic.indiv.resids,na.rm=TRUE))
-with(subset(bones,bone=='pelvic'), plot( absolute_volume, pelvic.indiv.resids, log='x' ) )
+with(subset(bones,bone=='pelvic'), plot( centroid, pelvic.indiv.resids, log='x' ) )
 
 # omegaR = .035
 
@@ -219,8 +219,8 @@ with(subset(bones,bone=='pelvic'), plot( absolute_volume, pelvic.indiv.resids, l
 
 
 lms <- with( subset(bones,bone=="pelvic"), list( 
-                lm( log(absolute_volume) ~ log(bodylength) ),
-                lm( log(absolute_volume) ~ specimen ) )
+                lm( log(centroid) ~ log(bodylength) ),
+                lm( log(centroid) ~ specimen ) )
         )
 
 #####
@@ -234,8 +234,8 @@ layout(matrix(1:4,nrow=2))
 with(whmeans, plot( left.pelvic, right.pelvic ) ); abline(0,1)
 with(whmeans, plot( left.rib, right.rib ) ); abline(0,1)
 
-lm0 <- with( bones, lm( log(absolute_volume) ~ log(bodylength) + sex ) )
-lm1 <- with( bones, lm( log(absolute_volume) ~ log(bodylength) + species ) )
-lm2 <- with( bones, lm( log(absolute_volume) ~ log(bodylength) + species + sex ) )
+lm0 <- with( bones, lm( log(centroid) ~ log(bodylength) + sex ) )
+lm1 <- with( bones, lm( log(centroid) ~ log(bodylength) + species ) )
+lm2 <- with( bones, lm( log(centroid) ~ log(bodylength) + species + sex ) )
 
 

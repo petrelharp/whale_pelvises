@@ -5,7 +5,7 @@ require(ape)
 tree_file <- "consensusTree_ALL_CETACEA.tree"
 species_tree<-read.nexus(file=tree_file)
 
-bones <- read.table("50_make_datamatrix.out", header=TRUE)
+bones <- read.table("62_add_centroids.out", header=TRUE)
 bones <- droplevels( subset(bones, ! species %in% c("ORCINUS_ORCA") ) )
 
 species <- read.table("52_sexual_dimorphism.out", header=TRUE)
@@ -30,7 +30,7 @@ usevars <- setdiff(names(bones),c("side","bone"))
 by.bone <- tapply( 1:nrow(bones), whichbone, function (k) bones[k,,drop=FALSE] )
 for (k in seq_along(by.bone)) {
     by.bone[[k]] <- by.bone[[k]][usevars]
-    names(by.bone[[k]])[match("absolute_volume",names(by.bone[[k]]))] <- names(by.bone)[k]
+    names(by.bone[[k]])[match("centroid",names(by.bone[[k]]))] <- names(by.bone)[k]
 }
 whales <- by.bone[[1]]
 for (k in 2:length(by.bone)) { whales <- merge( whales, by.bone[[k]], all=TRUE ) }
