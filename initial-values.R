@@ -4,7 +4,7 @@ require(Matrix)
 tree_file <- "consensusTree_ALL_CETACEA.tree"
 species_tree<-read.nexus(file=tree_file)
 
-bones <- read.table("50_make_datamatrix.out", header=TRUE)
+bones <- read.table("62_add_centroids.out", header=TRUE)
 bones <- subset(bones, ! species %in% c("ORCINUS_ORCA") )
 
 species <- read.table("52_sexual_dimorphism.out", header=TRUE)
@@ -49,7 +49,7 @@ species.lengths <- tapply(bones$bodylength,bones$species,mean,na.rm=TRUE)
 omit.species <- c("PHOCOENA_PHOCOENA",names(species.lengths[species.lengths>400]))
 deltas <- lapply( levels(bones$bone), function (thisbone) {
     with( subset(bones,bone==thisbone & ! species %in% omit.species ), {
-                plot( (centroid) ~ (bodylength), col=species, log='xy', main=thisbone )
+                plot( centroid ~ bodylength, col=species, log='xy', main=thisbone )
                 thislm <- lm( log(centroid) ~ log(bodylength) + 0  )
                 # abline( coef(thislm)[1]/log(10), coef(thislm)[2] )
                 abline( 0, coef(thislm)[1] )
@@ -63,8 +63,8 @@ t.delta <- with( species, {
 
 deltas
 t.delta
-# delta = 1.6 seems pretty good for all three...
-# so sqrt(delta) = 1.25
+# delta = 1.3 seems pretty good for all three...
+# so sqrt(delta) = 1.14
 
 ####
 # estimate sigmaL
@@ -105,8 +105,8 @@ lines( distpoints, sqrt(coef(rib.resid.lm)*distpoints), col='red' )
 
 rib.resid.lm
 
-# not much phylogenetic signal
-# sigmaR = sqrt(.414) = .64
+# less phylogenetic signal
+# sigmaR = sqrt(.2478)) = .5
 
 ###
 # estimate sigmaP, phylogenetic pelvic variance after accounting for length
@@ -127,8 +127,8 @@ lines( distpoints, sqrt(coef(pelvic.resid.lm)*distpoints), col='red' )
 
 pelvic.resid.lm
 
-# YES phylogenetic signal
-# sigmaP = sqrt(5.3) = 2.3
+# more phylogenetic signal
+# sigmaP = sqrt(1.26) = 1.12
 
 ###
 # and betaT, phylogenetic testes size after accounting for length
@@ -158,7 +158,7 @@ testes.resid.lm
 plot( testes.length.resids, species.pelvic.length.resids[names(testes.length.resids)] )
 identify( testes.length.resids, species.pelvic.length.resids[names(testes.length.resids)], labels=names(testes.length.resids) )
 lm( species.pelvic.length.resids[names(testes.length.resids)] ~ testes.length.resids  )
-# correlated, coefficient 0.23785
+# correlated, coefficient 0.12
 #  driven most by c("EUBALAENA_GLACIALIS","PONTOPORIA_BLAINVILLEI","MESOPLODON_CARLHUBBSI") ??
 #   and also by c("ESCHRICHTIUS_ROBUSTUS","PHOCOENA_PHOCOENA", "ZIPHIUS_CAVIROSTRIS", "BALAENOPTERA_PHYSALUS")
 
@@ -186,7 +186,7 @@ rib.resids <- with(subset(bones,bone=='rib'), log(centroid) - log(species.ribs[ 
 sqrt(var(rib.resids,na.rm=TRUE))
 with(subset(bones,bone=='rib'), plot(centroid, rib.resids,log='x') )
 
-# zetaR = .144
+# zetaR = .06
 
 ###
 # and omegaR, within indivs, rib
@@ -195,7 +195,7 @@ rib.indiv.resids <- with(subset(bones,bone=='rib'), log(centroid) - log(indiv.ri
 sqrt(var(rib.indiv.resids,na.rm=TRUE))
 with(subset(bones,bone=='rib'), plot( centroid, rib.indiv.resids, log='x' ) )
 
-# omegaR = .036
+# omegaR = .012
 
 ####
 # and zetaP: pelvis
@@ -204,38 +204,13 @@ pelvic.resids <- with(subset(bones,bone=='pelvic'), log(centroid) - log(species.
 sqrt(var(pelvic.resids,na.rm=TRUE))
 with(subset(bones,bone=='pelvic'), plot(centroid, pelvic.resids,log='x') )
 
-# zetaP = .29
+# zetaP = .12
 
 ###
-# and omegaR, within indivs, rib
+# and omegaP, within indivs, pelvic
 indiv.pelvics <- with(subset(bones,bone=='pelvic'), tapply( centroid, specimen, mean, na.rm=TRUE ) )
 pelvic.indiv.resids <- with(subset(bones,bone=='pelvic'), log(centroid) - log(indiv.pelvics[ match(specimen,names(indiv.pelvics)) ]) )
 sqrt(var(pelvic.indiv.resids,na.rm=TRUE))
 with(subset(bones,bone=='pelvic'), plot( centroid, pelvic.indiv.resids, log='x' ) )
 
-# omegaR = .035
-
-######
-
-
-lms <- with( subset(bones,bone=="pelvic"), list( 
-                lm( log(centroid) ~ log(bodylength) ),
-                lm( log(centroid) ~ specimen ) )
-        )
-
-#####
-## ok do a big linear model
-require(plyr)
-
-whmeans <- ddply( whales, "species", summarise, bodylength=mean(bodylength,na.rm=TRUE), left.pelvic=mean(left.pelvic,na.rm=TRUE), left.rib=mean(left.rib,na.rm=TRUE), right.pelvic=mean(right.pelvic,na.rm=TRUE), right.rib=mean(right.rib,na.rm=TRUE) )
-whsds <- ddply( whales, "species", summarise, bodylength=sqrt(var(bodylength,na.rm=TRUE)), left.pelvic=sqrt(var(left.pelvic,na.rm=TRUE)), left.rib=sqrt(var(left.rib,na.rm=TRUE)), right.pelvic=sqrt(var(right.pelvic,na.rm=TRUE)), right.rib=sqrt(var(right.rib,na.rm=TRUE)) )
-
-layout(matrix(1:4,nrow=2))
-with(whmeans, plot( left.pelvic, right.pelvic ) ); abline(0,1)
-with(whmeans, plot( left.rib, right.rib ) ); abline(0,1)
-
-lm0 <- with( bones, lm( log(centroid) ~ log(bodylength) + sex ) )
-lm1 <- with( bones, lm( log(centroid) ~ log(bodylength) + species ) )
-lm2 <- with( bones, lm( log(centroid) ~ log(bodylength) + species + sex ) )
-
-
+# omegaP = .02

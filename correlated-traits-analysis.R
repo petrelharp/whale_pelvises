@@ -63,14 +63,14 @@ initpar <- c(
         sigmaL=3.16,
         betaT=6.5,
         betaP=2,
-        sigmaR=.64,
-        sigmaP=2.3,
+        sigmaR=.5,
+        sigmaP=1.1,
         zetaL=.05,
-        zetaR=.144,
-        omegaR=.036,
-        zetaP=.29,
-        omegaP=.035,
-        delta=sqrt(1.6)
+        zetaR=.06,
+        omegaR=.01,
+        zetaP=.12,
+        omegaP=.02,
+        delta=sqrt(1.3)
     )
 # construct full matrix
 fullmat <- make.fullmat( initpar )
