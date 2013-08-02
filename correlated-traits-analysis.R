@@ -128,7 +128,7 @@ if (FALSE) {  # DO THIS LATER
 #  these parameters are: theta = sigmaL, betaT, betaP, sigmaR, sigmaP.
 #  The vector Pmat is such that theta[Pmat] gives the NONZERO elements of the corresponding sqrt-covariance matrix.
 #  ... which are (branch length) * (sigmaL, sigmaL, sigmaL, sigmaL, betaT, betaP, sigmaR, sigmaP)
-#  and the matrix Q is similar, except says where to put delta (on all sigmaL but the first one)
+#  and the matrix Q is similar, except says where to put sqrt delta (on all sigmaL but the first one)
 species.Pmat <- c(1,1,1,1,1,1,2,3,3,4,4,5,5)
 species.Qmat <- c(0,1,1,1,1,1,0,0,0,0,0,0,0)
 
@@ -137,7 +137,7 @@ species.Qmat <- c(0,1,1,1,1,1,0,0,0,0,0,0,0)
 #  the paramters are: zetaL, zetaR, omegaR, zetaP, omegaP
 # and the nonzero elements, in order, are
 #  (zetaL, zetaL, zetaL, zetaL, zetaL, zetaR, zetaR, omegaR, -omegaR, zetaP, zetaP, omegaP, -omegaP)
-# again, put delta on all zetaL but the first one
+# again, put sqrt delta on all zetaL but the first one
 #  now, nonzero elements are theta[Pmat] * Pcoef
 sample.Pmat <- c(1,1,1,1,1,2,2,3,3,4,4,5,5)
 sample.Pcoef <- c(1,1,1,1,1,1,1,1,-1,1,1,1,-1)
@@ -163,8 +163,8 @@ sample.transmat <- Matrix(
 species.params <- c( sigmaL=.2, betaT=.1, betaP=.3, sigmaR=.25, sigmaP=.05 )
 sample.params <- c( zetaL=.1, zetaR=.15, omegaR=.05, zetaP=.12, omegaP=.05 )
 delta <- 1.2
-species.transmat@x <- as.vector( ( species.params[species.Pmat] ) * ( 1 + species.Qmat * (delta-1) ) )
-sample.transmat@x <- as.vector( ( sample.params[sample.Pmat] * sample.Pcoef ) * ( 1 + sample.Qmat * (delta-1) ) )
+species.transmat@x <- as.vector( ( species.params[species.Pmat] ) * ( 1 + species.Qmat * (sqrt(delta)-1) ) )
+sample.transmat@x <- as.vector( ( sample.params[sample.Pmat] * sample.Pcoef ) * ( 1 + sample.Qmat * (sqrt(delta)-1) ) )
 species.covmat <- as.matrix( tcrossprod(species.transmat) )
 sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
 
@@ -178,12 +178,13 @@ fchol <- chol( fullmat[ havedata, havedata ] )
 datavec <- thedata[havedata]
 
 # return negative log-likelihood for gaussian:
+#  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, delta
 llfun <- function (par) {
     species.params <- par[1:5]
     sample.params <- par[5+1:5]
     delta <- par[11]
-    species.transmat@x <- as.vector( ( species.params[species.Pmat] ) * ( 1 + species.Qmat * (delta-1) ) )
-    sample.transmat@x <- as.vector( ( sample.params[sample.Pmat] * sample.Pcoef ) * ( 1 + sample.Qmat * (delta-1) ) )
+    species.transmat@x <- as.vector( ( species.params[species.Pmat] ) * ( 1 + species.Qmat * (sqrt(delta)-1) ) )
+    sample.transmat@x <- as.vector( ( sample.params[sample.Pmat] * sample.Pcoef ) * ( 1 + sample.Qmat * (sqrt(delta)-1) ) )
     species.covmat <- as.matrix( tcrossprod(species.transmat) )
     sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
     fullmat <- kronecker( species.covmat, treedist ) + kronecker( sample.covmat, tipdist )  # variables are together
@@ -191,6 +192,24 @@ llfun <- function (par) {
     return( (-1) * sum( backsolve( fchol, datavec )^2 )/2 + sum(log(diag(fchol))) ) 
 }
 
+### initial values
+# from initial-values.R
+initpar <- c(
+        sigmaL=3.16,
+        betaT=6.5,
+        betaP=2,
+        sigmaR=.64,
+        sigmaP=2.3,
+        zetaL=.05,
+        zetaR=.144,
+        omegaR=.036,
+        zetaP=.29,
+        omegaP=.035,
+        delta=1.6
+    )
+
+mlestim <- optim( par=initpar, fn=llfun, lower=
 
 #### TO-DO:
 ## NORMALIZE BY SEXUAL DIMORPHISM
+## REVISIT SAME DELTA FOR TESTES, RIB, and PELVIS

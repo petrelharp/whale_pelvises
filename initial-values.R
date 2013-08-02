@@ -60,8 +60,11 @@ t.delta <- with( species, {
             thislm <- lm( log(actual_testes_mass_max) ~ log(bodylength) + 0 )
             abline( 0, coef(thislm)[1] )
             thislm } )
-# delta = 1.75 seems pretty good for all three...
-# so sqrt(delta) = 1.32
+
+deltas
+t.delta
+# delta = 1.6 seems pretty good for all three...
+# so sqrt(delta) = 1.25
 
 ####
 # estimate sigmaL
@@ -127,6 +130,45 @@ pelvic.resid.lm
 # YES phylogenetic signal
 # sigmaP = sqrt(5.3) = 2.3
 
+###
+# and betaT, phylogenetic testes size after accounting for length
+
+testes.length.lm <- with( species, lm( log(actual_testes_mass_max) ~ log(bodylength) ) )
+testes.length.resids <- with( species, { x <- resid(testes.length.lm); names(x) <- species[-testes.length.lm$na.action]; x } )
+testes.resid.diffs <- treedists
+testes.resid.diffs[] <- NA
+tmp <- outer( testes.length.resids, testes.length.resids, "-" )
+testes.resid.diffs[ rownames(tmp), colnames(tmp) ] <- tmp 
+testes.resid.vars <- tapply( testes.resid.diffs, distcats, var, na.rm=TRUE )
+testes.resid.lm <- lm( (testes.resid.vars) ~ distpoints + 0 )
+
+plot( treedists, testes.resid.diffs  )
+points( distpoints, sqrt( testes.resid.vars ), col='red', pch=20 )
+lines( distpoints, sqrt(coef(testes.resid.lm)*distpoints), col='red' )
+
+testes.resid.lm
+
+# YES phylogenetic signal
+# betaT = sqrt(41.65) = 6.5
+
+
+###
+# and betaP, something like covariance between testes resids and pelvic resids?
+
+plot( testes.length.resids, species.pelvic.length.resids[names(testes.length.resids)] )
+identify( testes.length.resids, species.pelvic.length.resids[names(testes.length.resids)], labels=names(testes.length.resids) )
+lm( species.pelvic.length.resids[names(testes.length.resids)] ~ testes.length.resids  )
+# correlated, coefficient 0.23785
+#  driven most by c("EUBALAENA_GLACIALIS","PONTOPORIA_BLAINVILLEI","MESOPLODON_CARLHUBBSI") ??
+#   and also by c("ESCHRICHTIUS_ROBUSTUS","PHOCOENA_PHOCOENA", "ZIPHIUS_CAVIROSTRIS", "BALAENOPTERA_PHYSALUS")
+
+
+###
+# what about testes-rib residual correlation?
+plot( testes.length.resids, species.rib.length.resids[names(testes.length.resids)] )
+identify( testes.length.resids, species.rib.length.resids[names(testes.length.resids)], labels=names(testes.length.resids) )
+lm( species.rib.length.resids[names(testes.length.resids)] ~ testes.length.resids  )
+# NOT correlated.
 
 
 ####
