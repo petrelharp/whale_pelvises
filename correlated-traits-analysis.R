@@ -91,7 +91,22 @@ mlestim2<- optim( par=initpar, fn=llfun, method="BFGS", control=list( fnscale=1e
 mlestim3 <- optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( fnscale=1e7, trace=3 ), lower=1e-3 )
 
 
+require(mcmc)
+# return positive log-likelihood times posterior
+#  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, delta
+# priors on these are exponential
+prior.means <- c(3,3,3,3,3,.2,.2,.2,.2,.2,1)
+lud <- function (par) {
+    if (any(par<=0)) { return( -Inf ) }
+    fchol <- chol(make.fullmat(par)[havedata,havedata])
+    return( (-1) * sum( par * prior.means ) - sum( backsolve( fchol, norm.datavec )^2 )/2 - sum(log(diag(fchol)))/2 ) 
+}
+
+mcrun <- metrop( lud, initial=initpar, nbatch=100, blen=1, scale=prior.means/10 )
+
+
 #### TO-DO:
+## SUBTRACT OFF MEAN TRAIT VALUES
 ## NORMALIZE BY SEXUAL DIMORPHISM
 ## REVISIT SAME DELTA FOR TESTES, RIB, and PELVIS
 
