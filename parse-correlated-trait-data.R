@@ -1,12 +1,14 @@
 #!/usr/bin/R
 
 require(ape)
+source("correlated-traits-fns.R")
 
 tree_file <- "consensusTree_ALL_CETACEA.tree"
 species_tree<-read.nexus(file=tree_file)
 
-bones <- read.table("50_make_datamatrix.out", header=TRUE)
+bones <- read.table("62_add_centroids.out", header=TRUE)
 bones <- droplevels( subset(bones, ! species %in% c("ORCINUS_ORCA") ) )
+bones <- bones[ setdiff( colnames(bones), "absolute_volume" ) ]
 
 species <- read.table("52_sexual_dimorphism.out", header=TRUE)
 # cat morphology_table_2013_June_27.txt | cut -f 1-7 -d '    ' > morphology_table_2013_June_27-plr.txt
@@ -30,7 +32,7 @@ usevars <- setdiff(names(bones),c("side","bone"))
 by.bone <- tapply( 1:nrow(bones), whichbone, function (k) bones[k,,drop=FALSE] )
 for (k in seq_along(by.bone)) {
     by.bone[[k]] <- by.bone[[k]][usevars]
-    names(by.bone[[k]])[match("absolute_volume",names(by.bone[[k]]))] <- names(by.bone)[k]
+    names(by.bone[[k]])[match("centroid",names(by.bone[[k]]))] <- names(by.bone)[k]
 }
 whales <- by.bone[[1]]
 for (k in 2:length(by.bone)) { whales <- merge( whales, by.bone[[k]], all=TRUE ) }
@@ -98,6 +100,7 @@ for (j in 1:nrow(treedist))  for (k in 1:ncol(treedist)) {
 tipdist <- matrix( 0, nrow=Nnode(tree)+Ntip(tree), ncol=Nnode(tree)+Ntip(tree) )
 diag(tipdist)[sample.nodes] <- 1
 
+
 # Get the data all together: [i,j] is j-th variable for i-th node in the tree
 # again: the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
 thedata <- matrix( c(NA), nrow=Nnode(tree)+Ntip(tree), ncol=6 )
@@ -108,11 +111,22 @@ thedata[species.nodes,intersect(names(species),colnames(thedata))] <- as.matrix(
 thedata[sample.nodes,intersect(names(whales),colnames(thedata))] <- as.matrix( whales[match(rownames(thedata)[sample.nodes],whales$specimen),intersect(names(whales),colnames(thedata))] )
 thedata <- log(thedata)
 havedata <- !is.na(thedata)
-# # normalize:
-# data.means <- colMeans(thedata,na.rm=TRUE)
-# data.sds <- sqrt(colMeans(sweep(thedata,2,data.means,"-")^2,na.rm=TRUE))
-# thedata <- sweep( thedata, 2, data.means, "-" )
-# thedata <- sweep( thedata, 2, data.sds, "/" )
+
+# "phylogenetic" mean:
+species.means <- apply( thedata[sample.nodes,], 2, tapply, bones$species[match(rownames(thedata)[sample.nodes],bones$specimen)], mean, na.rm=TRUE )
+species.means <- as.data.frame(species.means)
+species.means$species <- rownames(species.means)
+xspecies <- merge(species,species.means[c("bodylength", "left.rib", "right.rib", "left.pelvic", "right.pelvic",'species')],suffixes=c('','.log'),all=TRUE,by='species')
+xspecies$testes.log <- log( xspecies$actual_testes_mass_max )
+rownames(xspecies) <- xspecies$species
+xspecies <- as.matrix( xspecies[ c('bodylength.log',"left.rib", "right.rib", "left.pelvic", "right.pelvic",'testes.log') ] )
+phylomeans <- apply( xspecies, 2, phylomean, tree=species_tree )
+names(phylomeans)[match(c("bodylength.log", "left.rib", "right.rib", "left.pelvic", "right.pelvic", "testes.log"),names(phylomeans))] <-  c("bodylength", "left.rib", "right.rib", "left.pelvic", "right.pelvic", "actual_testes_mass_max" )
+phylomeans <- phylomeans[ colnames(thedata) ]
+# and, the weights of each species in the phylogenetic mean:
+# normalize by "phylogenetic" mean
+thedata <- sweep( thedata, 2, phylomeans, "-" )
+
 if (FALSE) {  # DO THIS LATER
     # normalize by sexual dimorphism
     data.specimens <- match( rownames(thedata), whales$specimen )
@@ -129,4 +143,5 @@ if (FALSE) {  # DO THIS LATER
 write.csv( treedist, file="all-sample-treedist.csv", row.names=FALSE)
 write.csv( tipdist, file="all-sample-tipdist.csv", row.names=FALSE)
 write.csv( thedata, file="all-data-rejiggered.csv", row.names=TRUE)
+write.csv( phylomeans, file="phylomeans.csv", row.names=FALSE )
 write.tree( tree, file="all-sample-tree.R")

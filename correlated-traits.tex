@@ -266,18 +266,26 @@ hence
     \cov[dX_e] = A A^T .
 \end{align}
 
-Normalize the $X$ by sutracting off the mean across species: 
-$\tilde X_t = X_t - \frac{1}{n}\sum_i \frac{1}{n_i} \sum_{jk} X_{ijk}$.
-Then $\tilde X$ does not depend on $X_\rho$:
+If we normalize the $X$ by subtracting off a weighted mean across species: 
 \begin{align}
-    \tilde X_t = \sum_{e \in \rho \to t} dX_e - \frac{1}{n}\sum_{ijk} \sum_{e \in \rho \to ijk} dX_e .
+\tilde X_t = X_t - \sum_t w_t X_t,
 \end{align}
-and the covariance between two observations is just
+with $\sum_t w_t = 1$,
+then $\tilde X$ does not depend on $X_\rho$:
+if we define 
 \begin{align}
-    \cov[\tilde X_s,\tilde X_t] &= \sum_{e \in \rho \to s \cap \rho \to t} \cov[dX_e] +  \frac{1}{n^2} \sum_{ijk} \sum_{e \in \rho \to ijk} \cov[ dX_e ] \\
-    &= \sum_e \left( \mathbf{1}_{e \in \rho \to s} \mathbf{1}_{e \in \rho \to t} + \frac{n_e}{n^2} \right) \cov[dX_e] ,
+    w_e = \sum_{t : e \in \rho \to t} w_t
 \end{align}
-where $n$ is the number of samples, and $n_e$ is the number of samples below edge $e$.
+then
+\begin{align}
+    \tilde X_t = \sum_{e \in \rho \to t} dX_e - \sum_e w_e dX_e,
+\end{align}
+and if each branch's covariance is a constant multiplied by a common matrix $\Sigma$, $\cov[dX_e] = \tau_e \Sigma$, 
+then the covariance between two observations is just
+\begin{align}
+    \cov[\tilde X_s,\tilde X_t] &= \sum_e \left( \mathbf{1}_{e \in \rho \to s} - w_e \right) \left( \mathbf{1}_{e \in \rho \to t} - w_e \right) \cov[dX_e] \\
+                                &= \left( \sum_{e \in \rho \to t \cap \rho \to s} \tau_e - \sum_{e \in \rho \to t} w_e \tau_e - \sum_{e \in \rho \to s} w_e \tau_e + \sum_e w_e^2 \tau_e \right) \Sigma .
+\end{align}
 
 
 There are two types of covariance matrices:
