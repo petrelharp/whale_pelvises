@@ -2,9 +2,10 @@
 
 require(Matrix)
 
-treedist <- as.matrix( read.csv( file="all-sample-treedist.csv", header=TRUE) )
-tipdist <- as.matrix( read.csv( file="all-sample-tipdist.csv", header=TRUE) )
-thedata <- as.matrix( read.csv( file="all-data-rejiggered.csv", header=TRUE, row.names=1 ) )
+# treedist <- as.matrix( read.csv( file="all-sample-treedist.csv", header=TRUE) )
+# tipdist <- as.matrix( read.csv( file="all-sample-tipdist.csv", header=TRUE) )
+# thedata <- as.matrix( read.csv( file="all-data-rejiggered.csv", header=TRUE, row.names=1 ) )
+load("thedata-and-covmatrices.Rdata")
 havedata <- !is.na(thedata)
 
 # associate P and Q with each internal branch of the tree:
@@ -53,7 +54,7 @@ make.fullmat <- function (par) {
     sample.transmat@x <- as.vector( ( sample.params[sample.Pmat] * sample.Pcoef ) * ( 1 + sample.Qmat * ((delta)-1) ) )
     species.covmat <- as.matrix( tcrossprod(species.transmat) )
     sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
-    fullmat <-  kronecker( species.covmat, treedist ) + kronecker( sample.covmat, tipdist )
+    fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
     return( fullmat )
 }
 

@@ -284,7 +284,8 @@ and if each branch's covariance is a constant multiplied by a common matrix $\Si
 then the covariance between two observations is just
 \begin{align}
     \cov[\tilde X_s,\tilde X_t] &= \sum_e \left( \mathbf{1}_{e \in \rho \to s} - w_e \right) \left( \mathbf{1}_{e \in \rho \to t} - w_e \right) \cov[dX_e] \\
-                                &= \left( \sum_{e \in \rho \to t \cap \rho \to s} \tau_e - \sum_{e \in \rho \to t} w_e \tau_e - \sum_{e \in \rho \to s} w_e \tau_e + \sum_e w_e^2 \tau_e \right) \Sigma .
+                                &= \left( \sum_{e \in \rho \to t \cap \rho \to s} \tau_e - \sum_{e \in \rho \to t} w_e \tau_e - \sum_{e \in \rho \to s} w_e \tau_e + \sum_e w_e^2 \tau_e \right) \Sigma \\
+                                &= \left( \sum_{e \in \rho \to t \cap \rho \to s} (1-2w_e) \tau_e - \sum_{e \in s \to t} w_e \tau_e + \sum_e w_e^2 \tau_e \right) \Sigma .
 \end{align}
 
 

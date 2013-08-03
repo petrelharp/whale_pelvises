@@ -62,19 +62,8 @@ tree <- drop.tip( tree, setdiff( tree$tip.label, c(levels(whales$specimen),level
 stopifnot( setequal( c(levels(whales$specimen),levels(whales$species)), tree$tip.label ) )
 stopifnot( all( tree$edge.length[ tree$edge[,2] %in% 1:Ntip(tree) ] %in% c(0,within_length) ) )
 
-# pre-compute the number of times each edge's covariance matrix enters into the full covariance matrix
-# as well as the vector indicating where it goes
-adjacency <- matrix( 0, nrow=Nnode(tree)+Ntip(tree), ncol=Nnode(tree)+Ntip(tree) ) 
-adjacency[ tree$edge ] <- 1  # adjacency matrix: [i,j] means that node j is directly below node i
-# descendants is indexed by NODES
-descendants <- apower <- adjacency  # [i,j] means that node j is somewhere below node i
-while ( any(apower>0) ) {
-    apower <- apower %*% adjacency
-    descendants <- descendants + apower
-}
-stopifnot( all( descendants %in% c(0,1) ) )
-descendants <- ( descendants > 0 )
-diag(descendants) <- TRUE
+## tree stuff:
+descendants <- get.descendants(tree)
 n.offspring <- rowSums(descendants)  # number of tips each edge contributes to
 rootnode <- which.max(n.offspring)
 # edge.indices[k] is the node associated with edge k
@@ -86,21 +75,8 @@ sample.nodes <- setdiff( 1:Ntip(tree), species.nodes )
 stopifnot( all( tree$edge.length[ tree$edge[,2] %in% species.nodes ] == 0 ) )
 stopifnot( all( tree$edge.length[ tree$edge[,2] %in% sample.nodes ] == within_length ) )
 stopifnot( ! ( rootnode %in% edge.indices ) )
-# pairwise lengths of shared internal branches leading to the root for all pairs of nodes in the tree
-treedist <- matrix( 0, nrow=Nnode(tree)+Ntip(tree), ncol=Nnode(tree)+Ntip(tree) )
-internal.lengths <- tree$edge.length
-internal.lengths[ tip.edges ] <- 0
-for (j in 1:nrow(treedist))  for (k in 1:ncol(treedist)) {
-    jdesc <- descendants[,j] 
-    kdesc <- descendants[,k] 
-    contributes <- match( which( ( jdesc & kdesc ) ), c(edge.indices,rootnode) )
-    treedist[j,k] <- sum( c(internal.lengths,0)[ contributes ] )
-}
-# and, in the tips
-tipdist <- matrix( 0, nrow=Nnode(tree)+Ntip(tree), ncol=Nnode(tree)+Ntip(tree) )
-diag(tipdist)[sample.nodes] <- 1
 
-
+###
 # Get the data all together: [i,j] is j-th variable for i-th node in the tree
 # again: the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
 thedata <- matrix( c(NA), nrow=Nnode(tree)+Ntip(tree), ncol=6 )
@@ -112,20 +88,30 @@ thedata[sample.nodes,intersect(names(whales),colnames(thedata))] <- as.matrix( w
 thedata <- log(thedata)
 havedata <- !is.na(thedata)
 
-# "phylogenetic" mean:
-species.means <- apply( thedata[sample.nodes,], 2, tapply, bones$species[match(rownames(thedata)[sample.nodes],bones$specimen)], mean, na.rm=TRUE )
-species.means <- as.data.frame(species.means)
-species.means$species <- rownames(species.means)
-xspecies <- merge(species,species.means[c("bodylength", "left.rib", "right.rib", "left.pelvic", "right.pelvic",'species')],suffixes=c('','.log'),all=TRUE,by='species')
-xspecies$testes.log <- log( xspecies$actual_testes_mass_max )
-rownames(xspecies) <- xspecies$species
-xspecies <- as.matrix( xspecies[ c('bodylength.log',"left.rib", "right.rib", "left.pelvic", "right.pelvic",'testes.log') ] )
-phylomeans <- apply( xspecies, 2, phylomean, tree=species_tree )
-names(phylomeans)[match(c("bodylength.log", "left.rib", "right.rib", "left.pelvic", "right.pelvic", "testes.log"),names(phylomeans))] <-  c("bodylength", "left.rib", "right.rib", "left.pelvic", "right.pelvic", "actual_testes_mass_max" )
-phylomeans <- phylomeans[ colnames(thedata) ]
+# "phylogenetic" mean: use imputed data to deal with missing values
+imputed.data <- thedata
+for (sp in levels(whales$species)) {
+    is.sp <- ( rownames(imputed.data) == sp ) | ( whales$species[ match( rownames(imputed.data), whales$specimen ) ] == sp )
+    is.sp[ is.na(is.sp) ] <- FALSE
+    sp.means <- colMeans( imputed.data[is.sp,], na.rm=TRUE )
+    if (any(is.na(sp.means))) {
+        # NA-out those species with some variables still missing
+        imputed.data[is.sp] <- NA
+    } else {
+        imputed.data[is.sp & is.na(imputed.data)] <- sp.means[ col( imputed.data )[is.sp & is.na(imputed.data)] ]
+    }
+}
+
+
+adjtree <- tree
+adjtree$edge.length[tip.edges] <- (.05/3.16)^2  # reasonable value from initial-values.R
+phylomeans <- lapply( 1:ncol(imputed.data), function(k) phylomean(imputed.data[1:Ntip(tree),k], tree=adjtree) )
+names(phylomeans) <- colnames(imputed.data)
+edgeweights <- tip.to.edge.weights( attr(phylomeans[[1]],"weights"), adjtree, descendants )
+
 # and, the weights of each species in the phylogenetic mean:
 # normalize by "phylogenetic" mean
-thedata <- sweep( thedata, 2, phylomeans, "-" )
+thedata <- sweep( thedata, 2, unlist(phylomeans), "-" )
 
 if (FALSE) {  # DO THIS LATER
     # normalize by sexual dimorphism
@@ -138,10 +124,32 @@ if (FALSE) {  # DO THIS LATER
     }
 }
 
+
+#####
+# covariance matrices:
+
+# "internal" edges --
+internal.lengths <- tree$edge.length
+internal.lengths[ tip.edges ] <- 0
+# lengths of shared internal branches leading to the root for all pairs of nodes in the tree
+species.shared.brlens <- shared.branchlengths( tree, internal.lengths*(1-2*edgeweights), descendants )
+# distances in internal branches in the tree for all pairs of nodes
+species.treedist <- treedist( tree, internal.lengths*edgeweights, descendants )
+species.treemat <- ( species.shared.brlens - species.treedist + sum(edgeweights^2 * internal.lengths) )
+
+# and, in the tips
+tip.lengths <- tree$edge.length
+tip.lengths[ - tip.edges ] <- 0
+tip.treedist <- treedist( tree, tip.lengths*edgeweights, descendants )
+sample.treemat <- ( 0 - tip.treedist + sum(edgeweights^2 * tip.lengths) )
+
+
 ###
 # write out
-write.csv( treedist, file="all-sample-treedist.csv", row.names=FALSE)
-write.csv( tipdist, file="all-sample-tipdist.csv", row.names=FALSE)
-write.csv( thedata, file="all-data-rejiggered.csv", row.names=TRUE)
-write.csv( phylomeans, file="phylomeans.csv", row.names=FALSE )
-write.tree( tree, file="all-sample-tree.R")
+save( species.treemat, sample.treemat, thedata, file="thedata-and-covmatrices.Rdata" )
+
+# write.csv( treedist, file="all-sample-treedist.csv", row.names=FALSE)
+# write.csv( tipdist, file="all-sample-tipdist.csv", row.names=FALSE)
+# write.csv( thedata, file="all-data-rejiggered.csv", row.names=TRUE)
+# write.csv( phylomeans, file="phylomeans.csv", row.names=FALSE )
+# write.tree( tree, file="all-sample-tree.R")
