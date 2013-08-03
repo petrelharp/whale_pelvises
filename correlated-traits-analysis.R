@@ -90,6 +90,8 @@ mlestim1 <- optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( fn
 mlestim2<- optim( par=initpar, fn=llfun, method="BFGS", control=list( fnscale=1e7, trace=3 ) )
 mlestim3 <- optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( fnscale=1e7, trace=3 ), lower=1e-3 )
 
+mlestims <- data.frame( rbind(initpar, mlestim1$par, mlestim2$par, mlestim3$par ) )
+mlestims$ll <- apply( mlestims, 1, llfun )
 
 require(mcmc)
 # return positive log-likelihood times posterior
