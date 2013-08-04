@@ -109,11 +109,53 @@ if (do.parallel) {
 
 mlestims$ll <- apply( mlestims, 1, llfun )
 
+####
 # examine results
 mlfullmat <- make.fullmat(mlestim1$par)
-mlchol <- chol(mlfullmat[havedata,havedata])
-plot( backsolve( mlchol, norm.
 
+# diff betweens individual's ribs:
+ribinds <- grep(".rib",colnames(thedata),fixed=TRUE)
+ribdiffmat <- t( sapply( levels(whales$specimen), function (sp) {
+            side <- matrix(0,nrow=nrow(thedata),ncol=ncol(thedata))
+            side[col(thedata) == ribinds[1]] <- 1
+            side[col(thedata) == ribinds[2]] <- -1
+            as.numeric( ( rownames(thedata)[row(thedata)] == sp ) ) * side
+        } ) )
+zdata <- thedata
+zdata[is.na(zdata)] <- 0
+ribdiffs <- ribdiffmat %*% as.vector( zdata )
+
+subsp <- c("STENELLA_LONGIROSTRIS","STENELLA_FRONTALIS","STENELLA_COERULEOALBA","DELPHINUS_DELPHIS")
+subind <- c( match( subsp, rownames(thedata) ), match( whales$specimen[ whales$species %in% subsp ], rownames(thedata) ) )
+submatind <- as.vector( outer( subind, (0:(ncol(thedata)-1))*nrow(thedata), "+" ) )
+
+image( Matrix( cov2cor( mlfullmat ) ) )
+image( Matrix( cov2cor( mlfullmat[submatind,submatind] ) ) )
+
+image( Matrix( cov2cor( fullmat ) ) )
+image( Matrix( cov2cor( fullmat[submatind,submatind] ) ) )
+
+layout(matrix(1:36,nrow=6))
+par(mar=c(0,0,0,0)+.1)
+for (i in 0:5) for (j in 0:5) {
+    i.thisind <- submatind[ (submatind-1)%%6 == i ]
+    j.thisind <- submatind[ (submatind-1)%%6 == j ]
+    image( mlfullmat[i.thisind,j.thisind] )
+}
+
+
+mlchol <- chol(mlfullmat[havedata,havedata])
+normresids <- backsolve( mlchol, datavec )
+layout(t(1:2))
+plot( normresids )
+outliers <- identify( normresids )
+outliercoef <- mlchol[outliers,]
+
+plot( thedata[havedata] )
+identify( thedata[havedata], labels=paste(rownames(thedata)[row(thedata)],colnames(thedata)[col(thedata)],sep='.')[havedata] )
+
+#####
+# MCMC
 
 require(mcmc)
 # return positive log-likelihood times posterior

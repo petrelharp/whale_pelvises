@@ -147,7 +147,7 @@ n.tree.tips <- Ntip(tree)
 
 ###
 # write out
-save( species.treemat, sample.treemat, norm.factor, n.tree.tips, thedata, file="thedata-and-covmatrices.Rdata" )
+save( species.treemat, sample.treemat, norm.factor, n.tree.tips, thedata, phylomeans, file="thedata-and-covmatrices.Rdata" )
 
 # write.csv( treedist, file="all-sample-treedist.csv", row.names=FALSE)
 # write.csv( tipdist, file="all-sample-tipdist.csv", row.names=FALSE)

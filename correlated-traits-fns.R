@@ -102,3 +102,11 @@ treedist <- function (tree,edge.length=tree$edge.length,descendants=get.descenda
     }
     return( treedist )
 }
+
+predgaus <- function( obsvec, meanvec, covmat ) {
+    # fill in NAs in 'obsvec' by kriging
+    ii <- is.na(obsvec)
+    krig <- meanvec[ ii ] + covmat[ ii, !ii ] %*% solve( covmat[!ii,!ii], (obsvec-meanvec)[!ii] ) 
+    obsvec[ii] <- krig
+    return(obsvec)
+}
