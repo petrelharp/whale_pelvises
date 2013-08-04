@@ -139,8 +139,11 @@ stopifnot(all(abs(cov2cor(sample.treemat[!dzeros,!dzeros]))<=1+1e-8))
 
 # construct (I-W) term that multiplies the normalized covariance matrix
 #  note: indexed by ( variables x tips+nodes )
-weightvec <- c( unlist(tipweights),rep(0,Nnode(tree)*ncol(thedata)) )
-norm.factor <- diag( length(thedata) ) - weightvec[ col(diag( length(thedata) )) ]
+weightmat <- do.call( rbind, lapply( seq_along(tipweights), function (k) {
+        c( rep(0,(k-1)*nrow(thedata)), c(tipweights[[k]],rep(0,Nnode(tree))), rep(0,(ncol(thedata)-k)*nrow(thedata)) )
+    } ) )
+weightmat <- weightmat[ rep(1:ncol(thedata),each=nrow(thedata)) ]
+norm.factor <- ( diag( length(thedata) ) - weightmat )
 
 # this will come in handy:
 n.tree.tips <- Ntip(tree)
