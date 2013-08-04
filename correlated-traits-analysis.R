@@ -83,20 +83,37 @@ colnames( fullmat ) <- rownames( fullmat ) <- outer( rownames(thedata), colnames
 fchol <- chol( fullmat[ havedata, havedata ] )
 
 datavec <- thedata[havedata]
-norm.datavec <- sweep( thedata, 2, colMeans(thedata,na.rm=TRUE), "-" )[havedata]
 # return negative log-likelihood for gaussian:
 #  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, delta
 llfun <- function (par) {
     fchol <- chol(make.fullmat(par)[havedata,havedata])
-    return( sum( backsolve( fchol, norm.datavec )^2 )/2 + sum(log(diag(fchol)))/2 ) 
+    return( sum( backsolve( fchol, datavec )^2 )/2 + sum(log(diag(fchol)))/2 ) 
 }
 
-mlestim1 <- optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( fnscale=1e7, trace=3 ) )
-mlestim2<- optim( par=initpar, fn=llfun, method="BFGS", control=list( fnscale=1e7, trace=3 ) )
-mlestim3 <- optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( fnscale=1e7, trace=3 ), lower=1e-3 )
+do.parallel <- TRUE
+if (do.parallel) {
+    require(parallel)
+    pjobs <-  list( mcparallel( { optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( fnscale=1e7, trace=3 ) ) } ),
+            mcparallel( { optim( par=initpar, fn=llfun, method="BFGS", control=list( fnscale=1e7, trace=3 ) ) } ),
+            mcparallel( { optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( fnscale=1e7, trace=3 ), lower=1e-3 ) } )
+        )
+    mlestims <- mccollect( pjobs, wait=TRUE )
+    mlestim1 <- mlestims[[1]]
+    mlestim2 <- mlestims[[2]]
+    mlestim3 <- mlestims[[3]]
+} else {
+    mlestim1 <- optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( fnscale=1e7, trace=3 ) )
+    mlestim2 <- optim( par=initpar, fn=llfun, method="BFGS", control=list( fnscale=1e7, trace=3 ) )
+    mlestim3 <- optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( fnscale=1e7, trace=3 ), lower=1e-3 )
+}
 
-mlestims <- data.frame( rbind(initpar, mlestim1$par, mlestim2$par, mlestim3$par ) )
 mlestims$ll <- apply( mlestims, 1, llfun )
+
+# examine results
+mlfullmat <- make.fullmat(mlestim1$par)
+mlchol <- chol(mlfullmat[havedata,havedata])
+plot( backsolve( mlchol, norm.
+
 
 require(mcmc)
 # return positive log-likelihood times posterior
@@ -109,8 +126,12 @@ lud <- function (par) {
     return( (-1) * sum( par * prior.means ) - sum( backsolve( fchol, norm.datavec )^2 )/2 - sum(log(diag(fchol)))/2 ) 
 }
 
-mcrun <- metrop( lud, initial=initpar, nbatch=100, blen=1, scale=prior.means/10 )
-
+if (do.parallel) {
+    mjob <- mcparallel( metrop( lud, initial=initpar, nbatch=100, blen=1, scale=prior.means/10 ) )
+    mcrun <- mccollect( mjob, wait=TRUE )
+} else {
+    mcrun <- metrop( lud, initial=initpar, nbatch=100, blen=1, scale=prior.means/10 )
+}
 
 #### TO-DO:
 ## SUBTRACT OFF MEAN TRAIT VALUES
