@@ -87,14 +87,14 @@ datavec <- thedata[havedata]
 #  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, delta
 llfun <- function (par) {
     fchol <- chol(make.fullmat(par)[havedata,havedata])
-    return( sum( backsolve( fchol, datavec )^2 )/2 + sum(log(diag(fchol)))/2 ) 
+    return( sum( backsolve( fchol, datavec )^2 )/2 + sum(log(diag(fchol))) ) 
 }
 
 do.parallel <- TRUE
 if (do.parallel) {
     require(parallel)
-    pjobs <-  list( mcparallel( { optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( fnscale=1e7, trace=3 ) ) } ),
-            mcparallel( { optim( par=initpar, fn=llfun, method="BFGS", control=list( fnscale=1e7, trace=3 ) ) } ),
+    pjobs <-  list( mcparallel( { optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( fnscale=1e7, trace=3, maxit=1000 ) ) } ),
+            mcparallel( { optim( par=initpar, fn=llfun, method="BFGS", control=list( fnscale=1e7, trace=3, maxit=200 ) ) } ),
             mcparallel( { optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( fnscale=1e7, trace=3 ), lower=1e-3 ) } )
         )
     mlestims <- mccollect( pjobs, wait=TRUE )
@@ -107,23 +107,54 @@ if (do.parallel) {
     mlestim3 <- optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( fnscale=1e7, trace=3 ), lower=1e-3 )
 }
 
-mlestims$ll <- apply( mlestims, 1, llfun )
+mlpars <- as.data.frame( rbind( initpar, do.call( rbind, lapply(mlestims,"[[","par") ) ) )
+mlpars$ll <- apply( mlpars, 1, llfun )
 
 ####
 # examine results
 mlfullmat <- make.fullmat(mlestim1$par)
 
+source("correlated-traits-fns.R")
+
+##
+# look at residuals...
+no.lefties <- thedata
+no.lefties[,grep("left.",colnames(thedata))] <- NA
+pred.leftbones <- predgaus( as.vector(no.lefties), unlist(phylomeans)[col(thedata)], mlfullmat )
+dim(pred.leftbones) <- dim(thedata)
+resid.leftbones <- (thedata-pred.leftbones)[,grep("left.",colnames(thedata))]
+
+### 
 # diff betweens individual's ribs:
-ribinds <- grep(".rib",colnames(thedata),fixed=TRUE)
-ribdiffmat <- t( sapply( levels(whales$specimen), function (sp) {
+boneinds <- grep(".pelvic",colnames(thedata),fixed=TRUE)
+bonediffmat <- sapply( levels(whales$specimen), function (sp) {
             side <- matrix(0,nrow=nrow(thedata),ncol=ncol(thedata))
-            side[col(thedata) == ribinds[1]] <- 1
-            side[col(thedata) == ribinds[2]] <- -1
-            as.numeric( ( rownames(thedata)[row(thedata)] == sp ) ) * side
-        } ) )
+            side[col(thedata) == boneinds[1]] <- 1
+            side[col(thedata) == boneinds[2]] <- -1
+            out <- as.numeric( ( rownames(thedata)[row(thedata)] == sp ) ) * side
+            if( any( is.na( thedata[ out!=0 ] ) ) ) { 
+                return(NULL) 
+            } else {
+                return( out )
+            }
+        } )
+bonediffmat <- do.call(rbind,lapply(bonediffmat,as.vector))
 zdata <- thedata
 zdata[is.na(zdata)] <- 0
-ribdiffs <- ribdiffmat %*% as.vector( zdata )
+bonediffs <- bonediffmat %*% as.vector( zdata )
+summary(bonediffs)
+sqrt(var(bonediffs))
+
+
+ml.bonediff.covmat <- tcrossprod( bonediffmat %*% mlfullmat, bonediffmat )
+range( ml.bonediff.covmat[ row(ml.bonediff.covmat) > col(ml.bonediff.covmat) ] )
+range( diag(ml.bonediff.covmat) )
+
+bonediff.covmat <- tcrossprod( bonediffmat %*% fullmat, bonediffmat )
+range( bonediff.covmat[ row(bonediff.covmat) > col(bonediff.covmat) ] )
+range( diag(bonediff.covmat) )
+
+
 
 subsp <- c("STENELLA_LONGIROSTRIS","STENELLA_FRONTALIS","STENELLA_COERULEOALBA","DELPHINUS_DELPHIS")
 subind <- c( match( subsp, rownames(thedata) ), match( whales$specimen[ whales$species %in% subsp ], rownames(thedata) ) )
@@ -165,7 +196,7 @@ prior.means <- c(3,3,3,3,3,.2,.2,.2,.2,.2,1)
 lud <- function (par) {
     if (any(par<=0)) { return( -Inf ) }
     fchol <- chol(make.fullmat(par)[havedata,havedata])
-    return( (-1) * sum( par * prior.means ) - sum( backsolve( fchol, norm.datavec )^2 )/2 - sum(log(diag(fchol)))/2 ) 
+    return( (-1) * sum( par * prior.means ) - sum( backsolve( fchol, norm.datavec )^2 )/2 - sum(log(diag(fchol))) ) 
 }
 
 if (do.parallel) {
