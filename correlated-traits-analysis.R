@@ -7,6 +7,10 @@ require(Matrix)
 # thedata <- as.matrix( read.csv( file="all-data-rejiggered.csv", header=TRUE, row.names=1 ) )
 load("thedata-and-covmatrices.Rdata")
 havedata <- !is.na(thedata)
+## we only really need this components of (I-W):
+## nfac <- norm.factor[1:n.tree.tips,1:n.tree.tips]
+# ... but leave well enough along:
+nfac <- norm.factor
 
 # associate P and Q with each internal branch of the tree:
 #  these parameters are: theta = sigmaL, betaT, betaP, sigmaR, sigmaP.
@@ -55,7 +59,7 @@ make.fullmat <- function (par) {
     species.covmat <- as.matrix( tcrossprod(species.transmat) )
     sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
     fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
-    return( fullmat )
+    return( tcrossprod( nfac %*% fullmat, nfac ) )
 }
 
 ### initial values
