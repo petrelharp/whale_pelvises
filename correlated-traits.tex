@@ -265,6 +265,78 @@ hence
 \begin{align}
     \cov[dX_e] = A A^T .
 \end{align}
+Also, $A$ is one of two forms, depending on if it is an internal edge (on the species tree)
+or if it on a tip (leading to a sample): 
+if we set edge lengths on the tips to be 1,
+then either $A = \sqrt{\tau_E} \Sigma_I$ or $A=\sqrt{\tau_E} \Sigma_T$.
+
+Furthermore, notice that 
+\begin{align}
+  \cov[X_s,X_t] &= \sum_{e \in \rho \to t \cap \rho \to s } \cov[dX_e] \\
+    &= \sum_{e \in \rho \to t \cap \rho \to s \cap I } \cov[dX_e] 
+      + \sum_{e \in \rho \to t \cap \rho \to s \cap T } \cov[dX_e] \\
+    &= \left( \sum_{e \in \rho \to t \cap \rho \to s \cap I } \tau_e \right) \Sigma_I
+      + \left( \sum_{e \in \rho \to t \cap \rho \to s \cap T } \tau_e \right) \Sigma_T 
+\end{align}
+
+In other words, as in Revell \& Collar 2009, the covariance matrix between species nodes is $C \otimes \Sigma_I$,
+where $C_{ij}$ is the total time in the tree since the common ancestor of $i$ and $j$,
+and $\otimes$ is the Kronecker product.
+Those at the tips all have the same for $\Sigma_T$.
+So, if we extend the matrix $C$ to be indexed by samples, 
+so that $C_{s,t}$ gives the time in the tree between the species that $s$ and $t$ belong to;
+and let $T_{s,t} = 1$ if $s$ and $t$ are the same species, and 0 otherwise;
+then the full covariance matrix is
+\begin{align}
+    \Sigma = C \otimes \Sigma_I + T \otimes \Sigma_T .
+\end{align}
+
+We also want to subtract off the mean across traits,
+since $X$ still depends on the value at the root.
+
+If we normalize the $X$ by subtracting off a weighted mean across species: 
+\begin{align}
+\tilde X_t = X_t - \sum_t w_t X_t,
+\end{align}
+with $\sum_t w_t = 1$,
+then $\tilde X$ does not depend on $X_\rho$:
+if we define 
+\begin{align}
+    w_e = \sum_{t : e \in \rho \to t} w_t
+\end{align}
+then
+\begin{align}
+    \tilde X_t = \sum_{e \in \rho \to t} dX_e - \sum_e w_e dX_e,
+\end{align}
+which doesn't include $X_\rho$.
+
+The covariance matrix is now easy to compute:
+note that by e.g. taking the Cholesky decomposition of $\Sigma$ we have a matrix $A$ such that $X = A Z$,
+with $Z$ independent N(0,1).
+Then if $W$ is the matrix whose rows are given by $w$,
+\begin{align}
+  \tilde X = (I-W) A Z,
+\end{align}
+and hence
+\begin{align}
+  \cov[\tilde X, \tilde X] = (I-W)A A^T (I-W^T) = (I-W) \Sigma (I-W^T) .
+\end{align}
+
+
+\paragraph{Shape:} the plan with shape is to leave it aside, 
+and afterwards see if faster shape changes associate with regions on the tree with larger posterior prob of competition.
+
+
+\section{Inference}
+
+So, we've reduced the model to a big multivariate normal distribution,
+where all the parameters are variances.
+Now we can put priors on the variances and MCMC to get the posterior distribution.
+
+Note that the covariance matrices
+
+\end{document}
+
 
 If we normalize the $X$ by subtracting off a weighted mean across species: 
 \begin{align}
@@ -287,33 +359,3 @@ then the covariance between two observations is just
                                 &= \left( \sum_{e \in \rho \to t \cap \rho \to s} \tau_e - \sum_{e \in \rho \to t} w_e \tau_e - \sum_{e \in \rho \to s} w_e \tau_e + \sum_e w_e^2 \tau_e \right) \Sigma \\
                                 &= \left( \sum_{e \in \rho \to t \cap \rho \to s} (1-2w_e) \tau_e - \sum_{e \in s \to t} w_e \tau_e + \sum_e w_e^2 \tau_e \right) \Sigma .
 \end{align}
-
-
-There are two types of covariance matrices:
-those at the tips and those at internal edges.
-Internal edges all have the same covariance matrix $\Sigma_I$ multiplied by the branch length;
-so as in Revell \& Collar 2009, the covariance matrix between species nodes is $C \otimes \Sigma_I$,
-where $C_{ij}$ is the total time in the tree since the common ancestor of $i$ and $j$,
-and $\otimes$ is the Kronecker product.
-Those at the tips all have the same for $\Sigma_T$.
-So, if we extend the matrix $C$ to be indexed by samples, 
-so that $C_{s,t}$ gives the time in the tree between the species that $s$ and $t$ belong to;
-and let $T_{s,t} = 1$ if $s$ and $t$ are the same species, and 0 otherwise;
-then the full covariance matrix is
-\begin{align}
-    \Sigma = C \otimes \Sigma_I + T \otimes \Sigma_T .
-\end{align}
-
-\paragraph{Shape:} the plan with shape is to leave it aside, 
-and afterwards see if faster shape changes associate with regions on the tree with larger posterior prob of competition.
-
-
-\section{Inference}
-
-So, we've reduced the model to a big multivariate normal distribution,
-where all the parameters are variances.
-Now we can put priors on the variances and MCMC to get the posterior distribution.
-
-Note that the covariance matrices
-
-\end{document}

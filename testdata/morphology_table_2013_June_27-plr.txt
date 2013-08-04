@@ -1,0 +1,4 @@
+species	max_length	max_mass	predicted_testes_mass	actual_testes_mass_max	RTS	weapons
+Phocoenoides_dalli	240	200000	229.51	560	2.439980829	0
+Stenella_attenuata	257	120000	158.88	2896	18.22759315	0
+Stenella_longirostris	235	82000	120.79	2708	22.41907443	0

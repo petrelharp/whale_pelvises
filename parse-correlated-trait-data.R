@@ -1,13 +1,14 @@
 #!/usr/bin/R
 
 require(ape)
-source("correlated-traits-fns.R")
+if (!exists("scriptdir")) {scriptdir <- "."}
+source(paste(scriptdir,"correlated-traits-fns.R",sep="/"))
 
 tree_file <- "consensusTree_ALL_CETACEA.tree"
 species_tree<-read.nexus(file=tree_file)
 
 bones <- read.table("62_add_centroids.out", header=TRUE)
-bones <- droplevels( subset(bones, ! species %in% c("ORCINUS_ORCA") ) )
+bones <- droplevels( subset(bones, ! (species %in% c("ORCINUS_ORCA")) & ! (specimen == "LACM_54109") ) )
 bones <- bones[ setdiff( colnames(bones), "absolute_volume" ) ]
 
 species <- read.table("52_sexual_dimorphism.out", header=TRUE)
@@ -136,12 +137,14 @@ species.shared.brlens <- shared.branchlengths( tree, internal.lengths*(1-2*edgew
 # distances in internal branches in the tree for all pairs of nodes
 species.treedist <- treedist( tree, internal.lengths*edgeweights, descendants )
 species.treemat <- ( species.shared.brlens - species.treedist + sum(edgeweights^2 * internal.lengths) )
+rownames( species.treemat ) <- colnames( species.treemat ) <- c( tree$tip.label, paste("node",Ntip(tree)+1:Nnode(tree),sep='.') )
 
 # and, in the tips
 tip.lengths <- tree$edge.length
 tip.lengths[ - tip.edges ] <- 0
 tip.treedist <- treedist( tree, tip.lengths*edgeweights, descendants )
 sample.treemat <- ( 0 - tip.treedist + sum(edgeweights^2 * tip.lengths) )
+rownames( sample.treemat ) <- colnames( sample.treemat ) <- c( tree$tip.label, paste("node",Ntip(tree)+1:Nnode(tree),sep='.') )
 
 
 ###
