@@ -105,88 +105,95 @@ if (do.parallel) {
     mlestim1 <- optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( maxit=1000 ) )
     mlestim2 <- optim( par=initpar, fn=llfun, method="BFGS", control=list( maxit=200 ) )
     mlestim3 <- optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( ), lower=1e-3 )
+    mlestims <- list( mlestim1, mlestim2, mlestim3 )
 }
 
 mlpars <- as.data.frame( rbind( initpar, do.call( rbind, lapply(mlestims,"[[","par") ) ) )
 mlpars$ll <- apply( mlpars, 1, llfun )
 
-####
-# examine results
-mlfullmat <- make.fullmat(mlestim1$par)
+save( mlestims, file="analysis-results.RData" )
 
-source("correlated-traits-fns.R")
+if (FALSE) {
+    ####
+    # examine results
+    mlfullmat <- make.fullmat(mlestim1$par)
 
-##
-# look at residuals...
-no.lefties <- thedata
-no.lefties[,grep("left.",colnames(thedata))] <- NA
-pred.leftbones <- predgaus( as.vector(no.lefties), unlist(phylomeans)[col(thedata)], mlfullmat )
-dim(pred.leftbones) <- dim(thedata)
-resid.leftbones <- (thedata-pred.leftbones)[,grep("left.",colnames(thedata))]
+    source("correlated-traits-fns.R")
 
-### 
-# diff betweens individual's ribs:
-boneinds <- grep(".pelvic",colnames(thedata),fixed=TRUE)
-bonediffmat <- sapply( levels(whales$specimen), function (sp) {
-            side <- matrix(0,nrow=nrow(thedata),ncol=ncol(thedata))
-            side[col(thedata) == boneinds[1]] <- 1
-            side[col(thedata) == boneinds[2]] <- -1
-            out <- as.numeric( ( rownames(thedata)[row(thedata)] == sp ) ) * side
-            if( any( is.na( thedata[ out!=0 ] ) ) ) { 
-                return(NULL) 
-            } else {
-                return( out )
-            }
-        } )
-bonediffmat <- do.call(rbind,lapply(bonediffmat,as.vector))
-zdata <- thedata
-zdata[is.na(zdata)] <- 0
-bonediffs <- bonediffmat %*% as.vector( zdata )
-summary(bonediffs)
-sqrt(var(bonediffs))
+    ##
+    # look at residuals...
+    no.lefties <- thedata
+    no.lefties[,grep("left.",colnames(thedata))] <- NA
+    pred.leftbones <- predgaus( as.vector(no.lefties), unlist(phylomeans)[col(thedata)], mlfullmat )
+    dim(pred.leftbones) <- dim(thedata)
+    resid.leftbones <- (thedata-pred.leftbones)[,grep("left.",colnames(thedata))]
 
-
-ml.bonediff.covmat <- tcrossprod( bonediffmat %*% mlfullmat, bonediffmat )
-range( ml.bonediff.covmat[ row(ml.bonediff.covmat) > col(ml.bonediff.covmat) ] )
-range( diag(ml.bonediff.covmat) )
-
-bonediff.covmat <- tcrossprod( bonediffmat %*% fullmat, bonediffmat )
-range( bonediff.covmat[ row(bonediff.covmat) > col(bonediff.covmat) ] )
-range( diag(bonediff.covmat) )
+    ### 
+    # diff betweens individual's ribs:
+    boneinds <- grep(".pelvic",colnames(thedata),fixed=TRUE)
+    bonediffmat <- sapply( levels(whales$specimen), function (sp) {
+                side <- matrix(0,nrow=nrow(thedata),ncol=ncol(thedata))
+                side[col(thedata) == boneinds[1]] <- 1
+                side[col(thedata) == boneinds[2]] <- -1
+                out <- as.numeric( ( rownames(thedata)[row(thedata)] == sp ) ) * side
+                if( any( is.na( thedata[ out!=0 ] ) ) ) { 
+                    return(NULL) 
+                } else {
+                    return( out )
+                }
+            } )
+    bonediffmat <- do.call(rbind,lapply(bonediffmat,as.vector))
+    zdata <- thedata
+    zdata[is.na(zdata)] <- 0
+    bonediffs <- bonediffmat %*% as.vector( zdata )
+    summary(bonediffs)
+    sqrt(var(bonediffs))
 
 
+    ml.bonediff.covmat <- tcrossprod( bonediffmat %*% mlfullmat, bonediffmat )
+    range( ml.bonediff.covmat[ row(ml.bonediff.covmat) > col(ml.bonediff.covmat) ] )
+    range( diag(ml.bonediff.covmat) )
 
-subsp <- c("STENELLA_LONGIROSTRIS","STENELLA_FRONTALIS","STENELLA_COERULEOALBA","DELPHINUS_DELPHIS")
-subind <- c( match( subsp, rownames(thedata) ), match( whales$specimen[ whales$species %in% subsp ], rownames(thedata) ) )
-submatind <- as.vector( outer( subind, (0:(ncol(thedata)-1))*nrow(thedata), "+" ) )
+    bonediff.covmat <- tcrossprod( bonediffmat %*% fullmat, bonediffmat )
+    range( bonediff.covmat[ row(bonediff.covmat) > col(bonediff.covmat) ] )
+    range( diag(bonediff.covmat) )
 
-image( Matrix( cov2cor( mlfullmat ) ) )
-image( Matrix( cov2cor( mlfullmat[submatind,submatind] ) ) )
 
-image( Matrix( cov2cor( fullmat ) ) )
-image( Matrix( cov2cor( fullmat[submatind,submatind] ) ) )
 
-layout(matrix(1:36,nrow=6))
-par(mar=c(0,0,0,0)+.1)
-for (i in 0:5) for (j in 0:5) {
-    i.thisind <- submatind[ (submatind-1)%%6 == i ]
-    j.thisind <- submatind[ (submatind-1)%%6 == j ]
-    image( mlfullmat[i.thisind,j.thisind] )
+    subsp <- c("STENELLA_LONGIROSTRIS","STENELLA_FRONTALIS","STENELLA_COERULEOALBA","DELPHINUS_DELPHIS")
+    subind <- c( match( subsp, rownames(thedata) ), match( whales$specimen[ whales$species %in% subsp ], rownames(thedata) ) )
+    submatind <- as.vector( outer( subind, (0:(ncol(thedata)-1))*nrow(thedata), "+" ) )
+
+    image( Matrix( cov2cor( mlfullmat ) ) )
+    image( Matrix( cov2cor( mlfullmat[submatind,submatind] ) ) )
+
+    image( Matrix( cov2cor( fullmat ) ) )
+    image( Matrix( cov2cor( fullmat[submatind,submatind] ) ) )
+
+    layout(matrix(1:36,nrow=6))
+    par(mar=c(0,0,0,0)+.1)
+    for (i in 0:5) for (j in 0:5) {
+        i.thisind <- submatind[ (submatind-1)%%6 == i ]
+        j.thisind <- submatind[ (submatind-1)%%6 == j ]
+        image( mlfullmat[i.thisind,j.thisind] )
+    }
+
+
+    mlchol <- chol(mlfullmat[havedata,havedata])
+    normresids <- backsolve( mlchol, datavec )
+    layout(t(1:2))
+    plot( normresids )
+    outliers <- identify( normresids )
+    outliercoef <- mlchol[outliers,]
+
+    plot( thedata[havedata] )
+    identify( thedata[havedata], labels=paste(rownames(thedata)[row(thedata)],colnames(thedata)[col(thedata)],sep='.')[havedata] )
 }
-
-
-mlchol <- chol(mlfullmat[havedata,havedata])
-normresids <- backsolve( mlchol, datavec )
-layout(t(1:2))
-plot( normresids )
-outliers <- identify( normresids )
-outliercoef <- mlchol[outliers,]
-
-plot( thedata[havedata] )
-identify( thedata[havedata], labels=paste(rownames(thedata)[row(thedata)],colnames(thedata)[col(thedata)],sep='.')[havedata] )
 
 #####
 # MCMC
+
+if (FALSE) {
 
 require(mcmc)
 # return positive log-likelihood times posterior
@@ -206,6 +213,8 @@ if (do.parallel) {
     mcrun <- metrop( lud, initial=initpar, nbatch=100, blen=1, scale=prior.means/10 )
 }
 
+}
+
 #### TO-DO:
 ## SUBTRACT OFF MEAN TRAIT VALUES
 ## NORMALIZE BY SEXUAL DIMORPHISM
@@ -214,15 +223,6 @@ if (do.parallel) {
 ####
 # testing:
 
-untf.data <- backsolve( fchol, norm.datavec )
-badones <- which(abs(untf.data)>800)
-fchol.badones <- backsolve( fchol, sapply( badones, function(k) as.numeric( ((1:nrow(fchol))==k) ) ) )
-lapply(1:ncol(fchol.badones), function(k) {
-        these <- which( abs(fchol.badones[,k]) > .1 )
-        x <- which( havedata, arr.ind=TRUE )[these,]
-        dim(x) <- c(length(x)/2,2)
-        cbind( rownames(thedata)[x[,1]], colnames(thedata)[x[,2]] )
-    } )
 
 if (FALSE) {  # inference simulating under the model works:
     require(mvtnorm)
