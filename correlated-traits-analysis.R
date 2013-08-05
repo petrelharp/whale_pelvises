@@ -8,9 +8,9 @@ require(Matrix)
 load("thedata-and-covmatrices.Rdata")
 havedata <- !is.na(thedata)
 ## we only really need this components of (I-W):
-## nfac <- norm.factor[1:n.tree.tips,1:n.tree.tips]
+## pmat <- projmatrix[1:n.tree.tips,1:n.tree.tips]
 # ... but leave well enough along:
-nfac <- norm.factor
+pmat <- projmatrix
 
 # associate P and Q with each internal branch of the tree:
 #  these parameters are: theta = sigmaL, betaT, betaP, sigmaR, sigmaP.
@@ -59,7 +59,9 @@ make.fullmat <- function (par) {
     species.covmat <- as.matrix( tcrossprod(species.transmat) )
     sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
     fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
-    return( tcrossprod( nfac %*% fullmat, nfac ) )
+    # will want to use 
+    # submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
+    return( fullmat )
 }
 
 ### initial values
@@ -80,16 +82,20 @@ initpar <- c(
 # construct full matrix
 fullmat <- make.fullmat( initpar )
 colnames( fullmat ) <- rownames( fullmat ) <- outer( rownames(thedata), colnames(thedata), paste, sep='.' )
-fchol <- chol( fullmat[ havedata, havedata ] )
+stopifnot( all( eigen( fullmat[havedata,havedata] )$values > -1e-8 ) )
+submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
+fchol <- chol( submat )
 
 datavec <- thedata[havedata]
 # return negative log-likelihood for gaussian:
 #  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, delta
 llfun <- function (par) {
-    fchol <- chol(make.fullmat(par)[havedata,havedata])
+    fullmat <- make.fullmat( par )
+    submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
+    fchol <- chol(submat)
     return( sum( backsolve( fchol, datavec )^2 )/2 + sum(log(diag(fchol))) ) 
 }
-
+stopifnot( is.finite(llfun(initpar)) )
 
 save(make.fullmat, initpar, thedata, species.Pmat, species.Qmat, sample.Pmat, sample.Qmat, sample.Pcoef, species.transmat, sample.transmat, file="mcmc-setup.RData")
 
@@ -118,6 +124,7 @@ if (!file.exists("analysis-results.RData")) {
 if (FALSE) {
     ####
     # examine results
+    load("analysis-results.RData")
 
     mlpars <- as.data.frame( rbind( initpar, do.call( rbind, lapply(mlestims,"[[","par") ) ) )
     mlpars$ll <- apply( mlpars, 1, llfun )
@@ -212,6 +219,6 @@ if (FALSE) {  # inference simulating under the model works:
         fchol <- chol(make.fullmat(par)[havedata,havedata])
         return( sum( backsolve( fchol, fakedata )^2 )/2 + sum(log(diag(fchol)))/2 ) 
     }
-    fake.mlestim <- optim( par=initpar, fn=fake.llfun, method="L-BFGS-B", control=list( fnscale=1e7, trace=3 ), lower=1e-3 )
+    fake.mlestim <- optim( par=initpar, fn=fake.llfun, method="L-BFGS-B", control=list( fnscale=1e3, trace=3 ), lower=1e-3 )
     rbind( initpar, fake.mlestim$par ) # looks good
 }

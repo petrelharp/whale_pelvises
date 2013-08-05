@@ -110,13 +110,15 @@ adjtree$edge.length[tip.edges] <- (.05/3.16)^2  # reasonable value from initial-
 phylomeans <- lapply( 1:ncol(orig.data), function(k) phylomean(orig.data[1:Ntip(tree),k], tree=adjtree) )
 names(phylomeans) <- colnames(orig.data)
 tipweights <- lapply( phylomeans, attr, "weights" )
+
 # construct (I-W) term that multiplies the normalized covariance matrix
 #  note: indexed by ( variables x tips+nodes )
-weightmat <- do.call( rbind, lapply( seq_along(tipweights), function (k) {
+weightmat <- do.call( cbind, lapply( seq_along(tipweights), function (k) {
         c( rep(0,(k-1)*nrow(orig.data)), c(tipweights[[k]],rep(0,Nnode(tree))), rep(0,(ncol(orig.data)-k)*nrow(orig.data)) )
     } ) )
-weightmat <- weightmat[ rep(1:ncol(orig.data),each=nrow(orig.data)), ]
-norm.factor <- ( diag( length(orig.data) ) - weightmat )
+# here are the W and I-W matrices
+weightmat <- weightmat[ , rep(1:ncol(orig.data),each=nrow(orig.data)) ]
+norm.factor <- ( diag( length(orig.data) ) - t(weightmat) )
 
 # normalize by "phylogenetic" mean
 thedata <- sweep( orig.data, 2, unlist(phylomeans), "-" )
@@ -124,6 +126,13 @@ thedata <- sweep( orig.data, 2, unlist(phylomeans), "-" )
 tmp <- norm.factor %*% as.vector(ifelse( is.na(orig.data), 0, orig.data ))
 stopifnot( all.equal( as.vector(tmp)[!is.na(thedata)], as.vector(thedata)[!is.na(thedata)] ) )
 
+# for likelihood computation, will project data onto the smaller-dimension space:
+#  where we have data, and phylomean-centered
+center.matrix <- norm.factor[havedata,]
+projmatrix.qr <- qr( t(center.matrix) )
+projmatrix <- qr.Q( projmatrix.qr )[,1:projmatrix.qr$rank]
+
+stopifnot( all.equal( crossprod( projmatrix , as.vector(ifelse( is.na(orig.data), 0, orig.data )) ), crossprod( projmatrix ,  as.vector(ifelse( is.na(thedata), 0, thedata )) ) ) )
 
 #####
 # covariance matrices:
@@ -153,7 +162,7 @@ n.tree.tips <- Ntip(tree)
 
 ###
 # write out
-save( species.treemat, sample.treemat, norm.factor, n.tree.tips, thedata, phylomeans, file="thedata-and-covmatrices.Rdata" )
+save( species.treemat, sample.treemat, projmatrix, n.tree.tips, thedata, phylomeans, file="thedata-and-covmatrices.Rdata" )
 
 # write.csv( treedist, file="all-sample-treedist.csv", row.names=FALSE)
 # write.csv( tipdist, file="all-sample-tipdist.csv", row.names=FALSE)
