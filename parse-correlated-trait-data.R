@@ -80,18 +80,18 @@ stopifnot( ! ( rootnode %in% edge.indices ) )
 ###
 # Get the data all together: [i,j] is j-th variable for i-th node in the tree
 # again: the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
-thedata <- matrix( c(NA), nrow=Nnode(tree)+Ntip(tree), ncol=6 )
-colnames(thedata) <- c("bodylength","actual_testes_mass_max","left.rib","right.rib","left.pelvic","right.pelvic")
-rownames(thedata) <- c( tree$tip.label, paste("NA",1:Nnode(tree),sep='.') )
+orig.data <- matrix( c(NA), nrow=Nnode(tree)+Ntip(tree), ncol=6 )
+colnames(orig.data) <- c("bodylength","actual_testes_mass_max","left.rib","right.rib","left.pelvic","right.pelvic")
+rownames(orig.data) <- c( tree$tip.label, paste("NA",1:Nnode(tree),sep='.') )
 # species obs
-thedata[species.nodes,intersect(names(species),colnames(thedata))] <- as.matrix( species[match(rownames(thedata)[species.nodes],species$species),intersect(names(species),colnames(thedata))] )
-thedata[sample.nodes,intersect(names(whales),colnames(thedata))] <- as.matrix( whales[match(rownames(thedata)[sample.nodes],whales$specimen),intersect(names(whales),colnames(thedata))] )
-thedata <- log(thedata)
-havedata <- !is.na(thedata)
+orig.data[species.nodes,intersect(names(species),colnames(orig.data))] <- as.matrix( species[match(rownames(orig.data)[species.nodes],species$species),intersect(names(species),colnames(orig.data))] )
+orig.data[sample.nodes,intersect(names(whales),colnames(orig.data))] <- as.matrix( whales[match(rownames(orig.data)[sample.nodes],whales$specimen),intersect(names(whales),colnames(orig.data))] )
+orig.data <- log(orig.data)
+havedata <- !is.na(orig.data)
 
 if (FALSE) {  # DO THIS LATER
     # normalize by sexual dimorphism
-    data.specimens <- match( rownames(thedata), whales$specimen )
+    data.specimens <- match( rownames(orig.data), whales$specimen )
     females <- ( whales$sex[ data.specimens ] == "F" )
     data.species <- whales$species[match(data.specimens,whales$specimen)]
     renorms <- species$sexual_size_dimorphism[match(data.species,species$species)]
@@ -107,12 +107,22 @@ if (FALSE) {  # DO THIS LATER
 adjtree <- tree
 adjtree$edge.length[tip.edges] <- (.05/3.16)^2  # reasonable value from initial-values.R
 
-phylomeans <- lapply( 1:ncol(thedata), function(k) phylomean(thedata[1:Ntip(tree),k], tree=adjtree) )
-names(phylomeans) <- colnames(thedata)
+phylomeans <- lapply( 1:ncol(orig.data), function(k) phylomean(orig.data[1:Ntip(tree),k], tree=adjtree) )
+names(phylomeans) <- colnames(orig.data)
 tipweights <- lapply( phylomeans, attr, "weights" )
+# construct (I-W) term that multiplies the normalized covariance matrix
+#  note: indexed by ( variables x tips+nodes )
+weightmat <- do.call( rbind, lapply( seq_along(tipweights), function (k) {
+        c( rep(0,(k-1)*nrow(orig.data)), c(tipweights[[k]],rep(0,Nnode(tree))), rep(0,(ncol(orig.data)-k)*nrow(orig.data)) )
+    } ) )
+weightmat <- weightmat[ rep(1:ncol(orig.data),each=nrow(orig.data)), ]
+norm.factor <- ( diag( length(orig.data) ) - weightmat )
 
 # normalize by "phylogenetic" mean
-thedata <- sweep( thedata, 2, unlist(phylomeans), "-" )
+thedata <- sweep( orig.data, 2, unlist(phylomeans), "-" )
+# check this
+tmp <- norm.factor %*% as.vector(ifelse( is.na(orig.data), 0, orig.data ))
+stopifnot( all.equal( as.vector(tmp)[!is.na(thedata)], as.vector(thedata)[!is.na(thedata)] ) )
 
 
 #####
@@ -137,13 +147,6 @@ dzeros <- diag(sample.treemat)==0
 stopifnot( any( sample.treemat[dzeros,dzeros] < 1e-8 ) )
 stopifnot(all(abs(cov2cor(sample.treemat[!dzeros,!dzeros]))<=1+1e-8))
 
-# construct (I-W) term that multiplies the normalized covariance matrix
-#  note: indexed by ( variables x tips+nodes )
-weightmat <- do.call( rbind, lapply( seq_along(tipweights), function (k) {
-        c( rep(0,(k-1)*nrow(thedata)), c(tipweights[[k]],rep(0,Nnode(tree))), rep(0,(ncol(thedata)-k)*nrow(thedata)) )
-    } ) )
-weightmat <- weightmat[ rep(1:ncol(thedata),each=nrow(thedata)) ]
-norm.factor <- ( diag( length(thedata) ) - weightmat )
 
 # this will come in handy:
 n.tree.tips <- Ntip(tree)
