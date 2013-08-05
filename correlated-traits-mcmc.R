@@ -1,0 +1,32 @@
+#!/usr/bin/R
+
+#####
+# MCMC
+
+load("mcmc-setup.RData")
+load("thedata-and-covmatrices.Rdata")
+havedata <- !is.na(thedata)
+datavec <- thedata[havedata]
+## we only really need this components of (I-W):
+## nfac <- norm.factor[1:n.tree.tips,1:n.tree.tips]
+# ... but leave well enough along:
+nfac <- norm.factor
+
+require(mcmc)
+
+# return positive log-likelihood times posterior
+#  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, delta
+# priors on these are exponential
+prior.means <- c(3,3,3,3,3,.2,.2,.2,.2,.2,1)
+lud <- function (par) {
+    if (any(par<=0)) { return( -Inf ) }
+    fchol <- chol(make.fullmat(par)[havedata,havedata])
+    return( (-1) * sum( par * prior.means ) - sum( backsolve( fchol, datavec )^2 )/2 - sum(log(diag(fchol))) ) 
+}
+
+run.id <- sample.int(9999,size=1)
+set.seed(run.id)
+
+mcrun <- metrop( lud, initial=initpar, nbatch=6000, blen=1, scale=prior.means/30 )
+
+save(mcrun, run.id, prior.means, lud, file=paste("mcmc-run-",run.id,".RData",sep=''))

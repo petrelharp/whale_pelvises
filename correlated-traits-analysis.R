@@ -90,32 +90,38 @@ llfun <- function (par) {
     return( sum( backsolve( fchol, datavec )^2 )/2 + sum(log(diag(fchol))) ) 
 }
 
-do.parallel <- TRUE
-if (do.parallel) {
-    require(parallel)
-    pjobs <-  list( mcparallel( { optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( maxit=1000 ) ) } ),
-            mcparallel( { optim( par=initpar, fn=llfun, method="BFGS", control=list( maxit=200 ) ) } ),
-            mcparallel( { optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( trace=3 ), lower=1e-3 ) } )
-        )
-    mlestims <- mccollect( pjobs, wait=TRUE )
-    mlestim1 <- mlestims[[1]]
-    mlestim2 <- mlestims[[2]]
-    mlestim3 <- mlestims[[3]]
-} else {
-    mlestim1 <- optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( maxit=1000 ) )
-    mlestim2 <- optim( par=initpar, fn=llfun, method="BFGS", control=list( maxit=200 ) )
-    mlestim3 <- optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( ), lower=1e-3 )
-    mlestims <- list( mlestim1, mlestim2, mlestim3 )
+
+save(make.fullmat, initpar, thedata, species.Pmat, species.Qmat, sample.Pmat, sample.Qmat, sample.Pcoef, species.transmat, sample.transmat, file="mcmc-setup.RData")
+
+if (!file.exists("analysis-results.RData")) {
+    do.parallel <- TRUE
+    if (do.parallel) {
+        require(parallel)
+        pjobs <-  list( mcparallel( { optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( maxit=1000 ) ) } ),
+                mcparallel( { optim( par=initpar, fn=llfun, method="BFGS", control=list( maxit=200 ) ) } ),
+                mcparallel( { optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( trace=3 ), lower=1e-3 ) } )
+            )
+        mlestims <- mccollect( pjobs, wait=TRUE )
+        mlestim1 <- mlestims[[1]]
+        mlestim2 <- mlestims[[2]]
+        mlestim3 <- mlestims[[3]]
+    } else {
+        mlestim1 <- optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( maxit=1000 ) )
+        mlestim2 <- optim( par=initpar, fn=llfun, method="BFGS", control=list( maxit=200 ) )
+        mlestim3 <- optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( ), lower=1e-3 )
+        mlestims <- list( mlestim1, mlestim2, mlestim3 )
+    }
+
+    save( mlestims, file="analysis-results.RData" )
 }
-
-save( mlestims, file="analysis-results.RData" )
-
-mlpars <- as.data.frame( rbind( initpar, do.call( rbind, lapply(mlestims,"[[","par") ) ) )
-mlpars$ll <- apply( mlpars, 1, llfun )
 
 if (FALSE) {
     ####
     # examine results
+
+    mlpars <- as.data.frame( rbind( initpar, do.call( rbind, lapply(mlestims,"[[","par") ) ) )
+    mlpars$ll <- apply( mlpars, 1, llfun )
+
     mlfullmat <- make.fullmat(mlestim1$par)
 
     source("correlated-traits-fns.R")
@@ -188,31 +194,6 @@ if (FALSE) {
 
     plot( thedata[havedata] )
     identify( thedata[havedata], labels=paste(rownames(thedata)[row(thedata)],colnames(thedata)[col(thedata)],sep='.')[havedata] )
-}
-
-#####
-# MCMC
-
-if (FALSE) {
-
-require(mcmc)
-# return positive log-likelihood times posterior
-#  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, delta
-# priors on these are exponential
-prior.means <- c(3,3,3,3,3,.2,.2,.2,.2,.2,1)
-lud <- function (par) {
-    if (any(par<=0)) { return( -Inf ) }
-    fchol <- chol(make.fullmat(par)[havedata,havedata])
-    return( (-1) * sum( par * prior.means ) - sum( backsolve( fchol, norm.datavec )^2 )/2 - sum(log(diag(fchol))) ) 
-}
-
-if (do.parallel) {
-    mjob <- mcparallel( metrop( lud, initial=initpar, nbatch=100, blen=1, scale=prior.means/10 ) )
-    mcrun <- mccollect( mjob, wait=TRUE )
-} else {
-    mcrun <- metrop( lud, initial=initpar, nbatch=100, blen=1, scale=prior.means/10 )
-}
-
 }
 
 #### TO-DO:
