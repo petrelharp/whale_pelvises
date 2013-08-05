@@ -93,18 +93,18 @@ llfun <- function (par) {
 do.parallel <- TRUE
 if (do.parallel) {
     require(parallel)
-    pjobs <-  list( mcparallel( { optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( fnscale=1e7, trace=3, maxit=1000 ) ) } ),
-            mcparallel( { optim( par=initpar, fn=llfun, method="BFGS", control=list( fnscale=1e7, trace=3, maxit=200 ) ) } ),
-            mcparallel( { optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( fnscale=1e7, trace=3 ), lower=1e-3 ) } )
+    pjobs <-  list( mcparallel( { optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( maxit=1000 ) ) } ),
+            mcparallel( { optim( par=initpar, fn=llfun, method="BFGS", control=list( maxit=200 ) ) } ),
+            mcparallel( { optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( trace=3 ), lower=1e-3 ) } )
         )
     mlestims <- mccollect( pjobs, wait=TRUE )
     mlestim1 <- mlestims[[1]]
     mlestim2 <- mlestims[[2]]
     mlestim3 <- mlestims[[3]]
 } else {
-    mlestim1 <- optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( fnscale=1e7, trace=3 ) )
-    mlestim2 <- optim( par=initpar, fn=llfun, method="BFGS", control=list( fnscale=1e7, trace=3 ) )
-    mlestim3 <- optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( fnscale=1e7, trace=3 ), lower=1e-3 )
+    mlestim1 <- optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( maxit=1000 ) )
+    mlestim2 <- optim( par=initpar, fn=llfun, method="BFGS", control=list( maxit=200 ) )
+    mlestim3 <- optim( par=initpar, fn=llfun, method="L-BFGS-B", control=list( ), lower=1e-3 )
 }
 
 mlpars <- as.data.frame( rbind( initpar, do.call( rbind, lapply(mlestims,"[[","par") ) ) )
