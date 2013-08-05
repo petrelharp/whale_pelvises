@@ -108,10 +108,10 @@ if (do.parallel) {
     mlestims <- list( mlestim1, mlestim2, mlestim3 )
 }
 
+save( mlestims, file="analysis-results.RData" )
+
 mlpars <- as.data.frame( rbind( initpar, do.call( rbind, lapply(mlestims,"[[","par") ) ) )
 mlpars$ll <- apply( mlpars, 1, llfun )
-
-save( mlestims, file="analysis-results.RData" )
 
 if (FALSE) {
     ####
