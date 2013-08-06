@@ -7,7 +7,6 @@ require(Matrix)
 # thedata <- as.matrix( read.csv( file="all-data-rejiggered.csv", header=TRUE, row.names=1 ) )
 load("thedata-and-covmatrices.Rdata")
 havedata <- !is.na(thedata)
-stopifnot( all( is.na(thedata) == is.na(normdata) ) )
 ## we only really need this components of (I-W):
 ## pmat <- projmatrix[1:n.tree.tips,1:n.tree.tips]
 # ... but leave well enough along:
@@ -84,7 +83,7 @@ initpar <- c(
 fullmat <- make.fullmat( initpar )
 colnames( fullmat ) <- rownames( fullmat ) <- outer( rownames(thedata), colnames(thedata), paste, sep='.' )
 stopifnot( all( eigen( fullmat[havedata,havedata] )$values > -1e-8 ) )
-submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
+submat <- ( ( crossprod( pmat, fullmat[havedata,havedata]) %*% pmat ) )
 fchol <- chol( submat )
 
 datavec <- normdata

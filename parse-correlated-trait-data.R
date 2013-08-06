@@ -80,18 +80,18 @@ stopifnot( ! ( rootnode %in% edge.indices ) )
 ###
 # Get the data all together: [i,j] is j-th variable for i-th node in the tree
 # again: the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
-orig.data <- matrix( c(NA), nrow=Nnode(tree)+Ntip(tree), ncol=6 )
-colnames(orig.data) <- c("bodylength","actual_testes_mass_max","left.rib","right.rib","left.pelvic","right.pelvic")
-rownames(orig.data) <- c( tree$tip.label, paste("NA",1:Nnode(tree),sep='.') )
+thedata <- matrix( c(NA), nrow=Nnode(tree)+Ntip(tree), ncol=6 )
+colnames(thedata) <- c("bodylength","actual_testes_mass_max","left.rib","right.rib","left.pelvic","right.pelvic")
+rownames(thedata) <- c( tree$tip.label, paste("NA",1:Nnode(tree),sep='.') )
 # species obs
-orig.data[species.nodes,intersect(names(species),colnames(orig.data))] <- as.matrix( species[match(rownames(orig.data)[species.nodes],species$species),intersect(names(species),colnames(orig.data))] )
-orig.data[sample.nodes,intersect(names(whales),colnames(orig.data))] <- as.matrix( whales[match(rownames(orig.data)[sample.nodes],whales$specimen),intersect(names(whales),colnames(orig.data))] )
-orig.data <- log(orig.data)
-havedata <- !is.na(orig.data)
+thedata[species.nodes,intersect(names(species),colnames(thedata))] <- as.matrix( species[match(rownames(thedata)[species.nodes],species$species),intersect(names(species),colnames(thedata))] )
+thedata[sample.nodes,intersect(names(whales),colnames(thedata))] <- as.matrix( whales[match(rownames(thedata)[sample.nodes],whales$specimen),intersect(names(whales),colnames(thedata))] )
+thedata <- log(thedata)
+havedata <- !is.na(thedata)
 
 if (FALSE) {  # DO THIS LATER
     # normalize by sexual dimorphism
-    data.specimens <- match( rownames(orig.data), whales$specimen )
+    data.specimens <- match( rownames(thedata), whales$specimen )
     females <- ( whales$sex[ data.specimens ] == "F" )
     data.species <- whales$species[match(data.specimens,whales$specimen)]
     renorms <- species$sexual_size_dimorphism[match(data.species,species$species)]
@@ -107,22 +107,19 @@ if (FALSE) {  # DO THIS LATER
 adjtree <- tree
 adjtree$edge.length[tip.edges] <- (.05/3.16)^2  # reasonable value from initial-values.R
 
-phylomeans <- lapply( 1:ncol(orig.data), function(k) phylomean(orig.data[1:Ntip(tree),k], tree=adjtree) )
-names(phylomeans) <- colnames(orig.data)
+phylomeans <- lapply( 1:ncol(thedata), function(k) phylomean(thedata[1:Ntip(tree),k], tree=adjtree) )
+names(phylomeans) <- colnames(thedata)
 tipweights <- lapply( phylomeans, attr, "weights" )
 
 # construct (I-W) term that multiplies the normalized covariance matrix
 #  note: indexed by ( variables x tips+nodes )
 weightmat <- do.call( cbind, lapply( seq_along(tipweights), function (k) {
-        c( rep(0,(k-1)*nrow(orig.data)), c(tipweights[[k]],rep(0,Nnode(tree))), rep(0,(ncol(orig.data)-k)*nrow(orig.data)) )
+        c( rep(0,(k-1)*nrow(thedata)), c(tipweights[[k]],rep(0,Nnode(tree))), rep(0,(ncol(thedata)-k)*nrow(thedata)) )
     } ) )
 # here are the W and I-W matrices
-weightmat <- weightmat[ , rep(1:ncol(orig.data),each=nrow(orig.data)) ]
-norm.factor <- ( diag( length(orig.data) ) - t(weightmat) )
+weightmat <- weightmat[ , rep(1:ncol(thedata),each=nrow(thedata)) ]
+norm.factor <- ( diag( length(thedata) ) - t(weightmat) )
 
-# check this
-tmp <- norm.factor %*% as.vector(ifelse( is.na(orig.data), 0, orig.data ))
-stopifnot( all.equal( as.vector(tmp)[!is.na(thedata)], as.vector(thedata)[!is.na(thedata)] ) )
 
 # for likelihood computation, will project data onto the smaller-dimension space:
 #  where we have data, and phylomean-centered
@@ -130,13 +127,19 @@ center.matrix <- norm.factor[havedata,]
 projmatrix.qr <- qr( t(center.matrix) )
 projmatrix <- qr.Q( projmatrix.qr )[,1:projmatrix.qr$rank]
 
-stopifnot( all.equal( crossprod( projmatrix , as.vector(ifelse( is.na(orig.data), 0, orig.data )) ), crossprod( projmatrix ,  as.vector(ifelse( is.na(orig.data), 0, sweep( orig.data, 2, unlist(phylomeans), "-" ) )) ) ) )
+# check this
+tmp <- norm.factor %*% as.vector(ifelse( is.na(thedata), 0, thedata ))
+tmp2 <- sweep( thedata, 2, unlist(phylomeans), "-" )
+stopifnot( all.equal( as.vector(tmp)[!is.na(tmp2)], as.vector(tmp2)[!is.na(tmp2)] ) )
+stopifnot( all.equal( crossprod( projmatrix , as.vector(ifelse( is.na(thedata), 0, thedata )) ), crossprod( projmatrix ,  as.vector(ifelse( is.na(thedata), 0, tmp2 )) ) ) )
 
 # normalize the data:
 # ... but rather than subtrating the "phylogenetic" mean
-#   thedata <- sweep( orig.data, 2, unlist(phylomeans), "-" )
+#   normdata <- sweep( thedata, 2, unlist(phylomeans), "-" )
 # project into the image of (I-W).
-thedata <- crossprod( projmatrix, orig.data )
+stopifnot( sum(abs( projmatrix[!havedata,]) ) < 1e-8 )  # should assign zero weight to missing values
+sub.projmatrix <- projmatrix[havedata,]
+normdata <- crossprod( sub.projmatrix, thedata[havedata] )
 
 #####
 # covariance matrices:
@@ -166,18 +169,18 @@ n.tree.tips <- Ntip(tree)
 
 ###
 # write out
-save( species.treemat, sample.treemat, projmatrix, n.tree.tips, thedata, phylomeans, file="thedata-and-covmatrices.Rdata" )
+save( species.treemat, sample.treemat, projmatrix, n.tree.tips, thedata, normdata, phylomeans, file="thedata-and-covmatrices.Rdata" )
 
 # write.csv( treedist, file="all-sample-treedist.csv", row.names=FALSE)
 # write.csv( tipdist, file="all-sample-tipdist.csv", row.names=FALSE)
-# write.csv( thedata, file="all-data-rejiggered.csv", row.names=TRUE)
+# write.csv( normdata, file="all-data-rejiggered.csv", row.names=TRUE)
 # write.csv( phylomeans, file="phylomeans.csv", row.names=FALSE )
 # write.tree( tree, file="all-sample-tree.R")
 
 
 if (FALSE) {  # OOPS THERE IS AN EASIER WAY THAN THE FOLLOWING
     # "phylogenetic" mean: use imputed data to deal with missing values
-    imputed.data <- thedata
+    imputed.data <- normdata
     for (sp in levels(whales$species)) {
         is.sp <- ( rownames(imputed.data) == sp ) | ( whales$species[ match( rownames(imputed.data), whales$specimen ) ] == sp )
         is.sp[ is.na(is.sp) ] <- FALSE
@@ -192,7 +195,7 @@ if (FALSE) {  # OOPS THERE IS AN EASIER WAY THAN THE FOLLOWING
 
     # and, the weights of each species in the phylogenetic mean:
     # normalize by "phylogenetic" mean
-    thedata <- sweep( thedata, 2, unlist(phylomeans), "-" )
+    normdata <- sweep( normdata, 2, unlist(phylomeans), "-" )
 
 
 
