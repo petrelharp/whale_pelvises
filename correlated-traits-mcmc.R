@@ -7,11 +7,7 @@ require(Matrix)
 load("mcmc-setup.RData")
 load("thedata-and-covmatrices.Rdata")
 havedata <- !is.na(thedata)
-datavec <- thedata[havedata]
-## we only really need this components of (I-W):
-## nfac <- norm.factor[1:n.tree.tips,1:n.tree.tips]
-# ... but leave well enough along:
-nfac <- norm.factor
+datavec <- normdata
 
 require(mcmc)
 
@@ -21,7 +17,9 @@ require(mcmc)
 prior.means <- c(3,3,3,3,3,.2,.2,.2,.2,.2,1)
 lud <- function (par) {
     if (any(par<=0)) { return( -Inf ) }
-    fchol <- chol(make.fullmat(par)[havedata,havedata])
+    fullmat <- make.fullmat( par )[havedata,havedata]
+    submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
+    fchol <- chol(submat)
     return( (-1) * sum( par * prior.means ) - sum( backsolve( fchol, datavec )^2 )/2 - sum(log(diag(fchol))) ) 
 }
 

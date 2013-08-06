@@ -7,10 +7,11 @@ require(Matrix)
 # thedata <- as.matrix( read.csv( file="all-data-rejiggered.csv", header=TRUE, row.names=1 ) )
 load("thedata-and-covmatrices.Rdata")
 havedata <- !is.na(thedata)
+stopifnot( all( is.na(thedata) == is.na(normdata) ) )
 ## we only really need this components of (I-W):
 ## pmat <- projmatrix[1:n.tree.tips,1:n.tree.tips]
 # ... but leave well enough along:
-pmat <- projmatrix
+pmat <- projmatrix[havedata,]
 
 # associate P and Q with each internal branch of the tree:
 #  these parameters are: theta = sigmaL, betaT, betaP, sigmaR, sigmaP.
@@ -86,18 +87,18 @@ stopifnot( all( eigen( fullmat[havedata,havedata] )$values > -1e-8 ) )
 submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
 fchol <- chol( submat )
 
-datavec <- thedata[havedata]
+datavec <- normdata
 # return negative log-likelihood for gaussian:
 #  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, delta
 llfun <- function (par) {
-    fullmat <- make.fullmat( par )
+    fullmat <- make.fullmat( par )[havedata,havedata]
     submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
     fchol <- chol(submat)
     return( sum( backsolve( fchol, datavec )^2 )/2 + sum(log(diag(fchol))) ) 
 }
 stopifnot( is.finite(llfun(initpar)) )
 
-save(make.fullmat, initpar, thedata, species.Pmat, species.Qmat, sample.Pmat, sample.Qmat, sample.Pcoef, species.transmat, sample.transmat, file="mcmc-setup.RData")
+save(make.fullmat, initpar, thedata, normdata, species.Pmat, species.Qmat, sample.Pmat, sample.Qmat, sample.Pcoef, species.transmat, sample.transmat, file="mcmc-setup.RData")
 
 if (!file.exists("analysis-results.RData")) {
     do.parallel <- TRUE
