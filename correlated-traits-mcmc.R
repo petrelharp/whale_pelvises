@@ -2,6 +2,7 @@
 
 #####
 # MCMC
+require(Matrix)
 
 load("mcmc-setup.RData")
 load("thedata-and-covmatrices.Rdata")
@@ -27,6 +28,10 @@ lud <- function (par) {
 run.id <- sample.int(9999,size=1)
 set.seed(run.id)
 
-mcrun <- metrop( lud, initial=initpar, nbatch=6000, blen=1, scale=prior.means/30 )
+if (interactive()) {
+    mcrun <- metrop( lud, initial=initpar, nbatch=10, blen=1, scale=prior.means/30 )
+} else {
+    mcrun <- metrop( lud, initial=initpar, nbatch=6000, blen=1, scale=prior.means/30 )
+}
 
 save(mcrun, run.id, prior.means, lud, file=paste("mcmc-run-",run.id,".RData",sep=''))

@@ -120,8 +120,6 @@ weightmat <- do.call( cbind, lapply( seq_along(tipweights), function (k) {
 weightmat <- weightmat[ , rep(1:ncol(orig.data),each=nrow(orig.data)) ]
 norm.factor <- ( diag( length(orig.data) ) - t(weightmat) )
 
-# normalize by "phylogenetic" mean
-thedata <- sweep( orig.data, 2, unlist(phylomeans), "-" )
 # check this
 tmp <- norm.factor %*% as.vector(ifelse( is.na(orig.data), 0, orig.data ))
 stopifnot( all.equal( as.vector(tmp)[!is.na(thedata)], as.vector(thedata)[!is.na(thedata)] ) )
@@ -132,7 +130,13 @@ center.matrix <- norm.factor[havedata,]
 projmatrix.qr <- qr( t(center.matrix) )
 projmatrix <- qr.Q( projmatrix.qr )[,1:projmatrix.qr$rank]
 
-stopifnot( all.equal( crossprod( projmatrix , as.vector(ifelse( is.na(orig.data), 0, orig.data )) ), crossprod( projmatrix ,  as.vector(ifelse( is.na(thedata), 0, thedata )) ) ) )
+stopifnot( all.equal( crossprod( projmatrix , as.vector(ifelse( is.na(orig.data), 0, orig.data )) ), crossprod( projmatrix ,  as.vector(ifelse( is.na(orig.data), 0, sweep( orig.data, 2, unlist(phylomeans), "-" ) )) ) ) )
+
+# normalize the data:
+# ... but rather than subtrating the "phylogenetic" mean
+#   thedata <- sweep( orig.data, 2, unlist(phylomeans), "-" )
+# project into the image of (I-W).
+thedata <- crossprod( projmatrix, orig.data )
 
 #####
 # covariance matrices:
