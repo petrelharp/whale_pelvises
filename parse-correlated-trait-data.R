@@ -42,6 +42,8 @@ if (FALSE) { ## for testing
     whales <- droplevels( subset( whales, species %in% c( "BALAENOPTERA_PHYSALUS", "BALAENOPTERA_MUSCULUS" ) ) )
 }
 
+write.csv(whales,"whales.csv",row.names=FALSE)
+
 # set up the tree
 within_length <- 1
 tree <- species_tree
@@ -175,7 +177,7 @@ save( species.treemat, sample.treemat, projmatrix, n.tree.tips, thedata, normdat
 # write.csv( tipdist, file="all-sample-tipdist.csv", row.names=FALSE)
 # write.csv( normdata, file="all-data-rejiggered.csv", row.names=TRUE)
 # write.csv( phylomeans, file="phylomeans.csv", row.names=FALSE )
-# write.tree( tree, file="all-sample-tree.R")
+save( tree, file="all-sample-tree.RData" )
 
 
 if (FALSE) {  # OOPS THERE IS AN EASIER WAY THAN THE FOLLOWING

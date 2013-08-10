@@ -88,7 +88,7 @@ shared.branchlengths <- function (tree,edge.length=tree$edge.length,descendants=
 }
 
 treedist <- function (tree,edge.length=tree$edge.length,descendants=get.descendants(tree)) {
-    # pairwise lengths of shared internal branches leading to the root for all pairs of nodes in the tree
+    # distance matrix in the tree between each pair of nodes
     edge.indices <- tree$edge[,2] # associate each edge with the downstream node
     tip.edges <- match( 1:Ntip(tree), edge.indices )  # which edges correspond to tips... note these are the first Ntip(tree) nodes
     n.offspring <- rowSums(descendants)  # number of tips each edge contributes to
@@ -103,8 +103,16 @@ treedist <- function (tree,edge.length=tree$edge.length,descendants=get.descenda
     return( treedist )
 }
 
+# gaussian process x conditioned on x[ !ii ]
+# had mean
+#  mu[ ii ] + covmat[ ii, !ii ] %*% covmat[!ii,!ii]^{-1} %*% ( x[!ii] - mu[!ii] )
+# and covariance matrix
+#  covmat[ ii , ii ] - covmat[ ii, !ii ] %*% covmat[ !ii, !ii ]^{-1} %*% covmat[ !ii, ii ]
+#
+# and, E[ |x|^2 ] = sum_i E[ x_i^2 ] = sum_i Sigma_ii  + mu_i^2 
+
 predgaus <- function( obsvec, meanvec, covmat ) {
-    # fill in NAs in 'obsvec' by kriging
+    # fill in NAs in 'obsvec' by conditional means
     ii <- is.na(obsvec)
     krig <- meanvec[ ii ] + covmat[ ii, !ii ] %*% solve( covmat[!ii,!ii], (obsvec-meanvec)[!ii] ) 
     obsvec[ii] <- krig

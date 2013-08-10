@@ -19,6 +19,7 @@ pmat <- projmatrix[havedata,]
 #  and the matrix Q is similar, except says where to put delta (on all sigmaL but the first one)
 species.Pmat <- c(1,1,1,1,1,1,2,3,3,4,4,5,5)
 species.Qmat <- c(0,1,1,1,1,1,0,0,0,0,0,0,0)
+species.delta.Pmat <- c(0,1,2,2,3,3,0,0,0,0,0,0,0)
 
 # Now add tips for samples:
 # When constructing P, Q, 
@@ -30,6 +31,7 @@ species.Qmat <- c(0,1,1,1,1,1,0,0,0,0,0,0,0)
 sample.Pmat <- c(1,1,1,1,1,2,2,3,3,4,4,5,5)
 sample.Pcoef <- c(1,1,1,1,1,1,1,1,-1,1,1,1,-1)
 sample.Qmat <- c(0,1,1,1,1,0,0,0,0,0,0,0,0)
+sample.delta.Pmat <- c(0,2,2,3,3,0,0,0,0,0,0,0,0)
 
 # set up with some initial parameters
 # the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
@@ -53,9 +55,9 @@ make.fullmat <- function (par) {
     #  parameters are: ( sigmaL, betaT, betaP, sigmaR, sigmaP ), (zetaL, zetaR, omegaR, zetaP, omegaP), (delta)
     species.params <- par[1:5]
     sample.params <- par[5+1:5]
-    delta <- par[11]
-    species.transmat@x <- as.vector( ( species.params[species.Pmat] ) * ( 1 + species.Qmat * ((delta)-1) ) )
-    sample.transmat@x <- as.vector( ( sample.params[sample.Pmat] * sample.Pcoef ) * ( 1 + sample.Qmat * ((delta)-1) ) )
+    delta <- par[11:13]
+    species.transmat@x <- as.vector( ( species.params[species.Pmat] ) * c(1,delta)[1+species.delta.Pmat] )
+    sample.transmat@x <- as.vector( ( sample.params[sample.Pmat] * sample.Pcoef ) * c(1,delta)[1+sample.delta.Pmat] )
     species.covmat <- as.matrix( tcrossprod(species.transmat) )
     sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
     fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
@@ -77,7 +79,9 @@ initpar <- c(
         omegaR=.01,
         zetaP=.12,
         omegaP=.02,
-        delta=sqrt(1.3)
+        deltaT=sqrt(1.4),
+        deltaP=sqrt(1.3),
+        deltaR=sqrt(1.2)
     )
 # construct full matrix
 fullmat <- make.fullmat( initpar )
@@ -132,6 +136,25 @@ if (FALSE) {
     mlfullmat <- make.fullmat(mlestim1$par)
 
     source("correlated-traits-fns.R")
+
+    ##
+    # differences versus covariance
+    diffmat <- outer( as.vector(thedata), as.vector(thedata), "-" )
+    layout( matrix(1:6,nrow=2) )
+    for (k in 1:6) { 
+        theseones <- 1:nrow(thedata) + (k-1)*nrow(thedata)
+        plot( cov2cor(fullmat)[ theseones, theseones ], diffmat[ theseones, theseones ] )
+    }
+    load("all-sample-tree.RData")
+    edge.indices <- tree$edge[,2] # associate each edge with the downstream node
+    tip.edges <- match( 1:Ntip(tree), edge.indices )  # which edges correspond to tips... note these are the first Ntip(tree) nodes
+    treedist <- treedist(tree,edge.length=ifelse(1:Nedge(tree) %in% tip.edges, 0, tree$edge.length))
+    layout( matrix(1:6,nrow=2) )
+    for (k in 1:6) { 
+        theseones <- 1:nrow(thedata) + (k-1)*nrow(thedata)
+        plot( treedist, cov2cor(fullmat)[ theseones, theseones ] )
+    }
+
 
     ##
     # look at residuals...
