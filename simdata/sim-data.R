@@ -10,8 +10,21 @@ tree_file <- paste(basedir, "consensusTree_ALL_CETACEA.tree", sep='/')
 species_tree<-read.nexus(file=tree_file)
 load( paste(basedir,"all-sample-tree.RData",sep='/') ) # gets tree
 
-load(paste(basedir,"thedata-and-covmatrices.Rdata",sep='/'))
 whales <- read.csv(paste(basedir,"whales.csv",sep='/'),header=TRUE)
+allspecies <- intersect(tree$tip.label, species_tree$tip.label)
+if (FALSE) {
+    ## SIMPLE EXAMPLE
+    allspecies <- c( "PHOCOENOIDES_DALLI", "STENELLA_ATTENUATA", "STENELLA_LONGIROSTRIS" )
+    whales <- droplevels( subset(whales,species%in%allspecies) )
+    tree <- drop.tip( tree, setdiff( tree$tip.label, c( allspecies, as.character(whales$specimen) ) ) )
+}
+
+# # get thedata ready
+# thedata <- matrix( c(NA), nrow=Nnode(tree)+Ntip(tree), ncol=6 )
+# colnames(thedata) <- c("bodylength","actual_testes_mass_max","left.rib","right.rib","left.pelvic","right.pelvic")
+# rownames(thedata) <- c( tree$tip.label, paste("NA",1:Nnode(tree),sep='.') )
+
+load(paste(basedir,"thedata-and-covmatrices.Rdata",sep='/'))
 
 nvars <- ncol(thedata)
 
@@ -95,17 +108,23 @@ sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
 sptransmat <- cbind( as.matrix(species.transmat), matrix(0,ncol=2,nrow=6) )
 samtransmat <- cbind( as.matrix(sample.transmat), matrix(0,ncol=1,nrow=6) )
 
-###
-edgediffs <- rnorm( nvars * Nedge(tree) )
-dim(edgediffs) <- c(nvars,Nedge(tree))
-edgediffs[,internal.edges] <- sptransmat %*% edgediffs[,internal.edges] 
-edgediffs[,tip.edges] <- samtransmat %*% edgediffs[,tip.edges] 
-
-# sum down the tree
 # [k,j] TRUE if node j is below edge k
 edge.descendants <- descendants[edge.indices,]
-simdata <- t( edgediffs %*% edge.descendants )
-dimnames(simdata) <- dimnames(thedata)
+
+###
+fake.data <- function () {
+    edgediffs <- rnorm( nvars * Nedge(tree) )
+    dim(edgediffs) <- c(nvars,Nedge(tree))
+    edgediffs <- sweep( edgediffs, 2, sqrt(tree$edge.length), "*" )
+    edgediffs[,internal.edges] <- sptransmat %*% edgediffs[,internal.edges] 
+    edgediffs[,tip.edges] <- samtransmat %*% edgediffs[,tip.edges] 
+    # sum down the tree
+    simdata <- t( edgediffs %*% edge.descendants )
+    dimnames(simdata) <- dimnames(thedata)
+    return(simdata)
+}
+
+simdata <- fake.data()
 
 write.csv(simdata,file='full-simdata.csv',row.names=FALSE)
 
@@ -129,6 +148,55 @@ centered.simdata <- sweep( simdata, 2, sapply(sim.phylomeans, "[[", 1), "-" )
 # look at summary stats
 
 if (FALSE) {
+
+    ##
+    # check that covariance matrix matches simulated
+    # "internal" edges --
+    internal.lengths <- tree$edge.length
+    internal.lengths[ tip.edges ] <- 0
+    # lengths of shared internal branches leading to the root for all pairs of nodes in the tree
+    species.treemat <- shared.branchlengths( tree, internal.lengths, descendants )
+    rownames( species.treemat ) <- colnames( species.treemat ) <- c( tree$tip.label, paste("node",Ntip(tree)+1:Nnode(tree),sep='.') )
+    dzeros <- diag(species.treemat)==0
+    stopifnot( any( species.treemat[dzeros,dzeros] < 1e-8 ) )
+    stopifnot(all(abs(cov2cor(species.treemat[!dzeros,!dzeros]))<=1+1e-8))
+
+    # and, in the tips
+    tip.lengths <- tree$edge.length
+    tip.lengths[ - tip.edges ] <- 0
+    sample.treemat <- shared.branchlengths( tree, tip.lengths, descendants )
+    rownames( sample.treemat ) <- colnames( sample.treemat ) <- c( tree$tip.label, paste("node",Ntip(tree)+1:Nnode(tree),sep='.') )
+    dzeros <- diag(sample.treemat)==0
+    stopifnot( any( sample.treemat[dzeros,dzeros] < 1e-8 ) )
+    stopifnot(all(abs(cov2cor(sample.treemat[!dzeros,!dzeros]))<=1+1e-8))
+
+
+    make.fullmat <- function (par) {
+        # return full covariance matrix for all data (observed and unobserved)
+        #  parameters are: ( sigmaL, betaT, betaP, sigmaR, sigmaP ), (zetaL, zetaR, omegaR, zetaP, omegaP), (deltaT, deltaP, deltaR)
+        species.params <- par[1:5]
+        sample.params <- par[5+1:5]
+        delta <- par[11:13]
+        species.transmat@x <- as.vector( ( species.params[species.Pmat] ) * c(1,delta)[1+species.delta.Pmat] )
+        sample.transmat@x <- as.vector( ( sample.params[sample.Pmat] * sample.Pcoef ) * c(1,delta)[1+sample.delta.Pmat] )
+        species.covmat <- as.matrix( tcrossprod(species.transmat) )
+        sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
+        fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
+        # will want to use 
+        # submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
+        return( fullmat )
+    }
+
+    fullmat <- make.fullmat(initpar)
+    colnames( fullmat ) <- rownames( fullmat ) <- outer( rownames(thedata), colnames(thedata), paste, sep='.' )
+
+    many.data <- replicate(10000,fake.data())
+    dim(many.data) <- c( prod(dim(many.data)[1:2]), dim(many.data)[3] )
+    many.cov <- cov(t(many.data))
+    range(fullmat - many.cov)
+    
+    plot( as.vector(fullmat), as.vector(many.cov) )
+
 
     ## look at predicted sum-square-differences between paired bones
 
