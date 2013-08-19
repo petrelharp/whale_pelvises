@@ -14,41 +14,36 @@ pmat <- projmatrix[havedata,]
 
 # associate P and Q with each internal branch of the tree:
 #  these parameters are: theta = sigmaL, betaT, betaP, sigmaR, sigmaP.
-#  The vector Pmat is such that theta[Pmat] gives the NONZERO elements of the corresponding sqrt-covariance matrix.
-#  ... which are (branch length) * (sigmaL, sigmaL, sigmaL, sigmaL, betaT, betaP, sigmaR, sigmaP)
-#  and the matrix Q is similar, except says where to put delta (on all sigmaL but the first one)
-species.Pmat <- c(1,1,1,1,1,1,2,3,3,4,4,5,5)
-species.Qmat <- c(0,1,1,1,1,1,0,0,0,0,0,0,0)
-species.delta.Pmat <- c(0,1,2,2,3,3,0,0,0,0,0,0,0)
-
-# Now add tips for samples:
-# When constructing P, Q, 
-#  the paramters are: zetaL, zetaR, omegaR, zetaP, omegaP
-# and the nonzero elements, in order, are
-#  (zetaL, zetaL, zetaL, zetaL, zetaL, zetaR, zetaR, omegaR, -omegaR, zetaP, zetaP, omegaP, -omegaP)
-# again, put delta on all zetaL but the first one
-#  now, nonzero elements are theta[Pmat] * Pcoef
-sample.Pmat <- c(1,1,1,1,1,2,2,3,3,4,4,5,5)
-sample.Pcoef <- c(1,1,1,1,1,1,1,1,-1,1,1,1,-1)
-sample.Qmat <- c(0,1,1,1,1,0,0,0,0,0,0,0,0)
-sample.delta.Pmat <- c(0,2,2,3,3,0,0,0,0,0,0,0,0)
-
-# set up with some initial parameters
 # the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
-species.transmat <- Matrix( 
+species.transmat <- matrix( 
               c(1,0,0,0,
                 1,1,0,0,
                 1,0,1,0,
                 1,0,1,0,
                 1,1,0,1,
-                1,1,0,1), nrow=6, byrow=TRUE, sparse=TRUE )
-sample.transmat <- Matrix( 
+                1,1,0,1), nrow=6, byrow=TRUE )
+species.Tind <- which(species.transmat!=0)  # nonzero elements of species.transmat
+species.Sind <- c(1,1,1,1,1,1,2,3,3,4,4,5,5)    # put species.params[species.Sind] into species.transmat[species.Tind]
+species.Dind <- c(0,1,2,2,3,3,0,0,0,0,0,0,0)  # multiply elements by delta[ this ]
+
+# Now add tips for samples:
+#  the paramters are: zetaL, zetaR, omegaR, zetaP, omegaP
+# and the nonzero elements, in order, are
+#  (zetaL, zetaL, zetaL, zetaL, zetaL, zetaR, zetaR, omegaR, -omegaR, zetaP, zetaP, omegaP, -omegaP)
+# again, put delta on all zetaL but the first one
+#  now, nonzero elements are theta[Pmat] * Pcoef
+# the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
+sample.transmat <- matrix( 
               c(1,0,0,0,0,
                 0,0,0,0,0,
                 1,1,1,0,0,
                 1,1,-1,0,0,
                 1,0,0,1,1,
-                1,0,0,1,-1), nrow=6, byrow=TRUE, sparse=TRUE )
+                1,0,0,1,-1), nrow=6, byrow=TRUE )
+sample.Tind <- which(sample.transmat!=0)  # nonzero elements of sample.transmat
+sample.Pcoef <- sample.transmat[sample.Tind]
+sample.Sind <- c(1,1,1,1,1,2,2,3,3,4,4,5,5)     # put sample.params[sample.Sind]*sample.Pcoef into sample.transmat[sample.Tind]
+sample.Dind <- c(0,2,2,3,3,0,0,0,0,0,0,0,0)   # multiply elements by delta[ this ]
 
 make.fullmat <- function (par) {
     # return full covariance matrix for all data (observed and unobserved)
@@ -56,8 +51,8 @@ make.fullmat <- function (par) {
     species.params <- par[1:5]
     sample.params <- par[5+1:5]
     delta <- par[11:13]
-    species.transmat@x <- as.vector( ( species.params[species.Pmat] ) * c(1,delta)[1+species.delta.Pmat] )
-    sample.transmat@x <- as.vector( ( sample.params[sample.Pmat] * sample.Pcoef ) * c(1,delta)[1+sample.delta.Pmat] )
+    species.transmat[species.Tind] <- species.params[species.Sind] * c(1,delta)[1+species.Dind]
+    sample.transmat[sample.Tind] <- sample.params[sample.Sind] * sample.Pcoef * c(1,delta)[1+sample.Dind]
     species.covmat <- as.matrix( tcrossprod(species.transmat) )
     sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
     fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
@@ -97,7 +92,7 @@ llfun <- function (par) {
     fullmat <- make.fullmat( par )[havedata,havedata]
     submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
     fchol <- chol(submat)
-    return( sum( backsolve( fchol, datavec )^2 )/2 + sum(log(diag(fchol))) ) 
+    return( sum( backsolve( fchol, datavec, transpose=TRUE )^2 )/2 + sum(log(diag(fchol))) ) 
 }
 stopifnot( is.finite(llfun(initpar)) )
 
@@ -216,7 +211,7 @@ if (FALSE) {
 
 
     mlchol <- chol(mlfullmat[havedata,havedata])
-    normresids <- backsolve( mlchol, datavec )
+    normresids <- backsolve( mlchol, datavec, transpose=TRUE )
     layout(t(1:2))
     plot( normresids )
     outliers <- identify( normresids )
@@ -240,7 +235,7 @@ if (FALSE) {  # inference simulating under the model works:
     fakedata <- fchol %*% rnorm(nrow(fchol))
     fake.llfun <- function (par) {
         fchol <- chol(make.fullmat(par)[havedata,havedata])
-        return( sum( backsolve( fchol, fakedata )^2 )/2 + sum(log(diag(fchol)))/2 ) 
+        return( sum( backsolve( fchol, fakedata, transpose=TRUE )^2 )/2 + sum(log(diag(fchol)))/2 ) 
     }
     fake.mlestim <- optim( par=initpar, fn=fake.llfun, method="L-BFGS-B", control=list( fnscale=1e3, trace=3 ), lower=1e-3 )
     rbind( initpar, fake.mlestim$par ) # looks good

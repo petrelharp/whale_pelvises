@@ -311,16 +311,22 @@ then
 which doesn't include $X_\rho$.
 
 The covariance matrix is now easy to compute:
-note that by e.g. taking the Cholesky decomposition of $\Sigma$ we have a matrix $A$ such that $X = A Z$,
-with $Z$ independent N(0,1).
-Then if $W$ is the matrix whose rows are given by $w$,
+if $B^T B = \Sigma$ is the Cholesky decomposition of $\Sigma$, then we can write $X = B^T Z$,
+with $Z$ independent N(0,1);
+and if $W$ is the matrix whose rows are given by $w$,
 \begin{align}
-  \tilde X = (I-W) A Z,
+  \tilde X = (I-W) B^T Z,
 \end{align}
 and hence
 \begin{align}
-  \cov[\tilde X, \tilde X] = (I-W)A A^T (I-W^T) = (I-W) \Sigma (I-W^T) .
+  \cov[\tilde X, \tilde X] := \tilde \Sigma = (I-W)B^T B (I-W^T) = (I-W) \Sigma (I-W^T) .
 \end{align}
+To compute the likelihood function, we let $A^T A = \tilde \Sigma$ be the Cholesky decomposition of $\tilde \Sigma$;
+so that $\tilde \Sigma^{-1} = (A^T A)^{-1} = A^{-1} (A^T)^{-1}$, and hence
+\begin{align}
+  x^T \tilde \Sigma^{-1} x = \| (A^T)^{-1} x \|^2 ,
+\end{align}
+and since $A$ is upper triangular, $A^{-1} x$ can be found efficiently, e.g.\ with \texttt{forwardsolve(t(A),x)} in R.
 
 
 \paragraph{Shape:} the plan with shape is to leave it aside, 
@@ -333,7 +339,31 @@ So, we've reduced the model to a big multivariate normal distribution,
 where all the parameters are variances.
 Now we can put priors on the variances and MCMC to get the posterior distribution.
 
-Note that the covariance matrices
+
+\section{The likelihood computation}
+
+If $X$ is an $n$-dimensional multivariate Gaussian with mean 0 and covariance matrix $\Sigma$ that depends on parameters $\theta$,
+then the likelihood function is
+\begin{align}
+  \mathcal{L}(x) = \frac{1}{ (2 \pi)^{n/2} \sqrt{ \det \Sigma } } \exp \left( - \frac{1}{2} x^T \Sigma^{-1} x \right)
+\end{align}
+and so the negative log-likelihood function is
+\begin{align}
+  L(x) = \frac{1}{2} \log \left( \det \Sigma \right) + \frac{1}{2} x^T \Sigma^{-1} x  .
+\end{align}
+If $\Sigma = A^T A$, with $A$ upper triangular, then $\Sigma^{-1} = (A^T A)^{-1} = A^{-1} (A^T)^{-1}$, and so
+if $z$ solves $A^T z = x$, then
+\begin{align}
+  x^T \Sigma^{-1} x &= x^T A^{-1} (A^T)^{-1} x \\
+  &= ( (A^T)^{-1} x )^T ( (A^T)^{-1} x ) \\
+  &= \| (A^T)^{-1} x \|^2 \\
+  &= \|z\|^2  .
+\end{align}
+Also, 
+\begin{align}
+  \det \Sigma = (\det A )^2 = \left( \prod_{i=1}^n A_{ii} \right)^2 .
+\end{align}
+
 
 \end{document}
 

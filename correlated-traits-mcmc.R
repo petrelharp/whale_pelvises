@@ -20,7 +20,7 @@ lud <- function (par) {
     fullmat <- make.fullmat( par )[havedata,havedata]
     submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
     fchol <- chol(submat)
-    return( (-1) * sum( par * prior.means ) - sum( backsolve( fchol, datavec )^2 )/2 - sum(log(diag(fchol))) ) 
+    return( (-1) * sum( par * prior.means ) - sum( backsolve( fchol, datavec, transpose=TRUE )^2 )/2 - sum(log(diag(fchol))) ) 
 }
 
 run.id <- sample.int(9999,size=1)
