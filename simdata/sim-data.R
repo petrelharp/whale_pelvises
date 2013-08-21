@@ -13,7 +13,8 @@ load( paste(basedir,"all-sample-tree.RData",sep='/') ) # gets tree
 whales <- read.csv(paste(basedir,"whales.csv",sep='/'),header=TRUE)
 allspecies <- intersect(tree$tip.label, species_tree$tip.label)
 
-if (TRUE) {
+do.simple <- TRUE
+if (do.simple) {
     ## SIMPLE EXAMPLE
     allspecies <- c( "PHOCOENOIDES_DALLI", "STENELLA_ATTENUATA", "STENELLA_LONGIROSTRIS" )
     whales <- droplevels( subset(whales,species%in%allspecies) )
@@ -67,111 +68,124 @@ species.nodes <- match( levels(whales$species), tree$tip.label )  # which nodes 
 sample.nodes <- setdiff( 1:Ntip(tree), species.nodes )
 internal.nodes <- Ntip(tree) + (1:Nnode(tree))
 
+if (!do.simple) {
 ###### from correlated-traits-analysis.R
 # set up with some initial parameters
 # the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
 
-species.transmat <- matrix( 
-              c(1,0,0,0,
-                1,1,0,0,
-                1,0,1,0,
-                1,0,1,0,
-                1,1,0,1,
-                1,1,0,1), nrow=6, byrow=TRUE )
-sample.transmat <- matrix( 
-              c(1,0,0,0,0,
-                0,0,0,0,0,
-                1,1,1,0,0,
-                1,1,-1,0,0,
-                1,0,0,1,1,
-                1,0,0,1,-1), nrow=6, byrow=TRUE )
-species.Tind <- which(species.transmat!=0)  # nonzero elements of species.transmat
-species.Sind <- c(1,1,1,1,1,1,2,3,3,4,4,5,5)    # put species.params[species.Sind] into species.transmat[species.Tind]
-species.Dind <- c(0,1,2,2,3,3,0,0,0,0,0,0,0)  # multiply elements by delta[ this ]
-sample.Tind <- which(sample.transmat!=0)  # nonzero elements of sample.transmat
-sample.Pcoef <- sample.transmat[sample.Tind]
-sample.Sind <- c(1,1,1,1,1,2,2,3,3,4,4,5,5)     # put sample.params[sample.Sind]*sample.Pcoef into sample.transmat[sample.Tind]
-sample.Dind <- c(0,2,2,3,3,0,0,0,0,0,0,0,0)   # multiply elements by delta[ this ]
-
-### initial values
-# from initial-values.R
-initpar <- c(
-        sigmaL=3.16,
-        betaT=6.5,
-        betaP=2,
-        sigmaR=.5,
-        sigmaP=1.1,
-        zetaL=.05,
-        zetaR=.06,
-        omegaR=.01,
-        zetaP=.12,
-        omegaP=.02,
-        deltaT=sqrt(1.4),
-        deltaP=sqrt(1.3),
-        deltaR=sqrt(1.2)
-    )
-
-species.params <- initpar[1:5]
-sample.params <- initpar[5+1:5]
-delta <- initpar[11:13]
-species.transmat[species.Tind] <- species.params[species.Sind] * c(1,delta)[1+species.Dind]
-sample.transmat[sample.Tind] <- sample.params[sample.Sind] * sample.Pcoef * c(1,delta)[1+sample.Dind]
-species.covmat <- as.matrix( tcrossprod(species.transmat) )
-sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
-sptransmat <- cbind( as.matrix(species.transmat), matrix(0,ncol=2,nrow=6) )
-samtransmat <- cbind( as.matrix(sample.transmat), matrix(0,ncol=1,nrow=6) )
-
-# check
-species.varnames <- matrix( '', nrow=nrow(species.transmat), ncol=ncol(species.transmat) )
-species.varnames[ species.transmat!=0 ] <- paste( names(species.params)[species.Sind], c('',names(delta))[1+species.Dind],sep='.')
-sample.varnames <- matrix( '', nrow=nrow(sample.transmat), ncol=ncol(sample.transmat) )
-sample.varnames[ sample.transmat!=0 ] <- paste( names(sample.params)[max(species.Sind)+sample.Sind], c('',names(delta))[1+sample.Dind],sep='.')
+    species.paramnames <- matrix(
+                  c('sigmaL','','','','','',
+                    'sigmaLdeltaT','betaT','','','','',
+                    'sigmaLdeltaP','','sigmaR','','','',
+                    'sigmaLdeltaP','','sigmaR','','','',
+                    'sigmaLdeltaR','betaP','','sigmaP','','',
+                    'sigmaLdeltaR','betaP','','sigmaP','',''), nrow=6, byrow=TRUE )
+    sample.paramnames <- matrix( 
+                  c('zetaL','','','','','',
+                    '','','','','','',
+                    'zetaLdeltaP','','zetaR','-omegaR','','',
+                    'zetaLdeltaP','','zetaR','omegaR','','',
+                    'zetaLdeltaR','','','','zetaP','-omegaP',
+                    'zetaLdeltaR','','','','zetaP','omegaP'), nrow=6, byrow=TRUE )
+    species.justparams <- gsub("\\..*","",gsub("^[-+]","",species.paramnames))
+    species.deltas <- gsub("[^.]\\.","",species.paramnames)
+    species.varnames <- setdiff( unique( species.justparams ), '' )
+    species.Tind <- which( species.justparams != '' )  # nonzero elements of species.transmat
+    species.Sind <- match( species.justparams[species.Tind], species.varnames )     # put params[species.Sind] into species.transmat[species.Tind]
+    stopifnot( length(species.Sind)==length(species.Tind) )
+    sample.justparams <- gsub("\\..*","",gsub("^[-+]","",sample.paramnames))
+    sample.signs <- ifelse( grepl( "^-", sample.paramnames ), -1, +1 )
+    sample.varnames <- setdiff( unique( sample.justparams ), '' )
+    sample.Tind <- which( sample.justparams != '' )
+    sample.Sind <- match( sample.justparams[sample.Tind], sample.varnames )     # put params[sample.Sind]*sample.Pcoef into sample.transmat[sample.Tind]
+    sample.Pcoef <- sample.signs[ sample.Tind ]
+    stopifnot( length(sample.Sind)==length(sample.Tind) )
 
 
-###
-# SIMPLER EXAMPLE
-species.transmat <- matrix( 
-              c(1,0,0,0,0,0,
-                1,1,0,0,0,0,
-                1,0,1,0,0,0,
-                1,0,1,0,0,0,
-                1,1,0,1,0,0,
-                1,1,0,1,0,0), nrow=6, byrow=TRUE )
-sample.transmat <- matrix( 
-              c(1,0,0,0,0,0,
-                1,1,0,0,0,0,
-                1,0,1,-1,0,0,
-                1,0,1,1,0,0,
-                1,1,0,0,1,-1,
-                1,1,0,0,1,1), nrow=6, byrow=TRUE )
-species.Tind <- which(species.transmat!=0)  # nonzero elements of species.transmat
-species.Sind <- c( 1,2, 3,3, 4,4, 5,5,5, 6,6, 7,7 )    # put params[species.Sind] into species.transmat[species.Tind]
-stopifnot( length(species.Sind)==length(species.Tind) )
-sample.Tind <- which(sample.transmat!=0)  # nonzero elements of sample.transmat
-sample.Pcoef <- sample.transmat[sample.Tind]
-sample.Sind <- c( rep(1,6), 2,2,2, 3,3, 4,4, 5,5, 6,6 )     # put params[sample.Sind]*sample.Pcoef into sample.transmat[sample.Tind]
-stopifnot( length(sample.Sind)==length(sample.Tind) )
+    ### initial values
+    # from initial-values.R
+    initpar <- c(
+            sigmaL=3.16,
+            betaT=6.5,
+            betaP=2,
+            sigmaR=.5,
+            sigmaP=1.1,
+            zetaL=.05,
+            zetaR=.06,
+            omegaR=.01,
+            zetaP=.12,
+            omegaP=.02,
+            # deltaT=sqrt(1.4),
+            # deltaP=sqrt(1.3),
+            # deltaR=sqrt(1.2),
+            sigmaLdeltaT=3.16*sqrt(1.4),
+            sigmaLdeltaP=3.16*sqrt(1.3),
+            sigmaLdeltaR=3.16*sqrt(1.2),
+            zetaLdeltaP=.05*sqrt(1.3),
+            zetaLdeltaR=.05*sqrt(1.2)
+        )
+    stopifnot( all(names(initpar) %in% c( species.justparams, sample.justparams ) ) )
 
-initpar <- rep(1,max(sample.Sind)+max(species.Sind))
-names(initpar) <- c( paste('a',1:max(species.Sind),sep=''), paste('b',1:max(sample.Sind),sep='') )
+    species.parindices <- match( species.varnames, names(initpar) )
+    sample.parindices <- match( sample.varnames, names(initpar) )
+    species.params <- initpar[species.parindices]
+    sample.params <- initpar[sample.parindices]
+    # delta <- initpar[11:13]
+    species.transmat <- matrix(0,nrow=nrow(species.paramnames),ncol=ncol(species.paramnames))
+    sample.transmat <- matrix(0,nrow=nrow(sample.paramnames),ncol=ncol(sample.paramnames))
+    species.transmat[species.Tind] <- species.params[species.Sind] # * c(1,delta)[1+species.Dind]
+    sample.transmat[sample.Tind] <- sample.params[sample.Sind] * sample.Pcoef #*c(1,delta)[1+sample.Dind]
+    species.covmat <- as.matrix( tcrossprod(species.transmat) )
+    sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
+    sptransmat <- species.transmat
+    samtransmat <- sample.transmat
 
-# check
-species.varnames <- matrix( '', nrow=nrow(species.transmat), ncol=ncol(species.transmat) )
-species.varnames[ species.transmat!=0 ] <- names(initpar)[species.Sind]
-sample.varnames <- matrix( '', nrow=nrow(sample.transmat), ncol=ncol(sample.transmat) )
-sample.varnames[ sample.transmat!=0 ] <- names(initpar)[max(species.Sind)+sample.Sind]
 
-species.params <- initpar[1:max(species.Sind)]
-sample.params <- initpar[max(species.Sind)+1:max(sample.Sind)]
-species.transmat[species.Tind] <- species.params[species.Sind]
-sample.transmat[sample.Tind] <- sample.params[sample.Sind]*sample.Pcoef
-species.covmat <- tcrossprod(species.transmat)
-sample.covmat <- tcrossprod(sample.transmat)
-sptransmat <- species.transmat
-samtransmat <- sample.transmat
+} else {
 
+    ###
+    # SIMPLER EXAMPLE
+
+    species.params <- matrix(
+                  c('a1','','','','','',
+                    'a2','a5','','','','',
+                    'a3','','a6','','','',
+                    'a3','','a6','','','',
+                    'a4','a5','','a7','','',
+                    'a4','a5','','a7','',''), nrow=6, byrow=TRUE )
+    sample.params <- matrix( 
+                  c('b1','','','','','',
+                    'b2','b2','','','','',
+                    'b3','','b3','-b4','','',
+                    'b3','','b3','b4','','',
+                    'b4','','','','b5','-b6',
+                    'b4','','','','b5','b6'), nrow=6, byrow=TRUE )
+    species.varnames <- setdiff( unique( species.params ), '' )
+    species.Tind <- which( species.params != '' )  # nonzero elements of species.transmat
+    species.Sind <- match( species.params[species.Tind], species.varnames )     # put params[species.Sind] into species.transmat[species.Tind]
+    stopifnot( length(species.Sind)==length(species.Tind) )
+    sample.justparams <- gsub("^[-+]","",sample.params)
+    sample.signs <- ifelse( grepl( "^-", sample.params ), -1, +1 )
+    sample.varnames <- setdiff( unique( sample.justparams ), '' )
+    sample.Tind <- which( sample.justparams != '' )
+    sample.Sind <- match( sample.justparams[sample.Tind], sample.varnames )     # put params[sample.Sind]*sample.Pcoef into sample.transmat[sample.Tind]
+    sample.Pcoef <- sample.signs[ sample.Tind ]
+    stopifnot( length(sample.Sind)==length(sample.Tind) )
+
+    initpar <- rep(1,max(sample.Sind)+max(species.Sind))
+    names(initpar) <- c( paste('a',1:max(species.Sind),sep=''), paste('b',1:max(sample.Sind),sep='') )
+
+    species.params <- initpar[1:max(species.Sind)]
+    sample.params <- initpar[max(species.Sind)+1:max(sample.Sind)]
+    species.transmat[species.Tind] <- species.params[species.Sind]
+    sample.transmat[sample.Tind] <- sample.params[sample.Sind]*sample.Pcoef
+    species.covmat <- tcrossprod(species.transmat)
+    sample.covmat <- tcrossprod(sample.transmat)
+    sptransmat <- species.transmat
+    samtransmat <- sample.transmat
 ### DONE SIMPLER EXAMPLE
 
+}
 
 # [k,j] TRUE if node j is below edge k
 edge.descendants <- descendants[edge.indices,]
@@ -209,11 +223,7 @@ fake.noise <- function (centered=FALSE) {
 
 ###
 fake.data <- function (centered=FALSE) {
-    edgediffs <- rnorm( nvars * Nedge(tree) )
-    dim(edgediffs) <- c(nvars,Nedge(tree))
-    edgediffs <- sweep( edgediffs, 2, sqrt(tree$edge.length), "*" )
-    edgediffs[,internal.edges] <- sptransmat %*% edgediffs[,internal.edges] 
-    edgediffs[,tip.edges] <- samtransmat %*% edgediffs[,tip.edges] 
+    edgediffs <- fake.noise(centered=centered)
     # sum down the tree
     simdata <- t( edgediffs %*% edge.descendants )
     if (centered) { 
@@ -271,37 +281,42 @@ if (FALSE) {
     stopifnot(all(abs(cov2cor(sample.treemat[!dzeros,!dzeros]))<=1+1e-8))
 
 
-    make.fullmat <- function (par) {
-        # return full covariance matrix for all data (observed and unobserved)
-        #  parameters are: ( sigmaL, betaT, betaP, sigmaR, sigmaP ), (zetaL, zetaR, omegaR, zetaP, omegaP), (deltaT, deltaP, deltaR)
-        species.params <- par[1:5]
-        sample.params <- par[5+1:5]
-        delta <- par[10+1:3]
-        species.transmat[species.Tind] <- species.params[species.Sind] * c(1,delta)[1+species.Dind]
-        sample.transmat[sample.Tind] <- sample.params[sample.Sind] * sample.Pcoef * c(1,delta)[1+sample.Dind]
-        species.covmat <- as.matrix( tcrossprod(species.transmat) )
-        sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
-        fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
-        # will want to use 
-        # submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
-        return( fullmat )
-    }
+    if (!do.simple) {
 
-    ### SIMPLER EXAMPLE
+        make.fullmat <- function (par) {
+            # return full covariance matrix for all data (observed and unobserved)
+            species.params <- par[species.parindices]
+            sample.params <- par[sample.parindices]
+            # delta <- par[10+1:3]
+            species.transmat[species.Tind] <- species.params[species.Sind] #* c(1,delta)[1+species.Dind]
+            sample.transmat[sample.Tind] <- sample.params[sample.Sind] * sample.Pcoef #* c(1,delta)[1+sample.Dind]
+            species.covmat <- as.matrix( tcrossprod(species.transmat) )
+            sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
+            fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
+            # will want to use 
+            # submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
+            return( fullmat )
+        }
 
-    make.fullmat <- function (par) {
-        # return full covariance matrix for all data (observed and unobserved)
-        #  parameters are: ( sigmaL, betaT, betaP, sigmaR, sigmaP ), (zetaL, zetaR, omegaR, zetaP, omegaP), (deltaT, deltaP, deltaR)
-        species.params <- par[1:max(species.Sind)]
-        sample.params <- par[max(species.Sind)+1:max(sample.Sind)]
-        species.transmat[species.Tind] <- species.params[species.Sind] 
-        sample.transmat[sample.Tind] <- sample.params[sample.Sind]*sample.Pcoef
-        species.covmat <- tcrossprod(species.transmat)
-        sample.covmat <- tcrossprod(sample.transmat)
-        fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
-        # will want to use 
-        # submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
-        return( fullmat )
+    } else {
+
+        ### SIMPLER EXAMPLE
+
+        make.fullmat <- function (par) {
+            # return full covariance matrix for all data (observed and unobserved)
+            #  parameters are: ( sigmaL, betaT, betaP, sigmaR, sigmaP ), (zetaL, zetaR, omegaR, zetaP, omegaP), (deltaT, deltaP, deltaR)
+            species.params <- par[1:max(species.Sind)]
+            sample.params <- par[max(species.Sind)+1:max(sample.Sind)]
+            species.transmat[species.Tind] <- species.params[species.Sind] 
+            sample.transmat[sample.Tind] <- sample.params[sample.Sind]*sample.Pcoef
+            species.covmat <- tcrossprod(species.transmat)
+            sample.covmat <- tcrossprod(sample.transmat)
+            fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
+            # will want to use 
+            # submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
+            return( fullmat )
+        }
+
     }
 
     # projection matrix for omitting all left ribs and pelvises in 'species' and internal nodes
@@ -317,7 +332,7 @@ if (FALSE) {
     many.data <- replicate(10000,fake.data())
     dim(many.data) <- c( prod(dim(many.data)[1:2]), dim(many.data)[3] )
     many.cov <- cov(t(many.data))
-    
+
     ## looks good
     layout(1:2)
     plot( as.vector(fullmat), as.vector(many.cov) )
@@ -383,30 +398,37 @@ if (FALSE) {
 
     ###
     # can use many observations to infer parameters?
+    #
     # havedata <- !is.na(thedata)
     havedata <- simple.havedata
-    # datavec <- crossprod( projmatrix[havedata,], thedata[havedata] )   # true data
-    # datavec <- crossprod( projmatrix[havedata,], many.data[havedata,] )  # lots of sims
+    ## unprojected:
     datavec <- many.data[havedata,]  # lots of sim, unprojected
+    llfun <- function (par) {
+        fullmat <- make.fullmat( par )[havedata,havedata]
+        fchol <- chol(fullmat)
+        return( sum( backsolve( fchol, datavec, transpose=TRUE )^2 )/2 + ncol(datavec) * sum(log(diag(fchol))) ) 
+    }
+
+    ## projected:
+    havedata <- !is.na(thedata)
+    # datavec <- crossprod( projmatrix[havedata,], thedata[havedata] )   # true data
+    datavec <- crossprod( projmatrix[havedata,], many.data[havedata,] )  # lots of sims
+    ## one simulation
     # simdata <- fake.data(center=TRUE)         # one sim
     # simdata[!havedata] <- NA
     # datavec <- crossprod( projmatrix[havedata,], simdata[havedata] )
     # return negative log-likelihood for gaussian:
     #  parameters are: sigmal, betat, betap, sigmar, sigmap, zetal, zetar, omegar, zetap, omegap, delta
     llfun <- function (par) {
-        fullmat <- make.fullmat( par )[havedata,havedata]
-        fchol <- chol(fullmat)
-        # fullmat <- make.fullmat( par )
-        # submat <- ( ( crossprod( projmatrix, fullmat) %*% projmatrix ) )
-        # fchol <- chol(submat)
+        fullmat <- make.fullmat( par )
+        submat <- ( ( crossprod( projmatrix, fullmat) %*% projmatrix ) )
+        fchol <- chol(submat)
         return( sum( backsolve( fchol, datavec, transpose=TRUE )^2 )/2 + ncol(datavec) * sum(log(diag(fchol))) ) 
-        # siginv <- ginv(submat)
-        # return( sum( apply( datavec, 2, function (x) crossprod(x, siginv %*% x) ) )/2 + ncol(datavec) * sum(log(diag(fchol))) )
     }
     stopifnot( is.finite(llfun(initpar)) )
 
-    mlestim1 <- optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( maxit=30, fnscale=llfun(initpar)/10 ) )
-    # mlestim1 <- optim( par=initpar+runif(length(initpar))/8, fn=llfun, method="Nelder-Mead", control=list( maxit=3000, fnscale=llfun(initpar)/10 ) )
+    mlestim1 <- optim( par=initpar, fn=llfun, method="Nelder-Mead", control=list( maxit=30, fnscale=abs(llfun(initpar)/10) ) )
+    # mlestim1 <- optim( par=initpar+runif(length(initpar))/8, fn=llfun, method="Nelder-Mead", control=list( maxit=3000, fnscale=abs(llfun(initpar)/10) ) )
     cbind( rbind(initpar,mlestim1$par), ll=c(llfun(initpar),llfun(mlestim1$par)) )
 
     # profiles

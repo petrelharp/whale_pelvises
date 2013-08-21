@@ -2,64 +2,42 @@
 
 require(Matrix)
 
-# treedist <- as.matrix( read.csv( file="all-sample-treedist.csv", header=TRUE) )
-# tipdist <- as.matrix( read.csv( file="all-sample-tipdist.csv", header=TRUE) )
-# thedata <- as.matrix( read.csv( file="all-data-rejiggered.csv", header=TRUE, row.names=1 ) )
-load("thedata-and-covmatrices.Rdata")
-havedata <- !is.na(thedata)
-## we only really need this components of (I-W):
-## pmat <- projmatrix[1:n.tree.tips,1:n.tree.tips]
-# ... but leave well enough along:
-pmat <- projmatrix[havedata,]
+#####
+# set up the model
 
-# associate P and Q with each internal branch of the tree:
+# associate matrices with each internal branch of the tree:
 #  these parameters are: theta = sigmaL, betaT, betaP, sigmaR, sigmaP.
 # the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
-species.transmat <- matrix( 
-              c(1,0,0,0,
-                1,1,0,0,
-                1,0,1,0,
-                1,0,1,0,
-                1,1,0,1,
-                1,1,0,1), nrow=6, byrow=TRUE )
-species.Tind <- which(species.transmat!=0)  # nonzero elements of species.transmat
-species.Sind <- c(1,1,1,1,1,1,2,3,3,4,4,5,5)    # put species.params[species.Sind] into species.transmat[species.Tind]
-species.Dind <- c(0,1,2,2,3,3,0,0,0,0,0,0,0)  # multiply elements by delta[ this ]
-
-# Now add tips for samples:
+# Also, associate matrices with tip-edges.
 #  the paramters are: zetaL, zetaR, omegaR, zetaP, omegaP
-# and the nonzero elements, in order, are
-#  (zetaL, zetaL, zetaL, zetaL, zetaL, zetaR, zetaR, omegaR, -omegaR, zetaP, zetaP, omegaP, -omegaP)
-# again, put delta on all zetaL but the first one
-#  now, nonzero elements are theta[Pmat] * Pcoef
-# the variables are, in order: Length, Testes, Rib-left, Rib-right, Pelvis-left, Pelvis-right
-sample.transmat <- matrix( 
-              c(1,0,0,0,0,
-                0,0,0,0,0,
-                1,1,1,0,0,
-                1,1,-1,0,0,
-                1,0,0,1,1,
-                1,0,0,1,-1), nrow=6, byrow=TRUE )
-sample.Tind <- which(sample.transmat!=0)  # nonzero elements of sample.transmat
-sample.Pcoef <- sample.transmat[sample.Tind]
-sample.Sind <- c(1,1,1,1,1,2,2,3,3,4,4,5,5)     # put sample.params[sample.Sind]*sample.Pcoef into sample.transmat[sample.Tind]
-sample.Dind <- c(0,2,2,3,3,0,0,0,0,0,0,0,0)   # multiply elements by delta[ this ]
+species.paramnames <- matrix(
+              c('sigmaL','','','','','',
+                'sigmaLdeltaT','betaT','','','','',
+                'sigmaLdeltaP','','sigmaR','','','',
+                'sigmaLdeltaP','','sigmaR','','','',
+                'sigmaLdeltaR','betaP','','sigmaP','','',
+                'sigmaLdeltaR','betaP','','sigmaP','',''), nrow=6, byrow=TRUE )
+sample.paramnames <- matrix( 
+              c('zetaL','','','','','',
+                '','','','','','',
+                'zetaLdeltaP','','zetaR','-omegaR','','',
+                'zetaLdeltaP','','zetaR','omegaR','','',
+                'zetaLdeltaR','','','','zetaP','-omegaP',
+                'zetaLdeltaR','','','','zetaP','omegaP'), nrow=6, byrow=TRUE )
+species.justparams <- gsub("\\..*","",gsub("^[-+]","",species.paramnames))
+species.deltas <- gsub("[^.]\\.","",species.paramnames)
+species.varnames <- setdiff( unique( species.justparams ), '' )
+species.Tind <- which( species.justparams != '' )  # nonzero elements of species.transmat
+species.Sind <- match( species.justparams[species.Tind], species.varnames )     # put params[species.Sind] into species.transmat[species.Tind]
+stopifnot( length(species.Sind)==length(species.Tind) )
+sample.justparams <- gsub("\\..*","",gsub("^[-+]","",sample.paramnames))
+sample.signs <- ifelse( grepl( "^-", sample.paramnames ), -1, +1 )
+sample.varnames <- setdiff( unique( sample.justparams ), '' )
+sample.Tind <- which( sample.justparams != '' )
+sample.Sind <- match( sample.justparams[sample.Tind], sample.varnames )     # put params[sample.Sind]*sample.Pcoef into sample.transmat[sample.Tind]
+sample.Pcoef <- sample.signs[ sample.Tind ]
+stopifnot( length(sample.Sind)==length(sample.Tind) )
 
-make.fullmat <- function (par) {
-    # return full covariance matrix for all data (observed and unobserved)
-    #  parameters are: ( sigmaL, betaT, betaP, sigmaR, sigmaP ), (zetaL, zetaR, omegaR, zetaP, omegaP), (delta)
-    species.params <- par[1:5]
-    sample.params <- par[5+1:5]
-    delta <- par[11:13]
-    species.transmat[species.Tind] <- species.params[species.Sind] * c(1,delta)[1+species.Dind]
-    sample.transmat[sample.Tind] <- sample.params[sample.Sind] * sample.Pcoef * c(1,delta)[1+sample.Dind]
-    species.covmat <- as.matrix( tcrossprod(species.transmat) )
-    sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
-    fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
-    # will want to use 
-    # submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
-    return( fullmat )
-}
 
 ### initial values
 # from initial-values.R
@@ -74,10 +52,59 @@ initpar <- c(
         omegaR=.01,
         zetaP=.12,
         omegaP=.02,
-        deltaT=sqrt(1.4),
-        deltaP=sqrt(1.3),
-        deltaR=sqrt(1.2)
+        # deltaT=sqrt(1.4),
+        # deltaP=sqrt(1.3),
+        # deltaR=sqrt(1.2),
+        sigmaLdeltaT=3.16*sqrt(1.4),
+        sigmaLdeltaP=3.16*sqrt(1.3),
+        sigmaLdeltaR=3.16*sqrt(1.2),
+        zetaLdeltaP=.05*sqrt(1.3),
+        zetaLdeltaR=.05*sqrt(1.2)
     )
+stopifnot( all(names(initpar) %in% c( species.justparams, sample.justparams ) ) )
+
+species.parindices <- match( species.varnames, names(initpar) )
+sample.parindices <- match( sample.varnames, names(initpar) )
+species.params <- initpar[species.parindices]
+sample.params <- initpar[sample.parindices]
+# delta <- initpar[11:13]
+species.transmat <- matrix(0,nrow=nrow(species.paramnames),ncol=ncol(species.paramnames))
+sample.transmat <- matrix(0,nrow=nrow(sample.paramnames),ncol=ncol(sample.paramnames))
+species.transmat[species.Tind] <- species.params[species.Sind] # * c(1,delta)[1+species.Dind]
+sample.transmat[sample.Tind] <- sample.params[sample.Sind] * sample.Pcoef #*c(1,delta)[1+sample.Dind]
+species.covmat <- as.matrix( tcrossprod(species.transmat) )
+sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
+sptransmat <- species.transmat
+samtransmat <- sample.transmat
+
+
+#####
+# Read in the data
+
+# treedist <- as.matrix( read.csv( file="all-sample-treedist.csv", header=TRUE) )
+# tipdist <- as.matrix( read.csv( file="all-sample-tipdist.csv", header=TRUE) )
+# thedata <- as.matrix( read.csv( file="all-data-rejiggered.csv", header=TRUE, row.names=1 ) )
+load("thedata-and-covmatrices.Rdata")
+havedata <- !is.na(thedata)
+pmat <- projmatrix[havedata,]
+
+###
+# function to construct full covariance matrix
+make.fullmat <- function (par) {
+    # return full covariance matrix for all data (observed and unobserved)
+    species.params <- par[species.parindices]
+    sample.params <- par[sample.parindices]
+    # delta <- par[10+1:3]
+    species.transmat[species.Tind] <- species.params[species.Sind] #* c(1,delta)[1+species.Dind]
+    sample.transmat[sample.Tind] <- sample.params[sample.Sind] * sample.Pcoef #* c(1,delta)[1+sample.Dind]
+    species.covmat <- as.matrix( tcrossprod(species.transmat) )
+    sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
+    fullmat <-  kronecker( species.covmat, species.treemat ) + kronecker( sample.covmat, sample.treemat )
+    # will want to use 
+    # submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
+    return( fullmat )
+}
+
 # construct full matrix
 fullmat <- make.fullmat( initpar )
 colnames( fullmat ) <- rownames( fullmat ) <- outer( rownames(thedata), colnames(thedata), paste, sep='.' )
@@ -85,7 +112,7 @@ stopifnot( all( eigen( fullmat[havedata,havedata] )$values > -1e-8 ) )
 submat <- ( ( crossprod( pmat, fullmat[havedata,havedata]) %*% pmat ) )
 fchol <- chol( submat )
 
-datavec <- normdata
+datavec <- crossprod( projmatrix[havedata,], thedata[havedata] )   # true data
 # return negative log-likelihood for gaussian:
 #  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, delta
 llfun <- function (par) {
@@ -96,7 +123,7 @@ llfun <- function (par) {
 }
 stopifnot( is.finite(llfun(initpar)) )
 
-save(make.fullmat, initpar, thedata, normdata, species.Pmat, species.Qmat, sample.Pmat, sample.Qmat, sample.Pcoef, species.transmat, sample.transmat, file="mcmc-setup.RData")
+save(make.fullmat, initpar, thedata, pmat, havedata, llfun, species.parindices, sample.parindices, species.transmat, species.Tind, species.Sind, sample.transmat, sample.Tind, sample.Sind, sample.Pcoef, species.treemat, sample.treemat, file="mcmc-setup.RData")
 
 if (!file.exists("analysis-results.RData")) {
     do.parallel <- TRUE

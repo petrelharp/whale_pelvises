@@ -7,14 +7,15 @@ require(Matrix)
 load("mcmc-setup.RData")
 load("thedata-and-covmatrices.Rdata")
 havedata <- !is.na(thedata)
-datavec <- normdata
+datavec <- crossprod( projmatrix[havedata,], thedata[havedata] )   # true data
 
 require(mcmc)
 
 # return positive log-likelihood times posterior
-#  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, delta
+#  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, sigmaLdeltaT, sigmaLdeltaP, sigmaLdeltaR, zetaLdeltaP, zetaLdeltaR, 
 # priors on these are exponential
-prior.means <- c(3,3,3,3,3,.2,.2,.2,.2,.2,1)
+prior.means <- c(3,3,3,3,3,.1,.1,.1,.1,.1,1,1,1,.1,.1)
+stopifnot( length(prior.means) == length(initpar) )
 lud <- function (par) {
     if (any(par<=0)) { return( -Inf ) }
     fullmat <- make.fullmat( par )[havedata,havedata]
