@@ -1,4 +1,26 @@
-#!/usr/bin/R
+#!/usr/bin/Rscript --vanilla
+require(optparse)
+
+usage <- "\
+Run mcmc longer.\
+"
+
+option_list <- list(
+        make_option( c("-i","--infile"), type="character", default=NULL, help=".RData file from previous MCMC run." ),
+        make_option( c("-n","--nbatches"), type="integer", default=1000, help="Number of MCMC batches. [default \"%default\"]" )
+    )
+opt <- parse_args(OptionParser(option_list=option_list,description=usage))
+attach(opt)
+if (interactive()) {
+    nbatches <- 10
+}
+
+new.mcmc <- is.null(infile)
+old.run.id <- NA
+if (!new.mcmc) { 
+    load(infile) 
+    old.run.id <- run.id
+}
 
 #####
 # MCMC
@@ -27,10 +49,10 @@ lud <- function (par) {
 run.id <- sample.int(9999,size=1)
 set.seed(run.id)
 
-if (interactive()) {
-    mcrun <- metrop( lud, initial=initpar, nbatch=10, blen=1, scale=prior.means/30 )
+if (new.mcmc) {
+    mcrun <- metrop( lud, initial=initpar, nbatch=nbatches, blen=1, scale=prior.means/100 )
 } else {
-    mcrun <- metrop( lud, initial=initpar, nbatch=6000, blen=1, scale=prior.means/30 )
+    mcrun <- metrop( mcrun, nbatch=nbatches, blen=1, scale=prior.means/100 )
 }
 
-save(mcrun, run.id, prior.means, lud, file=paste("mcmc-run-",run.id,".RData",sep=''))
+save(mcrun, run.id, old.run.id, prior.means, lud, file=paste("mcmcs/mcmc-run-",run.id,".RData",sep=''))
