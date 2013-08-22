@@ -2,6 +2,7 @@
 
 require(Matrix)
 
+
 #####
 # set up the model
 
@@ -13,8 +14,8 @@ require(Matrix)
 species.paramnames <- matrix(
               c('sigmaL','','','','','',
                 'sigmaLdeltaT','betaT','','','','',
-                'sigmaLdeltaP','','sigmaR','','','',
-                'sigmaLdeltaP','','sigmaR','','','',
+                'sigmaLdeltaP','betaR','sigmaR','','','',
+                'sigmaLdeltaP','betaR','sigmaR','','','',
                 'sigmaLdeltaR','betaP','','sigmaP','','',
                 'sigmaLdeltaR','betaP','','sigmaP','',''), nrow=6, byrow=TRUE )
 sample.paramnames <- matrix( 
@@ -45,6 +46,7 @@ initpar <- c(
         sigmaL=3.16,
         betaT=6.5,
         betaP=2,
+        betaR=.1,
         sigmaR=.5,
         sigmaP=1.1,
         zetaL=.05,
@@ -247,24 +249,4 @@ if (FALSE) {
 
     plot( thedata[havedata] )
     identify( thedata[havedata], labels=paste(rownames(thedata)[row(thedata)],colnames(thedata)[col(thedata)],sep='.')[havedata] )
-}
-
-#### TO-DO:
-## SUBTRACT OFF MEAN TRAIT VALUES
-## NORMALIZE BY SEXUAL DIMORPHISM
-## REVISIT SAME DELTA FOR TESTES, RIB, and PELVIS
-
-####
-# testing:
-
-
-if (FALSE) {  # inference simulating under the model works:
-    require(mvtnorm)
-    fakedata <- fchol %*% rnorm(nrow(fchol))
-    fake.llfun <- function (par) {
-        fchol <- chol(make.fullmat(par)[havedata,havedata])
-        return( sum( backsolve( fchol, fakedata, transpose=TRUE )^2 )/2 + sum(log(diag(fchol)))/2 ) 
-    }
-    fake.mlestim <- optim( par=initpar, fn=fake.llfun, method="L-BFGS-B", control=list( fnscale=1e3, trace=3 ), lower=1e-3 )
-    rbind( initpar, fake.mlestim$par ) # looks good
 }
