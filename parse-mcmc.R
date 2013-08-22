@@ -9,7 +9,7 @@ nvars <- length(initpar)
 havedata <- !is.na(thedata)
 datavec <- crossprod( projmatrix[havedata,], thedata[havedata] )   # true data
 
-mcrun.files <- list.files('.',"mcmc-run-.*RData")
+mcrun.files <- list.files('mcmcs/',"mcmc-run-.*RData")
 mcruns <- lapply( mcrun.files, function (x) { tmpenv <- environment(); tmp <- load(x,envir=tmpenv); names(tmp) <- tmp; lapply( tmp, get, envir=tmpenv ) } )
 
 lls <- rep(NA,length(mcruns))
