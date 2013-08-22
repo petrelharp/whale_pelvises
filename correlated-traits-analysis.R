@@ -154,6 +154,7 @@ if (FALSE) {
 
     mlpars <- as.data.frame( rbind( initpar, do.call( rbind, lapply(mlestims,"[[","par") ) ) )
     mlpars$ll <- apply( mlpars, 1, llfun )
+    mlpars$convergence <- c( NA, sapply( mlestims, "[[", "convergence" ) )
 
     mlfullmat <- make.fullmat(mlestim1$par)
 
