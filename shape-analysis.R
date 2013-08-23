@@ -80,10 +80,13 @@ plot(adjtree,edge.width=fullmean[edge.indices])
 # compare residuals to testes-weighted distance
 resid.rib.lm <- lm( resid(rib.lm) ~  testes.spdist[upper.tri(testes.spdist)][-rib.lm$na.action] )
 resid.pelvic.lm <- lm( resid(pelvic.lm) ~  testes.spdist[upper.tri(testes.spdist)][-pelvic.lm$na.action] )
-plot( testes.spdist[upper.tri(testes.spdist)][-rib.lm$na.action], resid(rib.lm) )
+pdf( file="ribs-correlate.pdf", width=8, height=5, pointsize=10 )
+layout(t(1:2))
+plot( testes.spdist[upper.tri(testes.spdist)][-rib.lm$na.action], resid(rib.lm), xlab="relative testes-weighted tree distance", ylab="residuals of bone distance accounting for tree distance", main="ribs" )
 abline(coef(resid.rib.lm))
-plot( testes.spdist[upper.tri(testes.spdist)][-pelvic.lm$na.action], resid(pelvic.lm) )
+plot( testes.spdist[upper.tri(testes.spdist)][-pelvic.lm$na.action], resid(pelvic.lm), xlab="relative testes-weighted tree distance", ylab="residuals of bone distance accounting for tree distance", main="pelvic" )
 abline(coef(resid.pelvic.lm))
+dev.off()
 ### LOOKS GOOD!!
 ########
 
