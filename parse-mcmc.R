@@ -3,13 +3,13 @@
 load("mcmc-setup.RData")
 load("thedata-and-covmatrices.Rdata")
 
-show( load("mcmcs/mcmc-run-3937.RData") )
+show( load("mcmcs/mcmc-run-8387.RData") )
 
 nvars <- length(initpar)
 havedata <- !is.na(thedata)
 datavec <- crossprod( projmatrix[havedata,], thedata[havedata] )   # true data
 
-mcrun.files <- list.files('mcmcs/',"mcmc-run-.*RData", full.names=TRUE)
+mcrun.files <- list.files('mcmcs',"mcmc-run-.*RData", full.names=TRUE)
 mcruns <- lapply( mcrun.files, function (x) { tmpenv <- environment(); tmp <- load(x,envir=tmpenv); names(tmp) <- tmp; lapply( tmp, get, envir=tmpenv ) } )
 
 lls <- rep(NA,length(mcruns))
@@ -48,15 +48,19 @@ abline(0,1)
 ####
 # Take this one
 
-load("mcmcs/mcmc-run-3937.RData")
-load("mcmcs/mcmc-run-6418.RData"
+load("mcmcs-no-betaR/mcmc-run-3937.RData")
+load("mcmcs-no-betaR/mcmc-run-6418.RData")
+load("mcmcs-no-betaR/mcmc-run-8387.RData")
 estpar <- colMeans( mcrun$batch[1e4 + (1:(nrow(mcrun$batch)-1e4)),] )
-pars <- as.data.frame( rbind(initpar,estpar) )
+pars <- as.data.frame( rbind(initpar[names(mcrun$initial)],estpar) )
 pars$deltaT <- pars$sigmaLdeltaT / pars$sigmaL
 pars$deltaP <- pars$sigmaLdeltaP / pars$sigmaL
 pars$deltaR <- pars$sigmaLdeltaR / pars$sigmaL
-pars$deltaP <- pars$zetaLdeltaP / pars$zetaL
-pars$deltaR <- pars$zetaLdeltaR / pars$zetaL
+pars$zdeltaP <- pars$zetaLdeltaP / pars$zetaL
+pars$zdeltaR <- pars$zetaLdeltaR / pars$zetaL
+
+samples <- mcrun$batch[ seq(1e4,nrow(mcrun$batch),length.out=1e3), ]
+save( pars, samples, file="results.RData" )
 
 layout( matrix(1:nvars^2,nrow=nvars) )
 opar <- par(mar=c(0,0,0,0)+.1)

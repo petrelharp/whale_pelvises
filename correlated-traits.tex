@@ -238,8 +238,8 @@ with $X^P_i$ and $X^R_i$ unobserved.
 and for individuals we observe ($t={ijk}$):
 \begin{align}
     X^L_{ijk} &= \log L_{ij} \\
-    X^P_{ijk} &= \log ( V^P_{ijk} \\
-    X^R_{ijk} &= \log ( V^R_{ijk} ,
+    X^P_{ijk} &= \log V^P_{ijk} \\
+    X^R_{ijk} &= \log V^R_{ijk} ,
 \end{align}
 with $X^L_{ijk}$ and $X^T_{ijk}$ unobserved.
 Furthermore, associate to each note the value of $C$ on the edge leading to it,
@@ -322,10 +322,6 @@ so that $\tilde \Sigma^{-1} = (A^T A)^{-1} = A^{-1} (A^T)^{-1}$, and hence
 and since $A$ is upper triangular, $A^{-1} x$ can be found efficiently, e.g.\ with \texttt{forwardsolve(t(A),x)} in R.
 
 
-\paragraph{Shape:} the plan with shape is to leave it aside, 
-and afterwards see if faster shape changes associate with regions on the tree with larger posterior prob of competition.
-
-
 \section{Inference}
 
 So, we've reduced the model to a big multivariate normal distribution,
@@ -365,13 +361,17 @@ say $s$ and $t$ by
 \begin{align*}
     S_t - S_s = \sum_{e \in s \to t} Y_e ,
 \end{align*}
-with the $Y_e$ a vector of independent Gaussians with variance equal to $\tau'_e := (\sigma^2_S + \gamma_P C_e) \tau_e$.
+with the $Y_e$ a vector of independent Gaussians with variance we define to be $\tau'_e$, 
+which is either $(\sigma^2_S + \gamma_P C_e) \tau_e$ on internal edges, or $\xi^2_P$ on the tips.
 The parameters only enter through these rescaled branch lengths.
 Now 
 \begin{align}
-    \frac{ \|S_t - S_s\|^2 }{ \sum_{e \in s \to t} \tau'_e } \sim \chi^2_{k_s} ,
+  \|S_t - S_s\|^2 &= \sum_k \| \sum_{e \in s \to t} Y_{e,k} \|^2 , \quad \text{and} \\
+  \sum_{e \in s \to t} Y_{e,k} & \sim N(0, \sum_{e \in s \to t} \tau'_e ), \quad \text{so} \\
+  \frac{ \sum_{e \in s \to t} Y_{e,k} }{ \sqrt{ \sum_{e \in s \to t} \tau'_e } } &\sim N(0,1), \quad \text{and hence} \\
+  \frac{ \|S_t - S_s\|^2 }{  \sum_{e \in s \to t} \tau'_e } &\sim \chi^2_{k_s} .
 \end{align}
-which for large $k_s$ we can approximate as Gaussian,
+For large $k_s$ we can approximate the chi-squared as Gaussian,
 with parameters
 \begin{align*}
     \E[ \|S_t - S_s\|^2 ] &= k_s \sum_{e \in s \to t} \tau'_e \\
@@ -384,14 +384,18 @@ Now, the covariance: note that if $Z$ is independent of $X$ and $Y$, and has mea
     &= \cov[X,Y^2] ,
 \end{align}
 and hence, by iteratively removing edges not in $(u \to t) \cap (u \to s)$,
+since $\E[Y_e]=0$,
 \begin{align}
     \cov[ \|S_t - S_u\|^2, \|S_s - S_u\|^2 ] &= \sum_{k=1}^{k_s} \cov\left[ (S_t-S_u)_k^2, (S_s-S_u)_k^2 \right] \\
-                                             &= \sum_{k=1}^{k_s} \var\left[ \left( \sum_{e \in (u \to t) \cap (u \to s)} Y_e \right)^2 \right] \\
+          &= \sum_{k=1}^{k_s} \var\left[ \left( \sum_{e \in (u \to t) \cap (u \to s)} Y_{e,k} \right)^2 \right] \\
                                              &= \var\left[ \|S_{t \wedge s} - S_u\|^2 \right] \\
                                              &= 2 k_s \left( \sum_{e \in (u \to t) \cap (s \to t) } \tau'_e \right)^2 
 \end{align}
 where $t \wedge s$ is the node where the paths $u \to t$ and  $u \to s$ diverge.
 
+So, we're back to a multivariate Gaussian distribution;
+in this case the parameters $k_s$, $\sigma^2_S$, $\gamma_P$, and $\xi^2_P$ are used to construct $\tau'_e$,
+which then is used to make the covariance matrix between the $\|S_t - S_u\|^2$.
 
 
 

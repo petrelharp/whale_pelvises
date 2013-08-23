@@ -5,7 +5,7 @@ if (!exists("scriptdir")) {scriptdir <- "."}
 source(paste(scriptdir,"correlated-traits-fns.R",sep="/"))
 
 tree_file <- "consensusTree_ALL_CETACEA.tree"
-species_tree<-read.nexus(file=tree_file)
+species.tree<-read.nexus(file=tree_file)
 
 bones <- read.table("62_add_centroids.out", header=TRUE)
 bones <- droplevels( subset(bones, ! (species %in% c("ORCINUS_ORCA")) & ! (specimen == "LACM_54109") ) )
@@ -46,7 +46,7 @@ write.csv(whales,"whales.csv",row.names=FALSE)
 
 # set up the tree
 within_length <- 1
-tree <- species_tree
+tree <- species.tree
 for (sp in intersect(levels(whales$species),tree$tip.label)) {
     theseones <- (whales$species==sp)
     nsamps <- sum(theseones)
@@ -78,6 +78,8 @@ sample.nodes <- setdiff( 1:Ntip(tree), species.nodes )
 stopifnot( all( tree$edge.length[ tree$edge[,2] %in% species.nodes ] == 0 ) )
 stopifnot( all( tree$edge.length[ tree$edge[,2] %in% sample.nodes ] == within_length ) )
 stopifnot( ! ( rootnode %in% edge.indices ) )
+
+save(species.tree, tree, descendants, rootnode, edge.indices, tip.edges, species.nodes, sample.nodes, file="tree-stuff.RData" )
 
 ###
 # Get the data all together: [i,j] is j-th variable for i-th node in the tree
