@@ -5,6 +5,7 @@
 \renewcommand{\P}{\mathbb{P}}
 \newcommand{\E}{\mathbb{E}}
 \DeclareMathOperator{\cov}{cov}
+\DeclareMathOperator{\var}{var}
 
 \begin{document}
 
@@ -30,9 +31,8 @@ and the volume and shapes of the right and left pelvis and (smallest) rib bones.
 we ignore the details, assuming only we have a sensible method for measuring shape differences,
 after removing size differences.)
 For each species, we have
-adult body length,
-breeding male testes volume,
-and size dimorphism ratio.
+adult body length and
+breeding male testes volume.
 (Here I say ``we have''; but note that actually some values are missing,
 a fact we will have to deal with.)
 
@@ -40,15 +40,11 @@ Furthermore, we assume that it is sensible to quantify the strength of prezygoti
 and hypothesize that the degree of competition affects testes volume, pelvic bone size, and speed of change of pelvic bone shape.
 Not all forms of prezygotic sexual competition are expected to work in this way;
 here we mean only the forms that are.
-An auxilliary hypothesis is that this strength of competition is negatively correlated with sexual size dimorphism,
-since size dimorphism is expected to indicate that sexual competition occurs in a different arena.
 
 In summary, the variables we observe are, for species (or, node in the tree) $i$:
 \begin{gather*}
-    T_i = \text{(testes size)}, \\
-    D_i = \text{(size dimorphism)} .
+    T_i = \text{(testes size)} .
 \end{gather*}
-Dimorphism is female size over male size.
 Since the strength of sexual competition affects the evolution of other traits,
 and is unobserved in the data,
 it is better to associate a value of $C$ for each branch, rather than each taxon.
@@ -133,12 +129,11 @@ then we can sample across the edge by
 
 
 Given the species-level values,
-and coding $G_{ij}$ as 0 (males) or 1 (females),
 the data are then
 \begin{align}
-    L_{ij} &= (1-(1-D_i)G_{ij}) L_i \exp( W^L_{ij} ) \\
-    V^R_{ijk} &= (1-(1-D_i)G_{ij}) V^R_i \exp( \delta W^L_{ij} + W^R_{ij} + (-1)^k Z^R_{ij} ) \\
-    V^P_{ijk} &= (1-(1-D_i)G_{ij}) V^P_i \exp( \delta W^L_{ij} + W^P_{ij} + (-1)^k Z^P_{ij} ) \\
+    L_{ij} &=  L_i \exp( W^L_{ij} ) \\
+    V^R_{ijk} &=  V^R_i \exp( \delta W^L_{ij} + W^R_{ij} + (-1)^k Z^R_{ij} ) \\
+    V^P_{ijk} &=  V^P_i \exp( \delta W^L_{ij} + W^P_{ij} + (-1)^k Z^P_{ij} ) \\
     S^R_{ijk} &= S^R_i + Y^R_{ijk} \\
     S^P_{ijk} &= S^P_i + Y^P_{ijk} \\
     W^L_{ij} &\sim N(0,\zeta^2_L) \\
@@ -153,8 +148,6 @@ Here $W^L$ fits the unobserved length of the whale in question,
 while $W^R$, $W^P$, and the shape differences can be thought of as measurement or developmental noise.
 Similar to before, if we let $W_1, W_2, \ldots$ be independent N(0,1), 
 then we can sample the individual observations of individual $j$, given the species, 
-and omitting the 
-$\log\left( 1-(1-D_i)G_{ij} \right)$ term from sex differences, by
 \begin{align}
 \begin{bmatrix}
     \log L_{ij} \\
@@ -242,11 +235,11 @@ For species, nodes ($t=i$) we observe
     X^T_i &= \log T_i ,
 \end{align}
 with $X^P_i$ and $X^R_i$ unobserved.
-and for individuals we observe ($t={ijk}$), normalized by size dimorphism:
+and for individuals we observe ($t={ijk}$):
 \begin{align}
     X^L_{ijk} &= \log L_{ij} \\
-    X^P_{ijk} &= \log ( V^P_{ijk} / (1-(1-D_i)G_{ij}) ) \\
-    X^R_{ijk} &= \log ( V^R_{ijk} / (1-(1-D_i)G_{ij}) ) ,
+    X^P_{ijk} &= \log ( V^P_{ijk} \\
+    X^R_{ijk} &= \log ( V^R_{ijk} ,
 \end{align}
 with $X^L_{ijk}$ and $X^T_{ijk}$ unobserved.
 Furthermore, associate to each note the value of $C$ on the edge leading to it,
@@ -365,7 +358,47 @@ Also,
 \end{align}
 
 
+\section{Shape differences}
+
+Recall above that we can write the shape difference between two particular nodes, 
+say $s$ and $t$ by
+\begin{align*}
+    S_t - S_s = \sum_{e \in s \to t} Y_e ,
+\end{align*}
+with the $Y_e$ a vector of independent Gaussians with variance equal to $\tau'_e := (\sigma^2_S + \gamma_P C_e) \tau_e$.
+The parameters only enter through these rescaled branch lengths.
+Now 
+\begin{align}
+    \frac{ \|S_t - S_s\|^2 }{ \sum_{e \in s \to t} \tau'_e } \sim \chi^2_{k_s} ,
+\end{align}
+which for large $k_s$ we can approximate as Gaussian,
+with parameters
+\begin{align*}
+    \E[ \|S_t - S_s\|^2 ] &= k_s \sum_{e \in s \to t} \tau'_e \\
+    \var[ \|S_t - S_s\|^2 ] &= 2 k_s \left( \sum_{e \in s \to t} \tau'_e \right)^2 
+\end{align*}
+Now, the covariance: note that if $Z$ is independent of $X$ and $Y$, and has mean 0, then
+\begin{align}
+    \cov[X,(Y+Z)^2] &= \cov[X,Y^2] + 2 \cov[X,YZ] + \cov[X, Z^2] \\
+    &= \cov[X,Y^2] + 2 \E[Z] \cov[X,Y] + \cov[X,Z^2] \\
+    &= \cov[X,Y^2] ,
+\end{align}
+and hence, by iteratively removing edges not in $(u \to t) \cap (u \to s)$,
+\begin{align}
+    \cov[ \|S_t - S_u\|^2, \|S_s - S_u\|^2 ] &= \sum_{k=1}^{k_s} \cov\left[ (S_t-S_u)_k^2, (S_s-S_u)_k^2 \right] \\
+                                             &= \sum_{k=1}^{k_s} \var\left[ \left( \sum_{e \in (u \to t) \cap (u \to s)} Y_e \right)^2 \right] \\
+                                             &= \var\left[ \|S_{t \wedge s} - S_u\|^2 \right] \\
+                                             &= 2 k_s \left( \sum_{e \in (u \to t) \cap (s \to t) } \tau'_e \right)^2 
+\end{align}
+where $t \wedge s$ is the node where the paths $u \to t$ and  $u \to s$ diverge.
+
+
+
+
 \end{document}
+
+
+
 
 
 If we normalize the $X$ by subtracting off a weighted mean across species: 

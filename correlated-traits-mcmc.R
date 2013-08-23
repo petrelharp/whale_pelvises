@@ -6,7 +6,7 @@ Run mcmc longer.\
 "
 
 option_list <- list(
-        make_option( c("-i","--infile"), type="character", default=NULL, help=".RData file from previous MCMC run." ),
+        make_option( c("-i","--infile"), type="character", default='', help=".RData file from previous MCMC run." ),
         make_option( c("-n","--nbatches"), type="integer", default=1000, help="Number of MCMC batches. [default \"%default\"]" )
     )
 opt <- parse_args(OptionParser(option_list=option_list,description=usage))
@@ -15,7 +15,7 @@ if (interactive()) {
     nbatches <- 10
 }
 
-new.mcmc <- is.null(infile)
+new.mcmc <- (infile == '')
 old.run.id <- NA
 if (!new.mcmc) { 
     load(infile) 
@@ -36,7 +36,7 @@ require(mcmc)
 # return positive log-likelihood times posterior
 #  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, sigmaLdeltaT, sigmaLdeltaP, sigmaLdeltaR, zetaLdeltaP, zetaLdeltaR, 
 # priors on these are exponential
-prior.means <- c(3,3,3,3,3,.1,.1,.1,.1,.1,1,1,1,.1,.1)
+prior.means <- c(3,3,3,3,3,3,.1,.1,.1,.1,.1,1,1,1,.1,.1)
 stopifnot( length(prior.means) == length(initpar) )
 lud <- function (par) {
     if (any(par<=0)) { return( -Inf ) }
@@ -48,6 +48,9 @@ lud <- function (par) {
 
 run.id <- sample.int(9999,size=1)
 set.seed(run.id)
+
+par.scale <- prior.means/100
+par.scale[ names(initpar) %in% c( "sigmaLdeltaT", "sigmaLdeltaP", "sigmaLdeltaR" ) ] <- 1/10
 
 if (new.mcmc) {
     mcrun <- metrop( lud, initial=initpar, nbatch=nbatches, blen=1, scale=prior.means/100 )
