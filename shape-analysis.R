@@ -18,8 +18,11 @@ estpar <- unlist( pars["estpar",] )
 # shapes
 shapediff <- read.table("61_pairwise_shapes.out", header=TRUE)
 shapediff <- subset( shapediff, ( bone1==bone2 ) & ( specimen1 %in% rownames(thedata) ) & ( specimen2 %in% rownames(thedata) ) )
+shapediff$species1 <- whales$species[match(shapediff$specimen1,whales$specimen)]
+shapediff$species2 <- whales$species[match(shapediff$specimen2,whales$specimen)]
 ### TEMPORARY
 shapediff <- subset( shapediff, (specimen1 != "USNM_504107") & (specimen2 != "USNM_504107") & ( side1 == "left") & ( side2 == "left" ) )
+####
 shapediff$specimen1 <- factor( shapediff$specimen1, levels=rownames(thedata) )
 shapediff$specimen2 <- factor( shapediff$specimen2, levels=rownames(thedata) )
 # matrix of pelvis shape differences
@@ -49,6 +52,7 @@ species.treedist <- treedist( species.tree )[ species.order, species.order ]
 # look at this
 plot( as.vector(species.treedist), as.vector(rib.speciesdiff) )
 plot( as.vector(species.treedist), as.vector(pelvic.speciesdiff) )
+
 # and resids
 rib.lm <- ( lm( rib.speciesdiff[upper.tri(rib.speciesdiff)] ~ species.treedist[upper.tri(species.treedist)] ) )
 pelvic.lm <- ( lm( pelvic.speciesdiff[upper.tri(pelvic.speciesdiff)] ~ species.treedist[upper.tri(species.treedist)] ) )
@@ -114,8 +118,6 @@ treemat <- treedist( adjtree, descendants=descendants )
 
 # quick-and-dirty parameters
 # within-species variance
-shapediff$species1 <- whales$species[match(shapediff$specimen1,whales$specimen)]
-shapediff$species2 <- whales$species[match(shapediff$specimen2,whales$specimen)]
 tip.ribvar <- with( subset( shapediff, species1==species2 & bone1=="rib" & bone2=="rib"), tapply( shape_difference, species1, mean, na.rm=TRUE ) )
 tip.pelvicvar <- with( subset( shapediff, species1==species2 & bone1=="pelvic" & bone2=="pelvic"), tapply( shape_difference, species1, mean, na.rm=TRUE ) )
 # estimate of xi2P,R

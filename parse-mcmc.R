@@ -3,7 +3,7 @@
 load("mcmc-setup.RData")
 load("thedata-and-covmatrices.Rdata")
 
-show( load("mcmcs/mcmc-run-8387.RData") )
+show( load("mcmcs/mcmc-run-2125.RData") )
 
 nvars <- length(initpar)
 havedata <- !is.na(thedata)
@@ -48,18 +48,35 @@ abline(0,1)
 ####
 # Take this one
 
-load("mcmcs-no-betaR/mcmc-run-3937.RData")
-load("mcmcs-no-betaR/mcmc-run-6418.RData")
-load("mcmcs-no-betaR/mcmc-run-8387.RData")
-estpar <- colMeans( mcrun$batch[1e4 + (1:(nrow(mcrun$batch)-1e4)),] )
+show( load("mcmcs/mcmc-run-2125.RData") )
+
+burnin <- 2e4
+usethese <- burnin + (1:(nrow(mcrun$batch)-burnin))
+estpar <- colMeans( mcrun$batch[usethese,] )
 pars <- as.data.frame( rbind(initpar[names(mcrun$initial)],estpar) )
+quants <- as.data.frame( apply(mcrun$batch[usethese,],2,quantile,c(.05,.25,.75,.95)) )
+names(quants) <- names(pars)
+for ( x in c("deltaT", "deltaP","deltaR") ) {
+    for (y in c("sigmaL","zetaL")) {
+        combname <- paste(y,x,sep='')
+        jj <- match(combname,names(mcrun$initial))
+        if (!is.na(jj)) {
+            kk <- match(y,names(mcrun$initial))
+            quants$deltaT <- quantile( mcrun$batch[usethese,jj]/mcrun$batch[usethese,jj], c(.05,.25,.75,.95) )
+            outname <- paste(substr(y,1,1),x)
+            pars[outname] <- pars[combname] / pars[x]
+        }
+    }
+}
+
 pars$deltaT <- pars$sigmaLdeltaT / pars$sigmaL
 pars$deltaP <- pars$sigmaLdeltaP / pars$sigmaL
 pars$deltaR <- pars$sigmaLdeltaR / pars$sigmaL
 pars$zdeltaP <- pars$zetaLdeltaP / pars$zetaL
 pars$zdeltaR <- pars$zetaLdeltaR / pars$zetaL
+pars <- rbind(pars, quants)
 
-samples <- mcrun$batch[ seq(1e4,nrow(mcrun$batch),length.out=1e3), ]
+samples <- mcrun$batch[ seq(burnin,nrow(mcrun$batch),length.out=1e3), ]
 save( pars, samples, file="results.RData" )
 
 layout( matrix(1:nvars^2,nrow=nvars) )
