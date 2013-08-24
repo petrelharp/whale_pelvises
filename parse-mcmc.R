@@ -60,32 +60,71 @@ for ( x in c("deltaT", "deltaP","deltaR") ) {
     for (y in c("sigmaL","zetaL")) {
         combname <- paste(y,x,sep='')
         jj <- match(combname,names(mcrun$initial))
+        kk <- match(y,names(mcrun$initial))
         if (!is.na(jj)) {
-            kk <- match(y,names(mcrun$initial))
-            quants$deltaT <- quantile( mcrun$batch[usethese,jj]/mcrun$batch[usethese,jj], c(.05,.25,.75,.95) )
-            outname <- paste(substr(y,1,1),x)
-            pars[outname] <- pars[combname] / pars[x]
+            outname <- paste(substr(y,1,1),x,sep='')
+            quants[outname] <- quantile( mcrun$batch[usethese,jj]/mcrun$batch[usethese,kk], c(.05,.25,.75,.95) )
+            pars[outname] <- pars[combname] / pars[y]
         }
     }
 }
-
-pars$deltaT <- pars$sigmaLdeltaT / pars$sigmaL
-pars$deltaP <- pars$sigmaLdeltaP / pars$sigmaL
-pars$deltaR <- pars$sigmaLdeltaR / pars$sigmaL
-pars$zdeltaP <- pars$zetaLdeltaP / pars$zetaL
-pars$zdeltaR <- pars$zetaLdeltaR / pars$zetaL
-pars <- rbind(pars, quants)
+pars <- rbind( pars, quants )
+pars <- pars[ ! ( grepl("delta",names(pars)) & ( grepl("sigma",names(pars)) | grepl("zeta",names(pars)) ) ) ]
 
 samples <- mcrun$batch[ seq(burnin,nrow(mcrun$batch),length.out=1e3), ]
+colnames(samples) <- names(mcrun$initial)
 save( pars, samples, file="results.RData" )
 
+####
+# output tables
+
+require(xtable)
+xtable( pars[c(3,4,2,5,6), grep("delta",names(pars),invert=TRUE) ], digits=3 )
+xtable( pars[c(3,4,2,5,6), grep("delta",names(pars)) ], digits=3 )
+
+names(estpar) <- names(mcrun$initial)
+species.params <- estpar[species.parindices]
+sample.params <- estpar[sample.parindices]
+species.transmat[species.Tind] <- species.params[species.Sind]
+sample.transmat[sample.Tind] <- sample.params[sample.Sind] * sample.Pcoef
+species.covmat <- as.matrix( tcrossprod(species.transmat) )
+sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
+species.subcovmat <- as.matrix( tcrossprod(species.transmat[-1,-1]) )
+sample.subcovmat <- as.matrix( tcrossprod(sample.transmat[-1,-1]) )
+
+xtable( cov2cor(species.covmat)[c(1,2,3,5),c(1,2,3,5)], digits=2 )
+xtable( cov2cor(sample.covmat)[c(1,3:6),c(1,3:6)], digits=2 )
+xtable( cov2cor(species.subcovmat[c(1,2,4),c(1,2,4)]) )
+
+# get posterior distribution on the correlations
+get.correlations <- function (par) {
+    species.params <- par[species.parindices]
+    sample.params <- par[sample.parindices]
+    species.transmat[species.Tind] <- species.params[species.Sind]
+    sample.transmat[sample.Tind] <- sample.params[sample.Sind] * sample.Pcoef
+    species.subcovmat <- as.matrix( tcrossprod(species.transmat[-1,-1]) )
+    sample.subcovmat <- as.matrix( tcrossprod(sample.transmat[-1,-1]) )
+    return( cov2cor(species.subcovmat[c(1,2,4),c(1,2,4)]) )
+}
+posterior.cors <- apply( samples, 1, get.correlations )
+dim( posterior.cors ) <- c(3,3,nrow(samples))
+
+hist( posterior.cors[1,2,], breaks=30, xlim=range(posterior.cors), col=adjustcolor('black',.5), xlab="value", main='', ylab="posterior density", freq=FALSE )
+hist( posterior.cors[1,3,], breaks=30, col=adjustcolor('red',.5), add=TRUE, freq=FALSE )
+hist( posterior.cors[2,3,], breaks=30, col=adjustcolor('blue',.5), add=TRUE, freq=FALSE )
+legend("topright", fill=adjustcolor(c('black','red','blue'),.5), legend=c("testes-ribs", "testes-pelvis", "ribs-pelvis"), main="correlations" )
+
+
+###
+# pairwise correlations
 layout( matrix(1:nvars^2,nrow=nvars) )
 opar <- par(mar=c(0,0,0,0)+.1)
+subsamp <- floor( seq( 1, nrow(mcrun$batch), length.out=1000 ) )
 for (j in 1:nvars) for (k in 1:nvars) {
     if (j==k) { 
         plot(0,type='n',xlim=c(-1,1),ylim=c(-1,1)); text(0,0,names(mcrun$initial)[j]) 
     } else {
-        plot( mcrun$batch[,j], mcrun$batch[,k], pch=20, col=adjustcolor(rainbow(64),.1)[ceiling(64*(1:nrow(mcrun$batch))/(nrow(mcrun$batch+1)))] )
+        plot( mcrun$batch[subsamp,j], mcrun$batch[subsamp,k], pch=20, col=adjustcolor(rainbow(64),.1)[ceiling(64*subsamp/(nrow(mcrun$batch+1)))] )
     }
 }
 par(opar)

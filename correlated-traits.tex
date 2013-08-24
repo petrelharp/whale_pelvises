@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage{fullpage}
 \usepackage{amsmath,amssymb}
+\usepackage{graphicx}
 
 \renewcommand{\P}{\mathbb{P}}
 \newcommand{\E}{\mathbb{E}}
@@ -43,6 +44,7 @@ here we mean only the forms that are.
 
 In summary, the variables we observe are, for species (or, node in the tree) $i$:
 \begin{gather*}
+    L_i = \text{(adult length)} \\
     T_i = \text{(testes size)} .
 \end{gather*}
 Since the strength of sexual competition affects the evolution of other traits,
@@ -55,12 +57,11 @@ So, for a branch $e$ in the tree, define
 We will take $C$ to be a real number, with smaller (perhaps negative) values of $C$ denoting less competition.
 For whale $j$ in species $i$, we have bones from both sides; so for $k \in \{\text{left},\text{right}\}$:
 \begin{gather*}
-    G_{ij} = \text{( sex )} \qquad  L_{ij} = \text{( body length )} \\
+    L_{ij} = \text{( body length )} \\
     V^P_{ijk} = \text{( pelvic volume )} \qquad S^P_{ijk} = \text{( rib shape )} \\
     V^R_{ijk} = \text{( rib volume )} \qquad S^R_{ijk} = \text{( rib shape )} 
 \end{gather*}
 Note this includes both observed and unobserved variables.
-Furthermore, write, for instance $V^P_i$ for the mean pelvic volume in species $i$.
 
 First we describe how the species-level variables evolve on the tree,
 namely, across a single branch.
@@ -96,12 +97,12 @@ with increments given by $Z^L$.
 A multiplicative change $a$ in length changes volumes by a factor of $a^\delta$ (so, $e^{\delta Z^L}$);
 in addition, there is independent evolution of each volume ($U$ terms).
 Furthermore, changes in strength of competition affect the volume of the testes and pelvic bones.
-Shape evolves as a $k_S$-dimensional Brownian motion (so changes are chi-squared),
+Shape evolves as a $k_S$-dimensional Brownian motion (discussed below),
 and the speed of pelvic shape depends on the strength of competition.
 In other words, if we let
 $(\zeta_1, \ldots, \zeta_4)$ be independent N(0,1),
 then we can sample across the edge by
-\begin{align}
+\begin{align}\label{eqn:species_matrix}
 \begin{bmatrix}
     \log L_t \\ \log T_t \\ \log V^R_t \\ \log V^P_t 
 \end{bmatrix}
@@ -112,9 +113,9 @@ then we can sample across the edge by
 +
 \begin{bmatrix}
     \sigma_L \sqrt{\tau} &  0  & 0  & 0  \\
-    \sigma_L \sqrt{\delta \tau}  &  \beta_T \sqrt{\tau}  & 0  &   0 \\
-    \sigma_L \sqrt{\delta \tau}  &  0        & \sigma_R \sqrt{\tau}  &   0 \\
-    \sigma_L \sqrt{\delta \tau}  &  \beta_P \sqrt{\tau}  & 0  &   \sigma_P\sqrt{\tau}  
+    \sigma_L \delta_T \sqrt{\tau}  &  \beta_T \sqrt{\tau}  & 0  &   0 \\
+    \sigma_L \delta_R \sqrt{\tau}  &  \beta_R \sqrt{\tau}  & \sigma_R \sqrt{\tau}  &   0 \\
+    \sigma_L \delta_P \sqrt{\tau}  &  \beta_P \sqrt{\tau}  & 0  &   \sigma_P\sqrt{\tau}  
 \end{bmatrix}
 \begin{bmatrix}
     Z_1 \\ Z_2 \\ Z_3 \\ Z_4
@@ -148,7 +149,7 @@ Here $W^L$ fits the unobserved length of the whale in question,
 while $W^R$, $W^P$, and the shape differences can be thought of as measurement or developmental noise.
 Similar to before, if we let $W_1, W_2, \ldots$ be independent N(0,1), 
 then we can sample the individual observations of individual $j$, given the species, 
-\begin{align}
+\begin{align} \label{eqn:sample_matrix}
 \begin{bmatrix}
     \log L_{ij} \\
     \log V_{ij1}^R \\ \log V_{ij2}^R  \\
@@ -163,10 +164,10 @@ then we can sample the individual observations of individual $j$, given the spec
 +
 \begin{bmatrix}
     \zeta_L  &   0 & 0  & 0  & 0 \\
-    \sqrt{\delta} \zeta_L  &  \zeta_R  &  \omega_R  & 0 & 0 \\ 
-    \sqrt{\delta} \zeta_L  & \zeta_R   & - \omega_R & 0 & 0\\ 
-    \sqrt{\delta} \zeta_L  & 0 & 0 &  \zeta_P  & \omega_P  \\ 
-    \sqrt{\delta} \zeta_L  & 0 & 0 &  \zeta_P  & - \omega_P
+    \eta_R \zeta_L  &  \zeta_R  &  \omega_R  & 0 & 0 \\ 
+    \eta_R \zeta_L  & \zeta_R   & - \omega_R & 0 & 0\\ 
+    \eta_P \zeta_L  & 0 & 0 &  \zeta_P  & \omega_P  \\ 
+    \eta_P \zeta_L  & 0 & 0 &  \zeta_P  & - \omega_P
 \end{bmatrix}
 \begin{bmatrix}
 W_1 \\W_2 \\W_3 \\W_4 \\ W_5  \\ 
@@ -181,34 +182,36 @@ W_1 \\W_2 \\W_3 \\W_4 \\ W_5  \\
 \end{align}
 and different individuals are independent, given the species values.
 
-Parameters, excluding those involving shape, are thus:
-\begin{align}
-    \theta_S = (
-    \sigma_L,
-    \beta_T,
-    \beta_P,
-    \sigma_R,
-    \sigma_P,
-    \zeta_L,
-    \zeta_R,
-    \omega_R,
-    \zeta_P,
-    \omega_P
-    ) ,
-\end{align}
-and those involving shape are:
-\begin{align}
-    \theta_I = (
-    \sigma^2_S,
-    \gamma_P,
-    k_S,
-    \xi^2_R,
-    \xi^2_P
-    )
-\end{align}
-We only actually care about $\beta_T$, $\beta_P$, and $\gamma_P$.
-We can furthermore add additional $\beta_R$ and $\gamma_R$ terms, which we expect to be zero.
 
+%%%%
+\section{Covariances and correlations}
+
+Squaring the matrix above in \eqref{eqn:species_matrix} we get the covariance matrix 
+for changes along a branch of length $\tau = 1$:
+\begin{align}
+\begin{bmatrix}
+  \sigma_L^2 &  \sigma_L^2 \delta_T   & \sigma_L^2 \delta_R  & \sigma_L^2 \delta_P   \\
+  \cdot &  \sigma_L^2 \delta_T^2 + \beta_T^2 & \sigma_L^2 \delta_T \delta_R + \beta_T \beta_R   &   \sigma_L^2 \delta_T \delta_P + \beta_T \beta_P \\
+    \cdot  &  \cdot & \delta_R^2 \sigma_L^2 + \beta_R^2 + \sigma_R^2 &   \sigma_L^2 \delta_R \delta_P + \beta_R \beta_P  \\
+    \cdot  &  \cdot  & \cdot  &  \delta_P^2 \sigma_L^2 + \beta_P^2 + \sigma_P^2  
+\end{bmatrix}
+\quad \begin{matrix}
+  \leftarrow \text{(length)} \\
+  \leftarrow \text{(testes)} \\
+  \leftarrow \text{(ribs)} \\
+  \leftarrow \text{(pelvic)} 
+\end{matrix}
+\end{align}
+
+Concretely, we can say that a proportion
+\[
+\frac{\beta_P}{ \delta_P \sigma_L + \beta_P + \sigma_P }
+\]
+of the changes in pelvic bone size changes
+comes from changes in testes size.
+
+
+%%%%
 \section{Implementation}
 
 First extend the phylogenetic tree to include each individual sample, by adding a ``twig'' for each sample
@@ -397,7 +400,129 @@ So, we're back to a multivariate Gaussian distribution;
 in this case the parameters $k_s$, $\sigma^2_S$, $\gamma_P$, and $\xi^2_P$ are used to construct $\tau'_e$,
 which then is used to make the covariance matrix between the $\|S_t - S_u\|^2$.
 
+\section{Results}
 
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Fri Aug 23 22:37:05 2013
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrrrrrrrrr}
+  \hline
+ & $\sigma_L$ & $\beta_T$ & $\beta_P$ & $\beta_R$ & $\sigma_R$ & $\sigma_P$ & $\zeta_L$ & $\zeta_R$ & $\omega_R$ & $\zeta_P$ & $\omega_P$ \\ 
+  \hline
+5\% & 1.648 & 4.840 & 0.188 & 0.004 & 0.343 & 0.658 & 0.042 & 0.054 & 0.011 & 0.121 & 0.020 \\ 
+  25\% & 1.822 & 5.264 & 0.371 & 0.022 & 0.434 & 0.799 & 0.044 & 0.059 & 0.012 & 0.128 & 0.021 \\ 
+  mean & 1.965 & 5.752 & 0.484 & 0.064 & 0.521 & 0.926 & 0.046 & 0.062 & 0.013 & 0.135 & 0.022 \\ 
+  75\% & 2.100 & 6.074 & 0.598 & 0.092 & 0.598 & 1.030 & 0.048 & 0.066 & 0.013 & 0.141 & 0.023 \\ 
+  95\% & 2.307 & 7.430 & 0.776 & 0.176 & 0.729 & 1.262 & 0.051 & 0.071 & 0.014 & 0.150 & 0.024 \\ 
+   \hline
+\end{tabular}
+\caption{Parameter estimates: posterior mean value and quantiles from 60,000 MCMC iterations.}
+\end{table}
+
+
+
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Fri Aug 23 22:37:05 2013
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrrr}
+  \hline
+ & $\delta_T$ & $\delta_P$ & $\eta_P$ & $\delta_R$ & $\eta_R$ \\ 
+  \hline
+  5\% & 1.802 & 0.672 & 0.379 & 0.355 & 0.034 \\ 
+  25\% & 2.073 & 0.754 & 0.517 & 0.484 & 0.158 \\ 
+  mean & 2.263 & 0.805 & 0.602 & 0.558 & 0.317 \\ 
+  75\% & 2.462 & 0.861 & 0.692 & 0.645 & 0.449 \\ 
+  95\% & 2.806 & 0.934 & 0.818 & 0.733 & 0.693 \\ 
+   \hline
+\end{tabular}
+\caption{Continued: posterior mean parameter value and quantiles from 60,000 MCMC iterations.}
+\end{table}
+
+The proportion of the changes in pelvic bone changes coming from changes in testes size is, at the mean values,
+%   ( 0.484 ) / ( 0.484 + (1.965*0.805) + 0.926 )
+\[
+\frac{\beta_P}{ \delta_P \sigma_L + \beta_P + \sigma_P } = 0.16 .
+\]
+For ribs, this is
+%   0.064 / ( 0.064 + (1.965*0.558) + 0.521 )
+\[
+\frac{\beta_R}{ \delta_R \sigma_L + \beta_R + \sigma_R } = 0.04 .
+\]
+
+The correlation matrix for changes along a branch at the posterior mean parameter values is \\
+%  xtable( cov2cor(species.covmat)[c(1,2,3,5),c(1,2,3,5)], digits=2 )
+% latex table generated in R 3.0.1 by xtable 1.7-1 package
+% Fri Aug 23 23:40:19 2013
+\begin{align}
+\begin{bmatrix}
+   1.00 & 0.61 & 0.95 & 0.72 \\ 
+   0.61 & 1.00 & 0.61 & 0.70 \\ 
+   0.95 & 0.61 & 1.00 & 0.70 \\ 
+   0.72 & 0.70 & 0.70 & 1.00 
+ \end{bmatrix}
+\quad \begin{matrix}
+  \leftarrow \text{(length)} \\
+  \leftarrow \text{(testes)} \\
+  \leftarrow \text{(ribs)} \\
+  \leftarrow \text{(pelvis)} 
+\end{matrix} ,
+\end{align}
+and the correlation matrix for changes within species is
+%  xtable( cov2cor(sample.covmat)[c(1,3:6),c(1,3:6)], digits=2 )
+\begin{align}
+\begin{bmatrix}
+  1.00 & 0.40 & 0.40 & 0.11 & 0.11 \\ 
+  0.40 & 1.00 & 0.93 & 0.04 & 0.04 \\ 
+  0.40 & 0.93 & 1.00 & 0.04 & 0.04 \\ 
+  0.11 & 0.04 & 0.04 & 1.00 & 0.95 \\ 
+  0.11 & 0.04 & 0.04 & 0.95 & 1.00 
+ \end{bmatrix}
+\quad \begin{matrix}
+  \leftarrow \text{(length)} \\
+  \leftarrow \text{(right ribs)} \\
+  \leftarrow \text{(left ribs)} \\
+  \leftarrow \text{(right pelvis)} \\
+  \leftarrow \text{(left pelvis)} 
+\end{matrix}  .
+\end{align}
+The correlations are high, but this is due to shared correlations with length.
+If we remove this, so look at e.g.\ correlation between the traits on a branch with length fixed,
+we get the following correlation matrix:
+%  xtable( cov2cor(species.subcovmat[c(1,2,4),c(1,2,4)]) )
+\begin{align}
+\begin{bmatrix}
+  1 & r_{TR} & r_{TP} \\ 
+  r_{TR} & 1 & r_{RP} \\ 
+  r_{TP} & r_{RP} & 1 
+ \end{bmatrix}
+ =
+\begin{bmatrix}
+   1.00 & 0.12 & 0.46 \\ 
+   0.12 & 1.00 & 0.06 \\ 
+   0.46 & 0.06 & 1.00 
+ \end{bmatrix}
+\quad \begin{matrix}
+  \leftarrow \text{(testes)} \\
+  \leftarrow \text{(rib)} \\
+  \leftarrow \text{(pelvis)} \\
+\end{matrix}  .
+\end{align}
+The marginal posterior distributions for these three parameters
+are shown in figure \ref{fig:posterior_cors}.
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics{posterior-correlations}
+  \end{center}
+  \caption{Marginal posterior distributions of correlations, with length fixed,
+  between changes in rib size, pelvic bone size, and testes size.
+  \emph{Note:} I'd constrained these to be nonnegative.  
+  Re-running the MCMC without that constraint, so that correlations with ribs should be centered at zero.
+  \label{fig:posterior_cors}
+  }
+\end{figure}
 
 \end{document}
 
