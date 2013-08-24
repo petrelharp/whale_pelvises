@@ -7,7 +7,9 @@ Run mcmc longer.\
 
 option_list <- list(
         make_option( c("-i","--infile"), type="character", default='', help=".RData file from previous MCMC run." ),
-        make_option( c("-n","--nbatches"), type="integer", default=1000, help="Number of MCMC batches. [default \"%default\"]" )
+        make_option( c("-n","--nbatches"), type="integer", default=1000, help="Number of MCMC batches. [default \"%default\"]" ),
+        make_option( c("-o","--outdir"), type="character", default='mcmcs/', help="Directory to put output in. [default \"%default\"]" )
+
     )
 opt <- parse_args(OptionParser(option_list=option_list,description=usage))
 attach(opt)
@@ -16,11 +18,8 @@ if (interactive()) {
 }
 
 new.mcmc <- (infile == '')
-old.run.id <- NA
-if (!new.mcmc) { 
-    load(infile) 
-    old.run.id <- run.id
-}
+if (!new.mcmc) { load(infile) }
+old.run.id <- if (new.mcmc) { NA } else { run.id }
 
 #####
 # MCMC
@@ -37,9 +36,12 @@ require(mcmc)
 #  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, sigmaLdeltaT, sigmaLdeltaP, sigmaLdeltaR, zetaLdeltaP, zetaLdeltaR, 
 # priors on these are exponential
 prior.means <- c(3,3,3,3,3,3,.1,.1,.1,.1,.1,1,1,1,.1,.1)
+# constrain these to be nonnegative:
+nonnegs <- c("sigmaL", "betaT", "sigmaR", "sigmaP", "zetaL", "zetaR", "omegaR", "zetaP", "omegaP" )
+nonneg.inds <- match( nonnegs, names(initpar) ) 
 stopifnot( length(prior.means) == length(initpar) )
 lud <- function (par) {
-    if (any(par<=0)) { return( -Inf ) }
+    if (any(par[nonneg.inds]<=0)) { return( -Inf ) }
     fullmat <- make.fullmat( par )[havedata,havedata]
     submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
     fchol <- chol(submat)
@@ -58,4 +60,4 @@ if (new.mcmc) {
     mcrun <- metrop( mcrun, nbatch=nbatches, blen=1, scale=prior.means/100 )
 }
 
-save(mcrun, run.id, old.run.id, prior.means, lud, file=paste("mcmcs/mcmc-run-",run.id,".RData",sep=''))
+save(mcrun, run.id, old.run.id, prior.means, lud, file=paste(outdir, "mcmc-run-",run.id,".RData",sep=''))
