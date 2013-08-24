@@ -109,10 +109,13 @@ get.correlations <- function (par) {
 posterior.cors <- apply( samples, 1, get.correlations )
 dim( posterior.cors ) <- c(3,3,nrow(samples))
 
-hist( posterior.cors[1,2,], breaks=30, xlim=range(posterior.cors), col=adjustcolor('black',.5), xlab="value", main='', ylab="posterior density", freq=FALSE )
+pdf(file="posterior-correlations.pdf", width=4, height=3, pointsize=10 )
+par(mar=c(4,4,1,1)+.1)
+hist( posterior.cors[1,2,], breaks=30, xlim=range(posterior.cors), ylim=c(0, 10), col=adjustcolor('black',.5), xlab="value", main='', ylab="posterior density", freq=FALSE )
 hist( posterior.cors[1,3,], breaks=30, col=adjustcolor('red',.5), add=TRUE, freq=FALSE )
 hist( posterior.cors[2,3,], breaks=30, col=adjustcolor('blue',.5), add=TRUE, freq=FALSE )
-legend("topright", fill=adjustcolor(c('black','red','blue'),.5), legend=c("testes-ribs", "testes-pelvis", "ribs-pelvis"), main="correlations" )
+legend("topright", fill=adjustcolor(c('black','red','blue'),.5), legend=c("testes-ribs", "testes-pelvis", "ribs-pelvis"), title="correlations" )
+dev.off()
 
 
 ###
