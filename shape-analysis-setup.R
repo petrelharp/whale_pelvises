@@ -62,8 +62,10 @@ pelvic.denom <- pelvic.denom + t(pelvic.denom) - diag(diag(pelvic.denom))
 pelvic.speciesdiff <- pelvic.speciesdiff / pelvic.denom
 
 # treedist
+all.treedist <- treedist( adjtree )
+rownames(all.treedist) <- colnames(all.treedist) <- rownames(thedata)
 species.order <- match( levels(shapediff$species1), species.tree$tip.label  )
-species.treedist <- treedist( species.tree )[ species.order, species.order ]
+species.treedist <- treedist(species.tree)[ species.order, species.order ]
 rownames(species.treedist) <- colnames(species.treedist) <- species.tree$tip.label[species.order]
 
 
@@ -88,17 +90,19 @@ fullmean <- cbind( fullmean, scaled.testes=(fullmean[,"actual_testes_mass_max"] 
 # associate mean value of adjacent nodes to each edge
 edge.values <- t( apply( tree$edge, 1, function (kk) { colMeans(fullmean[kk,]) } ) )
 colnames(edge.values) <- colnames(fullmean)
-edge.testes <- ( edge.values[,"scaled.testes"] * internal.lengths )
+edge.testes <- ( edge.values[,"scaled.testes"] )
 
 # and testes-weighted relative time in the tree:
-testes.treedist <- treedist( tree, edge.length=scale(edge.testes) )
+internal.lengths <- tree$edge.length
+internal.lengths[tip.edges] <- (.05/3.16)^2
+testes.treedist <- treedist( tree, edge.length=scale(edge.testes * internal.lengths) )
 rownames(testes.treedist) <- colnames(testes.treedist) <- rownames(thedata)
 testes.spdist <- testes.treedist[match(levels(shapediff$species1),rownames(thedata)),match(levels(shapediff$species1),rownames(thedata))]
 
 # visualization
 adjtree <- tree
 adjtree$edge.length[tip.edges] <- (.05/3.16)^2  # reasonable value from initial-values.R
-#
+
 if (interactive()) {
     layout(t(1:2))
     plot(adjtree,edge.color=diverge_hcl(64)[cut(edge.testes,breaks=seq((-1.05)*max(abs(edge.testes)),1.05*max(abs(edge.testes)),length.out=65))],main='relative testes size',edge.width=3,tip.color=ifelse(is.na(thedata[,"left.rib"])&is.na(thedata[,"right.rib"]),'red','black')[1:Ntip(adjtree)],cex=.5)
@@ -109,23 +113,59 @@ if (interactive()) {
 ######
 # BACK-OF-THE-ENVELOPE:
 
+pelvics <- with(shapediff, (bone1 == bone2) & (bone1 == "pelvic") & (specimen1 != specimen2) )
+pelvic.specimens <- with( subset(shapediff,pelvics), unique( c(as.character(specimen1),as.character(specimen2)) ) )
+ribs <- with(shapediff, (bone1 == bone2) & (bone1 == "rib") & (specimen1 != specimen2) )
+rib.specimens <- with( subset(shapediff,ribs), unique( c(as.character(specimen1),as.character(specimen2)) ) )
+both.specimens <- intersect( pelvic.specimens, rib.specimens )
+have.both <- with(shapediff, specimen1 %in% both.specimens &  specimen2 %in% both.specimens )
+havecols <- ifelse( have.both, 'black', 'red' )
+
+tdist <- all.treedist[ as.matrix( shapediff[,c("specimen1","specimen2")] ) ]
+testdist <- testes.treedist[ as.matrix( shapediff[,c("specimen1","specimen2")] ) ]
+pelvic.lm <- with( shapediff, lm( shape_difference ~ tdist, subset=pelvics ) )
+rib.lm <- with( shapediff, lm( shape_difference ~ tdist, subset=ribs ) )
+pelvic.bi.lm <- with( shapediff, lm( shape_difference ~ tdist + testdist, subset=pelvics ) )
+rib.bi.lm <- with( shapediff, lm( shape_difference ~ tdist + testdist, subset=ribs ) )
+
+layout(t(1:2))
+with(shapediff, plot( shape_difference ~ tdist, pch=20, cex=.5, col=adjustcolor(havecols,.2), subset=pelvics, main='pelvics' ) )
+points( fitted(pelvic.bi.lm) ~ tdist[pelvics], cex=.5, col=adjustcolor('green',.2), main='pelvics' )
+abline( coef(pelvic.lm), col='red' )
+with(shapediff, plot( shape_difference ~ tdist, pch=20, cex=.5, col=adjustcolor(havecols,.2), subset=ribs, main='ribs' ) )
+abline( coef(rib.lm), col='red' )
+
+
+
 # predict shape difference from time in the tree:
-have.ribs <- ( !is.na( rib.speciesdiff[upper.tri(rib.speciesdiff)] ) )
-rib.lm <- ( lm( rib.speciesdiff[upper.tri(rib.speciesdiff)] ~ species.treedist[upper.tri(species.treedist)], subset=have.ribs ) )
-have.pelvics <- ( !is.na( pelvic.speciesdiff[upper.tri(pelvic.speciesdiff)] ) )
-pelvic.lm <- ( lm( pelvic.speciesdiff[upper.tri(pelvic.speciesdiff)] ~ species.treedist[upper.tri(species.treedist)], subset=have.pelvics ) )
+ut <- upper.tri(pelvic.speciesdiff)
+have.ribs <- ( !is.na( rib.speciesdiff ) )
+have.pelvics <- ( !is.na( pelvic.speciesdiff ) )
+have.both <- have.ribs & have.pelvics
+pelvic.lm <- lm( pelvic.speciesdiff[ut] ~ species.treedist[ut] )
+bi.pelvic.lm <- lm( pelvic.speciesdiff[ut] ~ species.treedist[ut] + testes.spdist[ut] )
+rib.lm <- lm( rib.speciesdiff[ut] ~ species.treedist[ut] )
+bi.rib.lm <- lm( rib.speciesdiff[ut] ~ species.treedist[ut] + testes.spdist[ut] )
+
 # restrict to full observations
-have.both <- ( !is.na( rib.speciesdiff[upper.tri(rib.speciesdiff)] ) ) & ( !is.na( pelvic.speciesdiff[upper.tri(pelvic.speciesdiff)] ) ) 
-sub.rib.lm <- ( lm( rib.speciesdiff[upper.tri(rib.speciesdiff)] ~ species.treedist[upper.tri(species.treedist)], subset=have.both ) )
-sub.pelvic.lm <- ( lm( pelvic.speciesdiff[upper.tri(pelvic.speciesdiff)] ~ species.treedist[upper.tri(species.treedist)], subset=have.both ) )
+sub.pelvic.lm <- lm( pelvic.speciesdiff[ut] ~ species.treedist[ut] , subset=have.both )
+sub.bi.pelvic.lm <- lm( pelvic.speciesdiff[ut] ~ species.treedist[ut] + testes.spdist[ut], subset=have.both )
+sub.rib.lm <- lm( rib.speciesdiff[ut] ~ species.treedist[ut] , subset=have.both )
+sub.bi.rib.lm <- lm( rib.speciesdiff[ut] ~ species.treedist[ut] + testes.spdist[ut], subset=have.both )
+
+anova( bi.rib.lm, rib.lm )
+anova( bi.pelvic.lm, pelvic.lm )
 
 ##########
 # compare residuals to testes-weighted distance
-resid.rib.lm <- lm( resid(rib.lm) ~  testes.spdist[upper.tri(testes.spdist)][have.ribs] )
-resid.pelvic.lm <- lm( resid(pelvic.lm) ~  testes.spdist[upper.tri(testes.spdist)][have.pelvics] )
-# restrict to full observations
-sub.resid.rib.lm <- lm( resid(sub.rib.lm) ~  testes.spdist[upper.tri(testes.spdist)][have.both] )
-sub.resid.pelvic.lm <- lm( resid(sub.pelvic.lm) ~  testes.spdist[upper.tri(testes.spdist)][have.both] )
+rib.resids <- fitted(bi.rib.lm) - fitted(rib.lm)
+pelvic.resids <- fitted(bi.pelvic.lm) - fitted(pelvic.lm)
+
+# resid.rib.lm <- lm( resid(rib.lm) ~  testes.spdist[upper.tri(testes.spdist)][have.ribs] )
+# resid.pelvic.lm <- lm( resid(pelvic.lm) ~  testes.spdist[upper.tri(testes.spdist)][have.pelvics] )
+# # restrict to full observations
+# sub.resid.rib.lm <- lm( resid(sub.rib.lm) ~  testes.spdist[upper.tri(testes.spdist)][have.both] )
+# sub.resid.pelvic.lm <- lm( resid(sub.pelvic.lm) ~  testes.spdist[upper.tri(testes.spdist)][have.both] )
 
 # look at these:
 pdf( file="ribs-correlate.pdf", width=8, height=5, pointsize=10 )
@@ -133,26 +173,26 @@ layout(matrix(1:4,nrow=2))
 cols <- ifelse(have.both,"black","red")
 ##
 # shape-tree-diffs
-plot( species.treedist[upper.tri(species.treedist)], rib.speciesdiff[upper.tri(species.treedist)], xlab="tree distance", ylab="shape difference", main="rib", col=cols[have.ribs], xlim=range(species.treedist) )
+plot( species.treedist[ut], rib.speciesdiff[ut], xlab="tree distance", ylab="shape difference", main="rib", col=cols[have.ribs], xlim=range(species.treedist) )
 abline(coef(rib.lm),col='red')
 abline(coef(sub.rib.lm))
-plot( species.treedist[upper.tri(species.treedist)], pelvic.speciesdiff[upper.tri(species.treedist)], xlab="tree distance", ylab="shape difference", main="pelvic", col=cols[have.pelvics], xlim=range(species.treedist) )
-identify( species.treedist[upper.tri(species.treedist)], pelvic.speciesdiff[upper.tri(species.treedist)], labels=outer(rownames(pelvic.speciesdiff),colnames(pelvic.speciesdiff),paste)[upper.tri(species.treedist)] )
+plot( species.treedist[ut], pelvic.speciesdiff[ut], xlab="tree distance", ylab="shape difference", main="pelvic", col=cols[have.pelvics], xlim=range(species.treedist) )
+identify( species.treedist[ut], pelvic.speciesdiff[ut], labels=outer(rownames(pelvic.speciesdiff),colnames(pelvic.speciesdiff),paste)[ut] )
 abline(coef(pelvic.lm),col='red')
 abline(coef(sub.pelvic.lm))
 # shape-testes-tree-diffs
-plot( testes.spdist[upper.tri(testes.spdist)], rib.speciesdiff[upper.tri(testes.spdist)], xlab="testes-weighted tree distance", ylab="shape difference", main="rib", col=cols[have.ribs], xlim=range(testes.spdist) )
-plot( testes.spdist[upper.tri(testes.spdist)], pelvic.speciesdiff[upper.tri(testes.spdist)], xlab="testes-weighted tree distance", ylab="shape difference", main="pelvic", col=cols[have.pelvics], xlim=range(testes.spdist) )
+plot( testes.spdist[ut], rib.speciesdiff[ut], xlab="testes-weighted tree distance", ylab="shape difference", main="rib", col=cols[have.ribs], xlim=range(testes.spdist) )
+plot( testes.spdist[ut], pelvic.speciesdiff[ut], xlab="testes-weighted tree distance", ylab="shape difference", main="pelvic", col=cols[have.pelvics], xlim=range(testes.spdist) )
 ##
 # resids-testes-distance
-plot( testes.spdist[upper.tri(testes.spdist)][have.ribs], resid(rib.lm), xlab="testes-weighted tree distance", ylab="residuals of bone distance accounting for tree distance", main="ribs", col=cols[have.ribs], xlim=range( testes.spdist ) )
+plot( testes.spdist[ut][have.ribs], resid(rib.lm), xlab="testes-weighted tree distance", ylab="residuals of bone distance accounting for tree distance", main="ribs", col=cols[have.ribs], xlim=range( testes.spdist ) )
 abline(coef(resid.rib.lm),col='red')
-plot( testes.spdist[upper.tri(testes.spdist)][have.pelvics], resid(pelvic.lm), xlab="testes-weighted tree distance", ylab="residuals of bone distance accounting for tree distance", main="pelvic, residuals of all data", col=cols[have.pelvics], xlim=range( testes.spdist ) )
+plot( testes.spdist[ut][have.pelvics], resid(pelvic.lm), xlab="testes-weighted tree distance", ylab="residuals of bone distance accounting for tree distance", main="pelvic, residuals of all data", col=cols[have.pelvics], xlim=range( testes.spdist ) )
 abline(coef(resid.pelvic.lm),col='red')
 # resids-testes-distance, all observations
-plot( testes.spdist[upper.tri(testes.spdist)][have.both], resid(sub.rib.lm), xlab="testes-weighted tree distance", ylab="residuals of bone distance accounting for tree distance", main="ribs", col=cols[have.both], xlim=range( testes.spdist ) )
+plot( testes.spdist[ut][have.both], resid(sub.rib.lm), xlab="testes-weighted tree distance", ylab="residuals of bone distance accounting for tree distance", main="ribs", col=cols[have.both], xlim=range( testes.spdist ) )
 abline(coef(sub.resid.rib.lm))
-plot( testes.spdist[upper.tri(testes.spdist)][have.both], resid(sub.pelvic.lm), xlab="testes-weighted tree distance", ylab="residuals of bone distance accounting for tree distance", main="pelvic, residuals for complete obs", col=cols[have.both], xlim=range( testes.spdist ) )
+plot( testes.spdist[ut][have.both], resid(sub.pelvic.lm), xlab="testes-weighted tree distance", ylab="residuals of bone distance accounting for tree distance", main="pelvic, residuals for complete obs", col=cols[have.both], xlim=range( testes.spdist ) )
 abline(coef(sub.resid.pelvic.lm))
 dev.off()
 ### Hm.  Looks good?

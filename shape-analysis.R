@@ -27,7 +27,8 @@ treemat <- treedist( adjtree, edge.length=scale.brlens(initpar[2:4]), descendant
 # moment estimate?
 have.dpelvic <- !is.na(pelvicdiff)
 have.both <- !is.na(pelvicdiff) & !is.na(ribdiff)
-usethese <- have.both
+# usethese <- have.both
+usethese <- have.dpelvic
 datavec <- pelvicdiff[usethese] / initpar[1]
 f1 <- function (spar) {
     sigma2S <- spar[1]
@@ -48,19 +49,25 @@ est.vals <- optim( par=est.vals$par, fn=f1, method="BFGS", control=list(fnscale=
 #
 # Using only ones with ribs also:
 #    sigma2S     gammaP       xi2P 
-# 0.09803602 0.01388280 0.03363460 
+# 0.09869252 0.01409928 0.03361052 
 
 new.treemat <- treedist( adjtree, edge.length=scale.brlens(est.vals$par), descendants=descendants )
 
 if (interactive()) {
     layout(t(1:2))
-    plot( treemat[have.dpelvic], datavec )
+    plot( treemat[usethese], datavec )
     abline(0,1)
-    plot( new.treemat[have.dpelvic], datavec )
+    plot( new.treemat[usethese], datavec )
     abline(0,1)
 }
 
-##
+###
+# permutation test?
+
+
+
+
+##############
 # pseudolikelihood NOT WORKING
 have.dpelvic <- !is.na(pelvicdiff)
 chisq.datavec <- pelvicdiff[have.dpelvic]
@@ -75,6 +82,7 @@ f2 <- function (spar) {
 
 est.vals <- optim( par=initpar[2:4], fn=f2, method="BFGS", control=list(fnscale=1e4,maxit=10) )
 est.vals <- optim( par=est.vals$par, fn=f2, method="BFGS", control=list(fnscale=1e4,maxit=10) )
+
 
 ########
 # add tips
