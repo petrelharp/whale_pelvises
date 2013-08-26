@@ -3,7 +3,7 @@
 load("mcmc-setup.RData")
 load("thedata-and-covmatrices.Rdata")
 
-show( load("mcmcs/mcmc-run-2125.RData") )
+load("mcmcs/mcmc-run-2125.RData")
 
 nvars <- length(initpar)
 havedata <- !is.na(thedata)
@@ -33,22 +33,26 @@ normresids <- sapply( chols, function (fchol) { backsolve( fchol, datavec, trans
 init.fullmat <- make.fullmat( initpar )
 init.normresid <- backsolve( chol( crossprod(pmat, init.fullmat[havedata,havedata]) %*% pmat ), datavec, transpose=TRUE )
 
-layout(1)
-matplot( normresids[ order(rowSums(normresids)), ], type='l' )
+if (interactive()) {
+    layout(1)
+    matplot( normresids[ order(rowSums(normresids)), ], type='l' )
+}
 
 ####
 # Looking normal yet?
-qqnorms <- apply( normresids, 2, qqnorm, plot.it=FALSE )
-plot( 0, type='n', xlim=range(lapply(qqnorms,"[[",'x')), ylim=range(lapply(qqnorms,"[[",'y')), xlab='', ylab='' )
-lapply( seq_along(qqnorms), function (k) points(qqnorms[[k]], col=rainbow(10)[k]) )
-points( qqnorm( init.normresid, plot.it=FALSE ), pch=20 )
-abline(0,1)
+if (interactive()) {
+    qqnorms <- apply( normresids, 2, qqnorm, plot.it=FALSE )
+    plot( 0, type='n', xlim=range(lapply(qqnorms,"[[",'x')), ylim=range(lapply(qqnorms,"[[",'y')), xlab='', ylab='' )
+    lapply( seq_along(qqnorms), function (k) points(qqnorms[[k]], col=rainbow(10)[k]) )
+    points( qqnorm( init.normresid, plot.it=FALSE ), pch=20 )
+    abline(0,1)
+}
 
 
 ####
 # Take this one
 
-show( load("mcmcs/mcmc-run-2125.RData") )
+load("mcmcs/mcmc-run-2125.RData")
 
 burnin <- 2e4
 usethese <- burnin + (1:(nrow(mcrun$batch)-burnin))
@@ -120,15 +124,17 @@ dev.off()
 
 ###
 # pairwise correlations
-layout( matrix(1:nvars^2,nrow=nvars) )
-opar <- par(mar=c(0,0,0,0)+.1)
-subsamp <- floor( seq( 1, nrow(mcrun$batch), length.out=1000 ) )
-for (j in 1:nvars) for (k in 1:nvars) {
-    if (j==k) { 
-        plot(0,type='n',xlim=c(-1,1),ylim=c(-1,1)); text(0,0,names(mcrun$initial)[j]) 
-    } else {
-        plot( mcrun$batch[subsamp,j], mcrun$batch[subsamp,k], pch=20, col=adjustcolor(rainbow(64),.1)[ceiling(64*subsamp/(nrow(mcrun$batch+1)))] )
+if (interactive()) {
+    layout( matrix(1:nvars^2,nrow=nvars) )
+    opar <- par(mar=c(0,0,0,0)+.1)
+    subsamp <- floor( seq( 1, nrow(mcrun$batch), length.out=1000 ) )
+    for (j in 1:nvars) for (k in 1:nvars) {
+        if (j==k) { 
+            plot(0,type='n',xlim=c(-1,1),ylim=c(-1,1)); text(0,0,names(mcrun$initial)[j]) 
+        } else {
+            plot( mcrun$batch[subsamp,j], mcrun$batch[subsamp,k], pch=20, col=adjustcolor(rainbow(64),.1)[ceiling(64*subsamp/(nrow(mcrun$batch+1)))] )
+        }
     }
+    par(opar)
 }
-par(opar)
 

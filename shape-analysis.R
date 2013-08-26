@@ -2,6 +2,8 @@
 source("correlated-traits-fns.R")
 require(ape)
 
+load("shape-stuff.RData")
+
 ####
 # update branch lengths function
 # internal branches setup
@@ -24,18 +26,29 @@ treemat <- treedist( adjtree, edge.length=scale.brlens(initpar[2:4]), descendant
 
 # moment estimate?
 have.dpelvic <- !is.na(pelvicdiff)
-datavec <- pelvicdiff[have.dpelvic] / initpar[1]
+have.both <- !is.na(pelvicdiff) & !is.na(ribdiff)
+usethese <- have.both
+datavec <- pelvicdiff[usethese] / initpar[1]
 f1 <- function (spar) {
     sigma2S <- spar[1]
     gammaP <- spar[2]
     xi2P <- spar[3]
     elens <- ( internal.lengths * ( sigma2S + gammaP * edge.testes ) + tip.lengths * xi2P )
     treemat <- treedist( adjtree, edge.length=elens, descendants=descendants )
-    return( sum( ( datavec - treemat[have.dpelvic] )^2 ) )
+    return( sum( ( datavec - treemat[usethese] )^2 ) )
 }
 
-est.vals <- optim( par=initpar[2:4], fn=f1, method="BFGS", control=list(fnscale=1e4,maxit=10) )
+est.vals <- optim( par=initpar[2:4], fn=f1, method="BFGS", control=list(fnscale=1e4,maxit=100) )
 est.vals <- optim( par=est.vals$par, fn=f1, method="BFGS", control=list(fnscale=1e4,maxit=10) )
+est.vals <- optim( par=est.vals$par, fn=f1, method="BFGS", control=list(fnscale=1e4,maxit=1000) )
+# Using everything:
+# only took 31 iterations
+#    sigma2S     gammaP       xi2P 
+# 0.11451506 0.02237210 0.03384165 
+#
+# Using only ones with ribs also:
+#    sigma2S     gammaP       xi2P 
+# 0.09803602 0.01388280 0.03363460 
 
 new.treemat <- treedist( adjtree, edge.length=scale.brlens(est.vals$par), descendants=descendants )
 
@@ -47,7 +60,8 @@ if (interactive()) {
     abline(0,1)
 }
 
-# pseudolikelihood
+##
+# pseudolikelihood NOT WORKING
 have.dpelvic <- !is.na(pelvicdiff)
 chisq.datavec <- pelvicdiff[have.dpelvic]
 f2 <- function (spar) {

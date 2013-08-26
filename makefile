@@ -12,17 +12,15 @@ tree-stuff.RData : parse-correlated-trait-data.R
 all-sample-tree.RData: parse-correlated-trait-data.R
 	Rscript $<
 
-correlated-traits-analysis.R : thedata-and-covmatrices.Rdata analysis-results.RData all-sample-tree.RData
-
-mcmc-setup.RData : correlated-traits-analysis.R
+mcmc-setup.RData : correlated-traits-analysis.R thedata-and-covmatrices.Rdata analysis-results.RData all-sample-tree.RData
 	Rscript $<
 
-analysis-results.RData : correlated-traits-analysis.R
+analysis-results.RData : correlated-traits-analysis.R thedata-and-covmatrices.Rdata all-sample-tree.RData
 	Rscript $<
 
-parse-mcmc.R : mcmc-setup.RData thedata-and-covmatrices.Rdata
-
-results.RData : parse-mcmc.R
+results.RData : parse-mcmc.R mcmc-setup.RData thedata-and-covmatrices.Rdata
 	Rscript $<
 
-shape-analysis.R : tree-stuff.RData thedata-and-covmatrices.Rdata mcmc-setup.RData results.RData
+shape-stuff.RData : shape-analysis-setup.R tree-stuff.RData thedata-and-covmatrices.Rdata mcmc-setup.RData results.RData
+	Rscript $<
+

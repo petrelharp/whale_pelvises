@@ -1,6 +1,7 @@
 #/usr/bin/R --vanilla
 source("correlated-traits-fns.R")
 require(ape)
+require(colorspace)
 
 ####
 ## read in data
@@ -63,6 +64,7 @@ pelvic.speciesdiff <- pelvic.speciesdiff / pelvic.denom
 # treedist
 species.order <- match( levels(shapediff$species1), species.tree$tip.label  )
 species.treedist <- treedist( species.tree )[ species.order, species.order ]
+rownames(species.treedist) <- colnames(species.treedist) <- species.tree$tip.label[species.order]
 
 
 ####
@@ -80,13 +82,13 @@ islength <- ( col(thedata) == which(colnames(thedata)=="bodylength") & havedata 
 lengthmean[!islength] <- fullmat[!islength,islength] %*% solve( fullmat[islength,islength], lengthmean[islength] )
 dimnames(lengthmean) <- dimnames(thedata)
 lengthmean <- sweep( lengthmean, 2, unlist(phylomeans), "+" )
-# just the testes
+# testes:
 fullmean <- cbind( fullmean, scaled.testes=(fullmean[,"actual_testes_mass_max"] - lengthmean[,"actual_testes_mass_max"]) )
 # plot( lengthmean[,"actual_testes_mass_max"], fullmean[,'scaled.testes'] ) ## looks good
 # associate mean value of adjacent nodes to each edge
 edge.values <- t( apply( tree$edge, 1, function (kk) { colMeans(fullmean[kk,]) } ) )
 colnames(edge.values) <- colnames(fullmean)
-edge.testes <- edge.values[,"scaled.testes"]
+edge.testes <- ( edge.values[,"scaled.testes"] * internal.lengths )
 
 # and testes-weighted relative time in the tree:
 testes.treedist <- treedist( tree, edge.length=scale(edge.testes) )
@@ -99,7 +101,7 @@ adjtree$edge.length[tip.edges] <- (.05/3.16)^2  # reasonable value from initial-
 #
 if (interactive()) {
     layout(t(1:2))
-    plot(adjtree,edge.color=diverge_hcl(64)[cut(edge.testes,breaks=seq((-1)*max(abs(edge.testes)),max(abs(edge.testes)),length.out=65))],main='relative testes size',edge.width=3,tip.color=ifelse(is.na(thedata[,"left.rib"])&is.na(thedata[,"right.rib"]),'red','black')[1:Ntip(adjtree)],cex=.5)
+    plot(adjtree,edge.color=diverge_hcl(64)[cut(edge.testes,breaks=seq((-1.05)*max(abs(edge.testes)),1.05*max(abs(edge.testes)),length.out=65))],main='relative testes size',edge.width=3,tip.color=ifelse(is.na(thedata[,"left.rib"])&is.na(thedata[,"right.rib"]),'red','black')[1:Ntip(adjtree)],cex=.5)
     plot(adjtree,edge.color=diverge_hsv(64)[cut(fullmean[edge.indices,'bodylength'],64)],main='body length',edge.width=3,cex=.5,tip.color=ifelse(is.na(thedata[,"left.rib"])&is.na(thedata[,"right.rib"]),'red','black')[1:Ntip(adjtree)])
 }
 
