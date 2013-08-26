@@ -34,7 +34,7 @@ require(mcmc)
 
 # return positive log-likelihood times posterior
 #  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, sigmaLdeltaT, sigmaLdeltaP, sigmaLdeltaR, zetaLdeltaP, zetaLdeltaR, 
-# priors on these are exponential
+# priors are Gaussian with these SDs
 prior.means <- c(3,3,3,3,3,3,.1,.1,.1,.1,.1,1,1,1,.1,.1)
 # constrain these to be nonnegative:
 nonnegs <- c("sigmaL", "betaT", "sigmaR", "sigmaP", "zetaL", "zetaR", "omegaR", "zetaP", "omegaP" )
@@ -45,7 +45,7 @@ lud <- function (par) {
     fullmat <- make.fullmat( par )[havedata,havedata]
     submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
     fchol <- chol(submat)
-    return( (-1) * sum( par * prior.means ) - sum( backsolve( fchol, datavec, transpose=TRUE )^2 )/2 - sum(log(diag(fchol))) ) 
+    return( (-1/2) * sum( (par / prior.means)^2 ) - sum( backsolve( fchol, datavec, transpose=TRUE )^2 )/2 - sum(log(diag(fchol))) ) 
 }
 
 run.id <- sample.int(9999,size=1)
