@@ -1,6 +1,7 @@
 #/usr/bin/R --vanilla
 source("correlated-traits-fns.R")
 require(ape)
+require(Matrix)
 
 load("shape-stuff.RData")
 
@@ -61,8 +62,104 @@ if (interactive()) {
     abline(0,1)
 }
 
-###
-# permutation test?
+
+#####
+# Likelihood, species tree
+
+ut <- upper.tri(pelvic.speciesdiff)
+# construct covariance matrix
+sptree <- drop.tip( species.tree, setdiff( species.tree$tip.label, levels(shapediff$species1) ) )
+spdesc <- get.descendants(sptree)
+sp.edge.indices <- sptree$edge[,2] # associate each edge with the downstream node
+sp.tip.edges <- match( 1:Ntip(sptree), sp.edge.indices )  # which edges correspond to tips... note these are the first Ntip(tree) nodes
+sp.rootnode <- which.max( rowSums(spdesc) )  # number of tips each edge contributes to
+shared.paths <- matrix( 0, nrow=choose(Ntip(sptree),2), ncol=choose(Ntip(sptree),2) ) # in order as upper.tri
+sput <- upper.tri(shared.paths,diag=TRUE)
+# matrix so that elements of upper.tri(shared.paths) are sp.mapping %*% c(edge.length,0)
+if (!file.exists("spmapping.RData")) {  # takes a minute
+    sp.mapping <- matrix( 0, nrow=sum(sput), ncol=Nedge(sptree) )
+    m <- 1
+    for (j in 1:nrow(shared.paths))  for (k in 1:j) {
+        jx <- row(pelvic.speciesdiff)[ut][j]
+        jy <- col(pelvic.speciesdiff)[ut][j]
+        kx <- row(pelvic.speciesdiff)[ut][k]
+        ky <- col(pelvic.speciesdiff)[ut][k]
+        jxdesc <- spdesc[,jx] # which nodes are along the path from the root to each of these tips
+        jydesc <- spdesc[,jy] 
+        kxdesc <- spdesc[,kx] 
+        kydesc <- spdesc[,ky] 
+        #  which nodes are on both of the paths between the two pairs of tips
+        contributes.nodes <- which( ( ( jxdesc | jydesc ) & ! ( jxdesc & jydesc ) ) & ( ( kxdesc | kydesc ) & ! ( kxdesc & kydesc ) ) )
+        contributes.edges <- sp.edge.indices %in% contributes.nodes  # translate to edges
+        sp.mapping[m,] <- contributes.edges
+        m <- m+1
+    }
+    stopifnot( m == sum(sput) + 1 )
+    spmap.nonz <- ( rowSums(sp.mapping) > 0 )
+    sp.mapping <- Matrix( sp.mapping[spmap.nonz,] )
+    save(sp.mapping, spmap.nonz, file="spmapping.RData")
+} else {
+    load("spmapping.RData")
+}
+shared.paths[ upper.tri(shared.paths,diag=TRUE) ][spmap.nonz] <- as.vector( sp.mapping %*% sptree$edge.length )  ### update like this, but with @x
+shared.paths[lower.tri(shared.paths)] <- t(shared.paths)[lower.tri(shared.paths)]
+shared.paths <- Matrix( shared.paths )
+stopifnot( class(shared.paths) == "dsyMatrix"  & shared.paths@uplo == "U" )  # if so, changing upper tri also changes lower tri
+
+# get edge.testes on the species tree
+## grr: map between the trees
+descendants <- get.descendants(tree)
+colnames( descendants ) <- rownames( descendants ) <- c( tree$tip.label, paste("NA",1:Nnode(tree),sep='.') )
+tmp <- t( descendants[edge.indices,match(sptree$tip.label,tree$tip.label)] ) # edge-by-species-tip
+spdesc <- get.descendants(sptree)
+colnames( spdesc ) <- rownames( spdesc ) <- c( sptree$tip.label, paste("NA",1:Nnode(sptree),sep='.') )
+sptmp <- t( spdesc[sp.edge.indices,1:Ntip(sptree)] )
+## tree.translate[k] gives the index of the corresponding edge in tree
+tree.translate <- lapply( 1:Nedge(sptree), function (k) {
+        ematch <- which( apply( tmp == sptmp[,k], 2, all ) )
+        return( ematch[ ! names(ematch) %in% sptree$tip.label ] )
+    } )
+stopifnot( all( sapply(tree.translate,length) == 1 ) )
+tree.translate <- unlist(tree.translate)
+## ok finally
+sp.edge.testes <- edge.testes[ tree.translate ]
+# check
+#   layout(1:2)
+#   plot(adjtree, edge.color=ifelse(edge.testes>0,'red','blue') )
+#   plot(sptree, edge.color=ifelse(sp.edge.testes>0,'red','blue') )
+
+
+# Estimation:
+initpar <- c( kS=20, sigma2S=0.11, gammaP=0.02, xi2P=0.03 )
+have.pelvic <- !is.na(pelvic.speciesdiff[ut])
+have.both <- have.pelvic & !is.na(pelvic.speciesdiff[ut])
+# havedata <- have.both
+havedata <- have.pelvic
+stopifnot( class(shared.paths) == "dsyMatrix"  & shared.paths@uplo == "U" )  # if so, changing upper tri also changes lower tri
+make.spmat <- function ( par ) {
+    # par = sigma2S, gammaP
+    edgelens <- ( sptree$edge.length * par[1] * exp( par[2]/par[1] * sp.edge.testes ) )
+    shared.paths@x[ sput ][spmap.nonz] <- as.vector( sp.mapping %*% edgelens )  # note: update @x rather than entries to preserve symmetry
+    return( shared.paths )
+}
+kS <- initpar[1]
+datavec <- pelvic.speciesdiff[ut][havedata] / kS
+lud <- function (par) {
+    # par = sigma2S, gammaP
+    if (any(par<=0)) { return( -Inf ) }
+    spmat <- make.spmat( par )
+    x <- ( datavec - diag(spmat) )
+    fchol <- chol((1/kS)*(2*spmat^2))
+    return( (-1/2) * sum( (par / prior.means) ) - sum( backsolve( fchol, x, transpose=TRUE )^2 )/2 - sum(log(diag(fchol))) ) 
+}
+# priors: exponential
+prior.means <- c(.2,.2)
+stopifnot( length(prior.means) == length(initpar[2:3]) )
+stopifnot( is.finite( lud(initpar[2:3]) ) )
+
+require(mcmc)
+mcrun <- metrop( lud, initial=initpar[2:3], nbatch=100, blen=1, scale=.1 )
+mcrun <- metrop( mcrun, nbatch=1000, blen=1, scale=.1 )
 
 
 
@@ -82,18 +179,4 @@ f2 <- function (spar) {
 
 est.vals <- optim( par=initpar[2:4], fn=f2, method="BFGS", control=list(fnscale=1e4,maxit=10) )
 est.vals <- optim( par=est.vals$par, fn=f2, method="BFGS", control=list(fnscale=1e4,maxit=10) )
-
-
-########
-# add tips
-rib.lengths <- tree$edge.length
-rib.lengths[ tip.edges ] <- xi2R
-pelvic.lengths <- tree$edge.length
-pelvic.lengths[ tip.edges ] <- xi2P
-rib.treemat <- treedist( tree, edge.length=rib.lengths )
-pelvic.treemat <- treedist( tree, edge.length=pelvic.lengths )
-
-layout(matrix(1:4,nrow=2))
-plot( as.vector(rib.treemat), as.vector(ribdiff), ylab="rib differences" )
-plot( as.vector(pelvic.treemat), as.vector(pelvicdiff), ylab="pelvis differences" )
 

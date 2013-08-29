@@ -379,32 +379,54 @@ which is either $(\sigma^2_S + \gamma_P C_e) \tau_e$ on internal edges, or $\xi^
 The parameters only enter through these rescaled branch lengths.
 Now 
 \begin{align}
-  \|S_t - S_s\|^2 &= \sum_k \| \sum_{e \in s \to t} Y_{e,k} \|^2 , \quad \text{and} \\
-  \sum_{e \in s \to t} Y_{e,k} & \sim N(0, \sum_{e \in s \to t} \tau'_e ), \quad \text{so} \\
+  \|S_t - S_s\|^2 &= \sum_k \left( \sum_{e \in s \to t} Y_{e,k} \right)^2 , \quad \text{and} \\
+  \sum_{e \in s \to t} Y_{e,k} & \sim N(0, \sum_{e \in s \to t} \tau'_e ), \quad \text{for each $k$, so} \\
   \frac{ \sum_{e \in s \to t} Y_{e,k} }{ \sqrt{ \sum_{e \in s \to t} \tau'_e } } &\sim N(0,1), \quad \text{and hence} \\
   \frac{ \|S_t - S_s\|^2 }{  \sum_{e \in s \to t} \tau'_e } &\sim \chi^2_{k_s} .
 \end{align}
+Note that paths going through the same edge in opposite directions recieve opposite signs.
 For large $k_s$ we can approximate the chi-squared as Gaussian,
 with parameters
 \begin{align*}
     \E[ \|S_t - S_s\|^2 ] &= k_s \sum_{e \in s \to t} \tau'_e \\
     \var[ \|S_t - S_s\|^2 ] &= 2 k_s \left( \sum_{e \in s \to t} \tau'_e \right)^2 
 \end{align*}
-Now, the covariance: note that if $Z$ is independent of $X$ and $Y$, and has mean 0, then
+
+Now, two facts about the covariance: note that if $Z$ is independent of $X$ and $Y$, and has mean 0, then
 \begin{align}
     \cov[X,(Y+Z)^2] &= \cov[X,Y^2] + 2 \cov[X,YZ] + \cov[X, Z^2] \\
     &= \cov[X,Y^2] + 2 \E[Z] \cov[X,Y] + \cov[X,Z^2] \\
-    &= \cov[X,Y^2] ,
+    &= \cov[X,Y^2] .
 \end{align}
-and hence, by iteratively removing edges not in $(u \to t) \cap (u \to s)$,
+Also note that if $Z_i$ are independent $N(0,1)$, and $A=\sum_i a_i Z_i$ and $B=\sum_i b_i Z_i$,
+then $\E[A^2] = \sum_i a_i^2$, and (using that $\E[Z^4] = 3$),
+\begin{align}
+  \E[A^2 B^2] &= \sum_{ijk\ell} a_i a_j b_k b_\ell \E[Z_i Z_j Z_k Z_\ell] \\
+  &= \sum_{i \neq k} a_i^2 b_k^2   % i=j, k=l
+  + 2 \sum_{i \neq j} a_i b_i a_j b_j   % i=k, j=l
+  + 3 \sum_i a_i^2 b_i ^2  \\  % since E[Z^4]=3. 
+  &= (\sum_i a_i^2)(\sum_k b_k^2) - \sum_i a_i^2 b_i^2 
+  + 2 \left( \sum_i a_i b_i \right)^2 - 2 \sum_i a_i^2 b_i^2 
+  + 3 \sum_i a_i^2 b_i^2 \\
+  &= (\sum_i a_i^2)(\sum_k b_k^2) 
+  + 2 \left( \sum_i a_i b_i \right)^2 .
+\end{align}
+and so
+\begin{align}
+  \cov[ A^2, B^2 ] &= 2( a \cdot b )^2 = 2( \sum_i a_i b_i )^2 
+\end{align}
+
+Hence, by iteratively removing edges not in $(s \to t) \cap (u \to v)$,
 since $\E[Y_e]=0$,
 \begin{align}
-    \cov[ \|S_t - S_u\|^2, \|S_s - S_u\|^2 ] &= \sum_{k=1}^{k_s} \cov\left[ (S_t-S_u)_k^2, (S_s-S_u)_k^2 \right] \\
-          &= \sum_{k=1}^{k_s} \var\left[ \left( \sum_{e \in (u \to t) \cap (u \to s)} Y_{e,k} \right)^2 \right] \\
-                                             &= \var\left[ \|S_{t \wedge s} - S_u\|^2 \right] \\
-                                             &= 2 k_s \left( \sum_{e \in (u \to t) \cap (u \to s) } \tau'_e \right)^2 
+    \cov[ \|S_t - S_s\|^2, \|S_v - S_u\|^2 ] &= \sum_{k=1}^{k_s} \cov\left[ (S_t-S_s)_k^2, (S_v-S_u)_k^2 \right] \\
+    &= \sum_{k=1}^{k_s} \cov\left[ ( \sum_{e \in (s \to t) } Y_{e,k} )^2 , ( \sum_{e \in (u \to v) }  Y_{e,k} )^2 \right] \\
+    &= \sum_{k=1}^{k_s} \cov\left[ \left( \sum_{e \in (s \to t) \cap (u \to v) } (-1)^{\epsilon_e^{s \to t}} Y_{e,k} \right)^2 , \left( \sum_{e \in (u \to v) \cap (s \to t) } (-1)^{\epsilon_e^{u \to v}} Y_{e,k} \right)^2 \right] \\
+    &= k_s \left\{ 2\left( \sum_{e \in (s \to t) \cap (u \to v) } (-1)^{\epsilon_e^{s \to t}+\epsilon_e^{u \to v}}\tau'_e \right)^2 \right\} \\
+    &= k_s \left\{ 2\left( \sum_{e \in (s \to t) \cap (u \to v) } \tau'_e \right)^2 \right\} .
 \end{align}
-where $t \wedge s$ is the node where the paths $u \to t$ and  $u \to s$ diverge.
+Here the factor $(-1)^{\epsilon_e^{s \to t}+\epsilon_e^{u \to v}}$ just means $+1$ if $e$ is the same orientation in both $s \to t$ and $u \to v$ and $-1$ otherwise;
+it dissappears because all shared edges are either the same orientation or the opposite orientation.
 
 So, we're back to a multivariate Gaussian distribution;
 in this case the parameters $k_s$, $\sigma^2_S$, $\gamma_P$, and $\xi^2_P$ are used to construct $\tau'_e$,
