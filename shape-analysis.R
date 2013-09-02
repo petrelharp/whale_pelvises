@@ -2,6 +2,7 @@
 source("correlated-traits-fns.R")
 require(ape)
 require(Matrix)
+require(mcmc)
 
 load("shape-stuff.RData")
 
@@ -128,13 +129,8 @@ sp.edge.testes <- edge.testes[ tree.translate ]
 #   plot(adjtree, edge.color=ifelse(edge.testes>0,'red','blue') )
 #   plot(sptree, edge.color=ifelse(sp.edge.testes>0,'red','blue') )
 
-
 # Estimation:
 initpar <- c( kS=20, sigma2S=0.11, gammaP=0.02, xi2P=0.03 )
-have.pelvic <- !is.na(pelvic.speciesdiff[ut])
-have.both <- have.pelvic & !is.na(pelvic.speciesdiff[ut])
-# havedata <- have.both
-havedata <- have.pelvic
 stopifnot( class(shared.paths) == "dsyMatrix"  & shared.paths@uplo == "U" )  # if so, changing upper tri also changes lower tri
 make.spmat <- function ( par ) {
     # par = sigma2S, gammaP
@@ -142,27 +138,108 @@ make.spmat <- function ( par ) {
     shared.paths@x[ sput ][spmap.nonz] <- as.vector( sp.mapping %*% edgelens )  # note: update @x rather than entries to preserve symmetry
     return( shared.paths )
 }
-kS <- initpar[1]
-datavec <- pelvic.speciesdiff[ut][havedata] / kS
 lud <- function (par) {
-    # par = sigma2S, gammaP
-    if (any(par<=0)) { return( -Inf ) }
-    spmat <- make.spmat( par )
-    x <- ( datavec - diag(spmat) )
-    fchol <- chol((1/kS)*(2*spmat^2))
+    # par = ks, sigma2S, gammaP
+    if (any(par[1:2]<=0)) { return( -Inf ) }
+    spmat <- make.spmat( par[2:3] )[havedata,havedata]
+    x <- ( datavec - par[1] * diag(spmat) )
+    fchol <- chol(2*par[1]*spmat^2)
     return( (-1/2) * sum( (par / prior.means) ) - sum( backsolve( fchol, x, transpose=TRUE )^2 )/2 - sum(log(diag(fchol))) ) 
 }
 # priors: exponential
-prior.means <- c(.2,.2)
-stopifnot( length(prior.means) == length(initpar[2:3]) )
-stopifnot( is.finite( lud(initpar[2:3]) ) )
+prior.means <- c(20,.2,.2)
+stopifnot( length(prior.means) == length(initpar[1:3]) )
 
-require(mcmc)
-mcrun <- metrop( lud, initial=initpar[2:3], nbatch=100, blen=1, scale=.1 )
-mcrun <- metrop( mcrun, nbatch=1000, blen=1, scale=.1 )
+have.pelvic <- !is.na(pelvic.speciesdiff[ut])
+have.rib <- !is.na(rib.speciesdiff[ut])
+have.both <- have.pelvic & have.rib
+# havedata <- have.both
+
+###
+# Easier: fix kS and look at 2D density
+
+sigma2S.vals <- seq(1,8,length.out=20)
+gammaP.vals <- seq(-2,2,length.out=20)
+pargrid <- expand.grid( ks=18, sigma2S=sigma2S.vals, gammaP=gammaP.vals )
+
+havedata <- have.pelvic
+datavec <- pelvic.speciesdiff[ut][havedata]
+stopifnot( is.finite( lud(initpar[1:3]) ) )
+pargrid$pelvic <- apply( pargrid, 1, function (x) lud( x[1:3] ) )
+
+havedata <- have.ribs
+datavec <- rib.speciesdiff[ut][havedata]
+stopifnot( is.finite( lud(initpar[1:3]) ) )
+pargrid$ribs <- apply( pargrid, 1, function (x) lud( x[1:3] ) )
+
+havedata <- ( have.pelvic & have.ribs )
+datavec <- pelvic.speciesdiff[ut][havedata]
+stopifnot( is.finite( lud(initpar[1:3]) ) )
+pargrid$sub.pelvic <- apply( pargrid, 1, function (x) lud( x[1:3] ) )
+datavec <- rib.speciesdiff[ut][havedata]
+stopifnot( is.finite( lud(initpar[1:3]) ) )
+pargrid$sub.ribs <- apply( pargrid, 1, function (x) lud( x[1:3] ) )
+
+fcont <- function (x,...) {
+    z <- pargrid[[x]]
+    dim(z) <- c(length(sigma2S.vals),length(gammaP.vals))
+    contour( sigma2S.vals, gammaP.vals, z, levels=seq( quantile(z,.9), max(z)+1, length.out=20 ), ... )
+}
+
+fcont("pelvic",col='red',xlab="sigma2S", ylab="gammaP")
+fcont("ribs",add=TRUE,col='blue')
+fcont("sub.pelvic",col='red',add=TRUE,lty=2)
+fcont("sub.ribs",add=TRUE,col='blue',lty=2)
+
+###
+# MCMC
+
+havedata <- have.pelvic
+datavec <- pelvic.speciesdiff[ut][havedata]
+stopifnot( is.finite( lud(initpar[1:3]) ) )
+pelvic.mcrun <- metrop( lud, initial=initpar[1:3], nbatch=100, blen=1, scale=.1 )
+pelvic.mcrun <- metrop( pelvic.mcrun, nbatch=10000, blen=1, scale=.1 )
+
+havedata <- have.rib
+datavec <- rib.speciesdiff[ut][havedata]
+stopifnot( is.finite( lud(initpar[1:3]) ) )
+rib.mcrun <- metrop( lud, initial=initpar[1:3], nbatch=100, blen=1, scale=.1 )
+rib.mcrun <- metrop( rib.mcrun, nbatch=10000, blen=1, scale=.1 )
+
+# restrict to complete observations
+
+havedata <- have.both
+datavec <- pelvic.speciesdiff[ut][havedata]
+stopifnot( is.finite( lud(initpar[1:3]) ) )
+sub.pelvic.mcrun <- metrop( lud, initial=initpar[1:3], nbatch=100, blen=1, scale=.1 )
+sub.pelvic.mcrun <- metrop( sub.pelvic.mcrun, nbatch=10000, blen=1, scale=.1 )
+
+havedata <- have.both
+datavec <- rib.speciesdiff[ut][havedata]
+stopifnot( is.finite( lud(initpar[1:3]) ) )
+sub.rib.mcrun <- metrop( lud, initial=initpar[1:3], nbatch=100, blen=1, scale=.1 )
+sub.rib.mcrun <- metrop( sub.rib.mcrun, nbatch=10000, blen=1, scale=.1 )
+
+save( pelvic.mcrun, rib.mcrun, sub.pelvic.mcrun, sub.rib.mcrun, lud, make.spmat, pelvic.speciesdiff, rib.speciesdiff, file="shape-mcmc-results.RData" )
+
+# all the data
+layout(1:3)
+for (k in 1:3) {
+    tmp <- hist(c(pelvic.mcrun$batch[,k],rib.mcrun$batch[,k]),breaks=50,plot=FALSE)
+    hist(rib.mcrun$batch[,k],breaks=50,col=adjustcolor('blue',.5),main=names(initpar)[k],xlim=range(tmp$breaks))
+    hist(pelvic.mcrun$batch[,k],breaks=50,col=adjustcolor('red',.5),add=TRUE)
+}
+
+# complete obs
+layout(1:3)
+for (k in 1:3) {
+    tmp <- hist(c(sub.pelvic.mcrun$batch[,k],sub.rib.mcrun$batch[,k]),breaks=50,plot=FALSE)
+    hist(sub.rib.mcrun$batch[,k],breaks=50,col=adjustcolor('blue',.5),main=names(initpar)[k],xlim=range(tmp$breaks))
+    hist(sub.pelvic.mcrun$batch[,k],breaks=50,col=adjustcolor('red',.5),add=TRUE)
+}
 
 
-
+if (FALSE) {
 
 ##############
 # pseudolikelihood NOT WORKING
@@ -180,3 +257,4 @@ f2 <- function (spar) {
 est.vals <- optim( par=initpar[2:4], fn=f2, method="BFGS", control=list(fnscale=1e4,maxit=10) )
 est.vals <- optim( par=est.vals$par, fn=f2, method="BFGS", control=list(fnscale=1e4,maxit=10) )
 
+}
