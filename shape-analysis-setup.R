@@ -62,6 +62,8 @@ pelvic.denom <- pelvic.denom + t(pelvic.denom) - diag(diag(pelvic.denom))
 pelvic.speciesdiff <- pelvic.speciesdiff / pelvic.denom
 
 # treedist
+adjtree <- tree
+adjtree$edge.length[tip.edges] <- (.05/3.16)^2  # reasonable value from initial-values.R
 all.treedist <- treedist( adjtree )
 rownames(all.treedist) <- colnames(all.treedist) <- rownames(thedata)
 species.order <- match( levels(shapediff$species1), species.tree$tip.label  )
@@ -74,16 +76,17 @@ rownames(species.treedist) <- colnames(species.treedist) <- species.tree$tip.lab
 #  (posterior mean of testes size) - (predicted testes size given posterior mean of length)
 fullmat <- make.fullmat( estpar )
 # posterior mean trait values relative to the root at all nodes:
-fullmean <- sweep( thedata, 2, unlist(phylomeans), "-" )
-fullmean[!havedata] <- fullmat[!havedata,havedata] %*% solve( fullmat[havedata,havedata], fullmean[havedata] )
-dimnames(fullmean) <- dimnames(thedata)
-fullmean <- sweep( fullmean, 2, unlist(phylomeans), "+" )
-# predicted values given only length:
-lengthmean <- sweep( thedata, 2, unlist(phylomeans), "-" )
+get.postmean <- function (usethese) {
+    themean <- sweep( thedata, 2, unlist(phylomeans), "-" )
+    themean[!usethese] <- fullmat[!usethese,usethese] %*% solve( fullmat[usethese,usethese], themean[usethese] )
+    dimnames(themean) <- dimnames(thedata)
+    themean <- sweep( themean, 2, unlist(phylomeans), "+" )
+    return( themean )
+}
+fullmean <- get.postmean(havedata)
 islength <- ( col(thedata) == which(colnames(thedata)=="bodylength") & havedata )
-lengthmean[!islength] <- fullmat[!islength,islength] %*% solve( fullmat[islength,islength], lengthmean[islength] )
-dimnames(lengthmean) <- dimnames(thedata)
-lengthmean <- sweep( lengthmean, 2, unlist(phylomeans), "+" )
+istestes <- ( col(thedata) == which(colnames(thedata)=="actual_testes_mass_max") )
+lengthmean <- get.postmean( islength )
 # testes:
 fullmean <- cbind( fullmean, scaled.testes=(fullmean[,"actual_testes_mass_max"] - lengthmean[,"actual_testes_mass_max"]) )
 # plot( lengthmean[,"actual_testes_mass_max"], fullmean[,'scaled.testes'] ) ## looks good
@@ -91,6 +94,24 @@ fullmean <- cbind( fullmean, scaled.testes=(fullmean[,"actual_testes_mass_max"] 
 edge.values <- t( apply( tree$edge, 1, function (kk) { colMeans(fullmean[kk,]) } ) )
 colnames(edge.values) <- colnames(fullmean)
 edge.testes <- ( edge.values[,"scaled.testes"] )
+
+sample.values <- function (dothese=(istestes & ! havedata)) {
+    withthese <- ( ! dothese ) & havedata
+    spar <- samples[ sample(1:nrow(samples),1), ]
+    lengthmean <- get.postmean( islength )
+    sampled.cov <- fullmat[dothese,dothese] - fullmat[dothese,withthese] %*% solve( fullmat[withthese,withthese], fullmat[withthese,dothese] ) 
+    schol <- chol(sampled.cov,pivot=TRUE) 
+    sampled.values <- get.postmean(withthese) 
+    sampled.values[dothese] <- t( schol[,order(attr(schol,"pivot"))] ) %*% rnorm(sum(dothese))
+    sampled.values[dothese] <- ( sampled.values[dothese] + fullmean )
+    sampled.values <- cbind( sampled.values, scaled.testes=(sampled.values[,"actual_testes_mass_max"] - lengthmean[,"actual_testes_mass_max"]) )
+    edge.values <- t( apply( tree$edge, 1, function (kk) { colMeans(sampled.values[kk,]) } ) )
+    colnames(edge.values) <- colnames(sampled.values)
+    return( edge.values[,"scaled.testes"] )
+}
+
+sampled.edge.testes <- t( replicate(100, sample.values() ) )
+
 
 # and testes-weighted relative time in the tree:
 internal.lengths <- tree$edge.length
@@ -100,8 +121,6 @@ rownames(testes.treedist) <- colnames(testes.treedist) <- rownames(thedata)
 testes.spdist <- testes.treedist[match(levels(shapediff$species1),rownames(thedata)),match(levels(shapediff$species1),rownames(thedata))]
 
 # visualization
-adjtree <- tree
-adjtree$edge.length[tip.edges] <- (.05/3.16)^2  # reasonable value from initial-values.R
 
 if (interactive()) {
     layout(t(1:2))
