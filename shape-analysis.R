@@ -6,27 +6,6 @@ require(mcmc)
 
 load("shape-stuff.RData")
 
-####
-# update branch lengths function
-# internal branches setup
-internal.lengths <- tree$edge.length
-internal.lengths[ tip.edges ] <- 0
-# and, the tips
-tip.lengths <- tree$edge.length
-tip.lengths[ - tip.edges ] <- 0
-
-# given parameters get rescaled branch lengths
-scale.brlens <- function (par) {
-    # par = sigma2S, gammaP, xi2P
-    sigma2S <- par[1]
-    gammaP <- par[2]
-    xi2P <- par[3]
-    return( internal.lengths * ( sigma2S + gammaP * edge.testes ) + tip.lengths * xi2P )
-}
-
-treemat <- treedist( adjtree, edge.length=scale.brlens(initpar[2:4]), descendants=descendants )
-
-
 #####
 # Likelihood, species tree
 
@@ -247,6 +226,27 @@ for (k in 1:3) {
 }
 
 if (FALSE) {
+
+    ####
+    # update branch lengths function
+    # internal branches setup
+    internal.lengths <- tree$edge.length
+    internal.lengths[ tip.edges ] <- 0
+    # and, the tips
+    tip.lengths <- tree$edge.length
+    tip.lengths[ - tip.edges ] <- 0
+
+    # given parameters get rescaled branch lengths
+    scale.brlens <- function (par) {
+        # par = sigma2S, gammaP, xi2P
+        sigma2S <- par[1]
+        gammaP <- par[2]
+        xi2P <- par[3]
+        return( internal.lengths * ( sigma2S + gammaP * edge.testes ) + tip.lengths * xi2P )
+    }
+
+    treemat <- treedist( adjtree, edge.length=scale.brlens(initpar[2:4]), descendants=descendants )
+
     # moment estimate
     have.dpelvic <- !is.na(pelvicdiff)
     have.both <- !is.na(pelvicdiff) & !is.na(ribdiff)
