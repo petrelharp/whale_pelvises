@@ -111,4 +111,4 @@ sub.pelvic.sgrids <- mclapply( 1:nreps, function (k) {
         sub.pelvic.sgrid <- apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
     }, mc.cores=8 )
 
-save( pargrid, pelvic.sgrids, rib.sgrids, sub.pelvic.sgrids, make.spmat, thespars, lud, prior.means, sampled.sp.edge.testes, file="likelihood-surface.RData" )
+save( pargrid, pelvic.sgrids, rib.sgrids, sub.pelvic.sgrids, make.spmat, thesepars, lud, prior.means, sampled.sp.edge.testes, file="likelihood-surface.RData" )
