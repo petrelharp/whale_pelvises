@@ -110,7 +110,7 @@ sample.values <- function (dothese=(istestes & ! havedata)) {
     return( edge.values[,"scaled.testes"] )
 }
 
-sampled.edge.testes <- t( replicate(100, sample.values() ) )
+sampled.edge.testes <- t( replicate(1000, sample.values() ) )
 
 # matplot(t(sweep(sampled.edge.testes,2,edge.testes,"-")),type='l')
 
