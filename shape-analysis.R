@@ -21,7 +21,7 @@ thesepars <- match( c("kS", "sigma2S", "gammaP"), names(initpar) )
 lud <- function (par, ...) {
     # par = ks, sigma2S, gammaP
     if (any(par[1:2]<=0)) { return( -Inf ) }
-    spmat <- make.spmat( par[2:3], ... )[havedata,havedata]
+    spmat <- make.spmat( par[2:3], ... )[usedata,usedata]
     x <- ( datavec - par[1] * diag(spmat) )
     fchol <- chol(2*par[1]*spmat^2)
     return( (-1/2) * sum( (par / prior.means) ) - sum( backsolve( fchol, x, transpose=TRUE )^2 )/2 - sum(log(diag(fchol))) ) 
@@ -33,7 +33,7 @@ stopifnot( length(prior.means) == length(thesepars) )
 have.pelvic <- !is.na(pelvic.speciesdiff[ut])
 have.rib <- !is.na(rib.speciesdiff[ut])
 have.both <- have.pelvic & have.rib
-havedata <- have.both
+usedata <- have.both
 
 ###
 # fix kS and look at 2D density
@@ -45,18 +45,18 @@ gammaP.vals <- seq(-1,2,length.out=40)
 pargrid <- expand.grid( ks=ks.vals, sigma2S=sigma2S.vals, gammaP=gammaP.vals )
 
 if (interactive()) {
-    havedata <- have.pelvic
-    datavec <- pelvic.speciesdiff[ut][havedata]
+    usedata <- have.pelvic
+    datavec <- pelvic.speciesdiff[ut][usedata]
     stopifnot( is.finite( lud(initpar[thesepars]) ) )
     pargrid$pelvic <- apply( pargrid, 1, function (x) lud( x[1:3] ) )
 
-    havedata <- have.ribs
-    datavec <- rib.speciesdiff[ut][havedata]
+    usedata <- have.ribs
+    datavec <- rib.speciesdiff[ut][usedata]
     stopifnot( is.finite( lud(initpar[thesepars]) ) )
     pargrid$ribs <- apply( pargrid, 1, function (x) lud( x[1:3] ) )
 
-    havedata <- ( have.pelvic & have.ribs )
-    datavec <- pelvic.speciesdiff[ut][havedata]
+    usedata <- ( have.pelvic & have.ribs )
+    datavec <- pelvic.speciesdiff[ut][usedata]
     stopifnot( is.finite( lud(initpar[thesepars]) ) )
     pargrid$sub.pelvic <- apply( pargrid, 1, function (x) lud( x[1:3] ) )
 
@@ -97,24 +97,24 @@ if (do.parallel) {
 sampled.edge.testes <- t( replicate(nreps, sample.values() ) )
 sampled.sp.edge.testes <- sampled.edge.testes[ , tree.translate ]
 
-havedata <- have.pelvic
-datavec <- pelvic.speciesdiff[ut][havedata]
+usedata <- have.pelvic
+datavec <- pelvic.speciesdiff[ut][usedata]
 pelvic.sgrids <- this.lapply( 1:nreps, function (k) {
         # k <- sample(1:nrow(sampled.sp.edge.testes),1)
         edge.weights <- sampled.sp.edge.testes[k,]
         apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
     } )
 
-havedata <- have.ribs
-datavec <- rib.speciesdiff[ut][havedata]
+usedata <- have.ribs
+datavec <- rib.speciesdiff[ut][usedata]
 rib.sgrids <- this.lapply( 1:nreps, function (k) {
         # k <- sample(1:nrow(sampled.sp.edge.testes),1)
         edge.weights <- sampled.sp.edge.testes[k,]
         apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
     } )
 
-havedata <- ( have.pelvic & have.ribs )
-datavec <- pelvic.speciesdiff[ut][havedata]
+usedata <- ( have.pelvic & have.ribs )
+datavec <- pelvic.speciesdiff[ut][usedata]
 sub.pelvic.sgrids <- this.lapply( 1:nreps, function (k) {
         # k <- sample(1:nrow(sampled.sp.edge.testes),1)
         edge.weights <- sampled.sp.edge.testes[k,]
