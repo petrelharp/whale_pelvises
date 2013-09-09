@@ -86,7 +86,7 @@ if (interactive()) {
 
 # effect of sampling from posterior on testes size?
 require(parallel)
-nreps <- 1000
+nreps <- 500
 stopifnot( nreps >= nrow( sampled.sp.edge.testes )
 havedata <- have.pelvic
 datavec <- pelvic.speciesdiff[ut][havedata]
