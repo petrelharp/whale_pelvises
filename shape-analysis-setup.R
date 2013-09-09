@@ -28,6 +28,12 @@ shapediff$species1 <- whales$species[match(shapediff$specimen1,whales$specimen)]
 shapediff$species2 <- whales$species[match(shapediff$specimen2,whales$specimen)]
 # restrict to same-bone comparisons and ones observed in the data
 shapediff <- subset( shapediff, ( bone1==bone2 ) & ( specimen1 %in% rownames(thedata) ) & ( specimen2 %in% rownames(thedata) ) )
+# remove females
+no.females <- TRUE
+if (no.females) {
+    males <- whales$specimen[ whales$sex == "M" ]
+    shapediff <- subset( shapediff, specimen1 %in% males & specimen2 %in% males )
+}
 
 ## sample-by-sample
 # matrix of pelvis shape differences: exclude within-individual comparisons

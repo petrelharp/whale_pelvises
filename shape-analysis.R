@@ -122,4 +122,5 @@ sub.pelvic.sgrids <- this.lapply( 1:nreps, function (k) {
     } )
 
 run.id <- sprintf( sample(1e4,1), fmt="%04.0f" )
+if (no.females) { run.id <- paste("no-females-",run.id,sep='') }
 save( pargrid, pelvic.sgrids, rib.sgrids, sub.pelvic.sgrids, make.spmat, thesepars, lud, prior.means, sampled.edge.testes, sampled.sp.edge.testes, file=paste("likelihood-surface-", run.id, ".RData",sep='') )
