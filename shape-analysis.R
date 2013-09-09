@@ -121,4 +121,5 @@ sub.pelvic.sgrids <- this.lapply( 1:nreps, function (k) {
         sub.pelvic.sgrid <- apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
     } )
 
-save( pargrid, pelvic.sgrids, rib.sgrids, sub.pelvic.sgrids, make.spmat, thesepars, lud, prior.means, sampled.edge.testes, sampled.sp.edge.testes, file="likelihood-surface.RData" )
+run.id <- sprintf( sample(1e4,1), fmt="%04.0f" )
+save( pargrid, pelvic.sgrids, rib.sgrids, sub.pelvic.sgrids, make.spmat, thesepars, lud, prior.means, sampled.edge.testes, sampled.sp.edge.testes, file=paste("likelihood-surface-", run.id, ".RData",sep='') )
