@@ -85,31 +85,40 @@ if (interactive()) {
 }
 
 # effect of sampling from posterior on testes size?
-require(parallel)
-nreps <- 500
-stopifnot( nreps >= nrow( sampled.sp.edge.testes )
+nreps <- 2
+do.parallel <- FALSE
+if (do.parallel) {
+    require(parallel)
+    this.lapply <- function (...) { mclapply( ..., mc.cores=8 ) }
+} else {
+    this.lapply <- lapply
+}
+
+sampled.edge.testes <- t( replicate(nreps, sample.values() ) )
+sampled.sp.edge.testes <- sampled.edge.testes[ , tree.translate ]
+
 havedata <- have.pelvic
 datavec <- pelvic.speciesdiff[ut][havedata]
-pelvic.sgrids <- mclapply( 1:nreps, function (k) {
+pelvic.sgrids <- this.lapply( 1:nreps, function (k) {
         # k <- sample(1:nrow(sampled.sp.edge.testes),1)
         edge.weights <- sampled.sp.edge.testes[k,]
         apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
-    }, mc.cores=8 )
+    } )
 
 havedata <- have.ribs
 datavec <- rib.speciesdiff[ut][havedata]
-rib.sgrids <- mclapply( 1:nreps, function (k) {
+rib.sgrids <- this.lapply( 1:nreps, function (k) {
         # k <- sample(1:nrow(sampled.sp.edge.testes),1)
         edge.weights <- sampled.sp.edge.testes[k,]
         apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
-    }, mc.cores=8 )
+    } )
 
 havedata <- ( have.pelvic & have.ribs )
 datavec <- pelvic.speciesdiff[ut][havedata]
-sub.pelvic.sgrids <- mclapply( 1:nreps, function (k) {
+sub.pelvic.sgrids <- this.lapply( 1:nreps, function (k) {
         # k <- sample(1:nrow(sampled.sp.edge.testes),1)
         edge.weights <- sampled.sp.edge.testes[k,]
         sub.pelvic.sgrid <- apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
-    }, mc.cores=8 )
+    } )
 
-save( pargrid, pelvic.sgrids, rib.sgrids, sub.pelvic.sgrids, make.spmat, thesepars, lud, prior.means, sampled.sp.edge.testes, file="likelihood-surface.RData" )
+save( pargrid, pelvic.sgrids, rib.sgrids, sub.pelvic.sgrids, make.spmat, thesepars, lud, prior.means, sampled.edge.testes, sampled.sp.edge.testes, file="likelihood-surface.RData" )
