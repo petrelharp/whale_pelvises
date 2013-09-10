@@ -3,7 +3,10 @@
 load("mcmc-setup.RData")
 load("thedata-and-covmatrices.Rdata")
 
-load("mcmcs/mcmc-run-2125.RData")
+load("mcmcs/mcmc-run-6858.RData")
+
+nonnegs <- c("sigmaL", "betaT", "sigmaR", "sigmaP", "zetaL", "zetaR", "omegaR", "zetaP", "omegaP" )
+nonneg.inds <- match( nonnegs, names(initpar) ) 
 
 nvars <- length(initpar)
 havedata <- !is.na(thedata)
@@ -52,7 +55,7 @@ if (interactive()) {
 ####
 # Take this one
 
-load("mcmcs/mcmc-run-2125.RData")
+load("mcmcs/mcmc-run-6858.RData")
 
 burnin <- 2e4
 usethese <- burnin + (1:(nrow(mcrun$batch)-burnin))
@@ -115,7 +118,7 @@ dim( posterior.cors ) <- c(3,3,nrow(samples))
 
 pdf(file="posterior-correlations.pdf", width=4, height=3, pointsize=10 )
 par(mar=c(4,4,1,1)+.1)
-hist( posterior.cors[1,2,], breaks=30, xlim=range(posterior.cors), ylim=c(0, 10), col=adjustcolor('black',.5), xlab="value", main='', ylab="posterior density", freq=FALSE )
+hist( posterior.cors[1,2,], breaks=30, xlim=range(posterior.cors), ylim=c(0, 6), col=adjustcolor('black',.5), xlab="value", main='', ylab="posterior density", freq=FALSE )
 hist( posterior.cors[1,3,], breaks=30, col=adjustcolor('red',.5), add=TRUE, freq=FALSE )
 hist( posterior.cors[2,3,], breaks=30, col=adjustcolor('blue',.5), add=TRUE, freq=FALSE )
 legend("topright", fill=adjustcolor(c('black','red','blue'),.5), legend=c("testes-ribs", "testes-pelvis", "ribs-pelvis"), title="correlations" )
