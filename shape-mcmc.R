@@ -1,16 +1,43 @@
 #/usr/bin/R --vanilla
+require(optparse)
+
+usage <- "MCMC over parameters in shape analysis"
+option_list <- list(
+        make_option( c("-t","--type"), type="character", default=NULL, help="Which dataset? (pelvic, rib, or sub.pelvic)"),
+        make_option( c("-m","--mcmcfile"), type="character", default=NULL, help=".RData file containing previous MCMC run." ),
+        make_option( c("-n","--nbatches"), type="integer", default=1000, help="Number of MCMC batches. [default \"%default\"]" ),
+        make_option( c("-b","--blen"), type="integer", default=1, help="Length of each MCMC batch. [default \"%default\"]" ),
+        make_option( c("-o","--logfile"), type="character", default="", help="Direct output to this file. [default appends .Rout]" )
+    )
+opt <- parse_args(OptionParser(option_list=option_list,description=usage))
+attach(opt)
+if (interactive()) { type <- 'pelvic'; nbatches <- 100; blen <- 10; restart <- FALSE }
+basedir <- paste(type,"shape-mcmc",sep='-')
+basename <- paste(basedir, sprintf( sample(1e4,1), fmt="%04.0f" ), sep='/')
+
+outfile <- paste(basename, "-mcmc-run.RData",sep='')
+if (logfile=="") { logfile <- paste(basename,"-mcmc-run.Rout",sep='') }
+if (!is.null(logfile)) { 
+    logcon <- if (logfile=="-") { stdout() } else { file(logfile,open="wt") }
+    sink(file=logcon, type="output", split=interactive()) 
+    if (!interactive()) { sink(file=logcon, type="message",append=TRUE) }
+}
+
+
 source("correlated-traits-fns.R")
 require(ape)
 require(Matrix)
 require(mcmc)
 
 load("shape-stuff.RData")
+new.mcmc <- is.null(opt$mcmcfile)
+if (!new.mcmc) { load(mcmcfile) }
 
 #####
 # Likelihood, species tree
 
 # Estimation:
-initpar <- c( kS=20, sigma2S=0.11, gammaP=0.02, xi2P=0.03 )
+initpar <- c( kS=20, sigma2S=2.5, gammaP=0.5, xi2P=0.03 )
 stopifnot( class(shared.paths) == "dsyMatrix"  & shared.paths@uplo == "U" )  # if so, changing upper tri also changes lower tri
 make.spmat <- function ( par, edge.weights=sp.edge.testes ) {
     # par = sigma2S, gammaP
@@ -25,10 +52,10 @@ lud <- function (par, ...) {
     spmat <- make.spmat( par[2:3], ... )[havedata,havedata]
     x <- ( datavec - par[1] * diag(spmat) )
     fchol <- chol(2*par[1]*spmat^2)
-    return( (-1/2) * sum( (par / prior.means) ) - sum( backsolve( fchol, x, transpose=TRUE )^2 )/2 - sum(log(diag(fchol))) ) 
+    return( (-1) * sum( (par / prior.means) ) - sum( backsolve( fchol, x, transpose=TRUE )^2 )/2 - sum(log(diag(fchol))) ) 
 }
 # priors: exponential
-prior.means <- c(20,.2,.2)
+prior.means <- c(20,2,2)
 stopifnot( length(prior.means) == length(thesepars) )
 
 have.pelvic <- !is.na(pelvic.speciesdiff[ut])
@@ -36,131 +63,28 @@ have.rib <- !is.na(rib.speciesdiff[ut])
 have.both <- have.pelvic & have.rib
 havedata <- have.both
 
-
-
 ###
 # MCMC
 
-havedata <- have.pelvic
-datavec <- pelvic.speciesdiff[ut][havedata]
+if (type=='pelvic') {
+    havedata <- have.pelvic
+    datavec <- pelvic.speciesdiff[ut][havedata]
+} else if (type == "rib") {
+    havedata <- have.rib
+    datavec <- rib.speciesdiff[ut][havedata]
+} else if (type == "sub.pelvic") {
+    havedata <- have.both
+    datavec <- pelvic.speciesdiff[ut][havedata]
+}
+
 stopifnot( is.finite( lud(initpar[1:3]) ) )
-pelvic.mcrun <- metrop( lud, initial=initpar[thesepars], nbatch=100, blen=1, scale=.1 )
-pelvic.mcrun <- metrop( pelvic.mcrun, nbatch=10000, blen=1, scale=.1 )
 
-havedata <- have.rib
-datavec <- rib.speciesdiff[ut][havedata]
-stopifnot( is.finite( lud(initpar[thesepars]) ) )
-rib.mcrun <- metrop( lud, initial=initpar[thesepars], nbatch=100, blen=1, scale=.1 )
-rib.mcrun <- metrop( rib.mcrun, nbatch=10000, blen=1, scale=.1 )
-
-# restrict to complete observations
-
-havedata <- have.both
-datavec <- pelvic.speciesdiff[ut][havedata]
-stopifnot( is.finite( lud(initpar[thesepars]) ) )
-sub.pelvic.mcrun <- metrop( lud, initial=initpar[thesepars], nbatch=100, blen=1, scale=.1 )
-sub.pelvic.mcrun <- metrop( sub.pelvic.mcrun, nbatch=10000, blen=1, scale=.1 )
-
-havedata <- have.both
-datavec <- rib.speciesdiff[ut][havedata]
-stopifnot( is.finite( lud(initpar[thesepars]) ) )
-sub.rib.mcrun <- metrop( lud, initial=initpar[thesepars], nbatch=100, blen=1, scale=.1 )
-sub.rib.mcrun <- metrop( sub.rib.mcrun, nbatch=10000, blen=1, scale=.1 )
-
-save( pelvic.mcrun, rib.mcrun, sub.pelvic.mcrun, sub.rib.mcrun, lud, make.spmat, pelvic.speciesdiff, rib.speciesdiff, file="shape-mcmc-results.RData" )
-
-# all the data
-layout(1:3)
-for (k in 1:3) {
-    tmp <- hist(c(pelvic.mcrun$batch[,k],rib.mcrun$batch[,k]),breaks=50,plot=FALSE)
-    hist(rib.mcrun$batch[,k],breaks=50,col=adjustcolor('blue',.5),main=names(initpar)[k],xlim=range(tmp$breaks))
-    hist(pelvic.mcrun$batch[,k],breaks=50,col=adjustcolor('red',.5),add=TRUE)
+if (new.mcmc) {
+    mcrun <- metrop( lud, initial=initpar[thesepars], nbatch=nbatches, blen=blen, scale=.1 )
+} else {
+    mcrun <- metrop( mcrun, nbatch=nbatches, blen=blen, scale=.1 )
 }
+colnames(mcrun$batch) <- thesepars
 
-# complete obs
-layout(1:3)
-for (k in 1:3) {
-    tmp <- hist(c(sub.pelvic.mcrun$batch[,k],sub.rib.mcrun$batch[,k]),breaks=50,plot=FALSE)
-    hist(sub.rib.mcrun$batch[,k],breaks=50,col=adjustcolor('blue',.5),main=names(initpar)[k],xlim=range(tmp$breaks))
-    hist(sub.pelvic.mcrun$batch[,k],breaks=50,col=adjustcolor('red',.5),add=TRUE)
-}
 
-if (FALSE) {
-
-    ####
-    # update branch lengths function
-    # internal branches setup
-    internal.lengths <- tree$edge.length
-    internal.lengths[ tip.edges ] <- 0
-    # and, the tips
-    tip.lengths <- tree$edge.length
-    tip.lengths[ - tip.edges ] <- 0
-
-    # given parameters get rescaled branch lengths
-    scale.brlens <- function (par) {
-        # par = sigma2S, gammaP, xi2P
-        sigma2S <- par[1]
-        gammaP <- par[2]
-        xi2P <- par[3]
-        return( internal.lengths * ( sigma2S + gammaP * edge.testes ) + tip.lengths * xi2P )
-    }
-
-    treemat <- treedist( adjtree, edge.length=scale.brlens(initpar[2:4]), descendants=descendants )
-
-    # moment estimate
-    have.dpelvic <- !is.na(pelvicdiff)
-    have.both <- !is.na(pelvicdiff) & !is.na(ribdiff)
-    # usethese <- have.both
-    usethese <- have.dpelvic
-    datavec <- pelvicdiff[usethese] / initpar[1]
-    f1 <- function (spar) {
-        sigma2S <- spar[1]
-        gammaP <- spar[2]
-        xi2P <- spar[3]
-        elens <- ( internal.lengths * ( sigma2S + gammaP * edge.testes ) + tip.lengths * xi2P )
-        treemat <- treedist( adjtree, edge.length=elens, descendants=descendants )
-        return( sum( ( datavec - treemat[usethese] )^2 ) )
-    }
-
-    est.vals <- optim( par=initpar[2:4], fn=f1, method="BFGS", control=list(fnscale=1e4,maxit=100) )
-    est.vals <- optim( par=est.vals$par, fn=f1, method="BFGS", control=list(fnscale=1e4,maxit=10) )
-    est.vals <- optim( par=est.vals$par, fn=f1, method="BFGS", control=list(fnscale=1e4,maxit=1000) )
-    # Using everything:
-    # only took 31 iterations
-    #    sigma2S     gammaP       xi2P 
-    # 0.11451506 0.02237210 0.03384165 
-    #
-    # Using only ones with ribs also:
-    #    sigma2S     gammaP       xi2P 
-    # 0.09869252 0.01409928 0.03361052 
-
-    new.treemat <- treedist( adjtree, edge.length=scale.brlens(est.vals$par), descendants=descendants )
-
-    if (interactive()) {
-        layout(t(1:2))
-        plot( treemat[usethese], datavec )
-        abline(0,1)
-        plot( new.treemat[usethese], datavec )
-        abline(0,1)
-    }
-}
-
-if (FALSE) {
-
-##############
-# pseudolikelihood NOT WORKING
-have.dpelvic <- !is.na(pelvicdiff)
-chisq.datavec <- pelvicdiff[have.dpelvic]
-f2 <- function (spar) {
-    sigma2S <- spar[1]
-    gammaP <- spar[2]
-    xi2P <- spar[3]
-    elens <- ( internal.lengths * ( sigma2S + gammaP * edge.testes ) + tip.lengths * xi2P )
-    treemat <- treedist( adjtree, edge.length=elens, descendants=descendants )
-    return( (-1)*sum( dchisq( chisq.datavec/treemat[have.dpelvic], initpar[1], log=TRUE ) ) )
-}
-
-est.vals <- optim( par=initpar[2:4], fn=f2, method="BFGS", control=list(fnscale=1e4,maxit=10) )
-est.vals <- optim( par=est.vals$par, fn=f2, method="BFGS", control=list(fnscale=1e4,maxit=10) )
-
-}
+save( mcrun, lud, havedata, datavec, make.spmat, opt, file=outfile )
