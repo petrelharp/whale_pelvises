@@ -1,3 +1,14 @@
+#/usr/bin/R --vanilla
+# parse the mcmc output to infer parameters for shape evolution
+
+mcmcfiles <- list( pelvic="pelvic-shape-mcmc/7997-mcmc-run.RData",
+            rib="rib-shape-mcmc/1796-mcmc-run.RData",
+            'sub-pelvic'="sub-pelvic-shape-mcmc/6676-mcmc-run.RData" )
+mcruns <- lapply( mcmcfiles, function (x) { tmpenv <- environment(); load(x,envir=tmpenv); as.list(tmpenv) } )
+sapply(lapply(mcruns, "[[", 'mcrun'), "[[", "accept")
+#     pelvic        rib sub-pelvic 
+#   0.682150   0.598979   0.767871 
+
 
 
 # all the data

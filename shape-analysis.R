@@ -39,9 +39,18 @@ usedata <- have.both
 # fix kS and look at 2D density
 #  across parameter grid and sampled values in sampled.edge.testes
 
-ks.vals <- seq(17,20,length.out=4)
-sigma2S.vals <- seq(1,5,length.out=40)
-gammaP.vals <- seq(-1,2,length.out=40)
+if (FALSE) {
+    # first set of parameters
+    ks.vals <- seq(17,20,length.out=4)
+    sigma2S.vals <- seq(1,5,length.out=40)
+    gammaP.vals <- seq(-1,2,length.out=40)
+} else {
+    ks.vals <- seq(17,20,length.out=4)
+    sSdiff <- diff(seq(1,5,length.out=40))[1]
+    sigma2S.vals <- seq(1,4.2,by=sSdiff)
+    gPdiff <- diff( seq(-1,2,length.out=40) )[1]
+    gammaP.vals <- c( seq(-2.5,-1,by=gPdiff), seq(2,3.5,by=gPdiff) )
+}
 pargrid <- expand.grid( ks=ks.vals, sigma2S=sigma2S.vals, gammaP=gammaP.vals )
 
 if (interactive()) {
