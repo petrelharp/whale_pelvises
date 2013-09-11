@@ -61,7 +61,6 @@ stopifnot( length(prior.means) == length(thesepars) )
 have.pelvic <- !is.na(pelvic.speciesdiff[ut])
 have.rib <- !is.na(rib.speciesdiff[ut])
 have.both <- have.pelvic & have.rib
-havedata <- have.both
 
 ###
 # MCMC
@@ -75,6 +74,8 @@ if (type=='pelvic') {
 } else if (type == "sub.pelvic") {
     havedata <- have.both
     datavec <- pelvic.speciesdiff[ut][havedata]
+} else {
+    stop( "type must be 'pelvic', 'rib', or 'sub-pelvic'." )
 }
 
 stopifnot( is.finite( lud(initpar[1:3]) ) )
