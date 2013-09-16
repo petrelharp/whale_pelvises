@@ -112,7 +112,7 @@ if (do.parallel) {
 sampled.edge.testes <- t( replicate(nreps, sample.values() ) )
 sampled.sp.edge.testes <- sampled.edge.testes[ , tree.translate ]
 
-sample.lik <- function (...) {
+sample.lik <- function (k,...) {
         # k <- sample(1:nrow(sampled.sp.edge.testes),1)
         edge.weights <- sampled.sp.edge.testes[k,]
         apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
