@@ -101,7 +101,6 @@ if (interactive()) {
 
 # effect of sampling from posterior on testes size?
 nreps <- 100
-nreps <- 2
 do.parallel <- FALSE
 if (do.parallel) {
     require(parallel)
@@ -118,7 +117,8 @@ sample.lik <- function (...) {
         edge.weights <- sampled.sp.edge.testes[k,]
         apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
     }
-sample.lik <- function (...) { list(...) }
+# debugging
+# sample.lik <- function (...) { list(...) }
 
 usedata <- have.pelvic
 datavec <- pelvic.speciesdiff[ut][usedata]
@@ -134,5 +134,5 @@ sub.pelvic.sgrids <- this.lapply( 1:nreps, sample.lik )
 
 run.id <- sprintf( sample(1e4,1), fmt="%04.0f" )
 filename <- paste("shape-likelihood-surface/likelihood-surface-", run.id, ".RData",sep='')
-if (!exists(no.females) || !no.females) { filename <- paste("yes-females-",filename,sep='') }
+if (!exists('no.females') || !no.females) { filename <- paste("yes-females-",filename,sep='') }
 save( pargrid, pelvic.sgrids, rib.sgrids, sub.pelvic.sgrids, make.spmat, thesepars, lud, prior.means, sampled.edge.testes, sampled.sp.edge.testes, file=filename )
