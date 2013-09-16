@@ -39,12 +39,18 @@ usedata <- have.both
 # fix kS and look at 2D density
 #  across parameter grid and sampled values in sampled.edge.testes
 
-if (FALSE) {
+if (TRUE) {
+    # first set of parameters
+    ks.vals <- seq(15,22,length.out=6)
+    sigma2S.vals <- seq(1,4.2,length.out=30)
+    gammaP.vals <- seq(-2.5,3.5,length.out=30)
+} else if (FALSE) {
     # first set of parameters
     ks.vals <- seq(17,20,length.out=4)
     sigma2S.vals <- seq(1,5,length.out=40)
     gammaP.vals <- seq(-1,2,length.out=40)
 } else {
+    # extend these
     ks.vals <- seq(17,20,length.out=4)
     sSdiff <- diff(seq(1,5,length.out=40))[1]
     sigma2S.vals <- seq(1,4.2,by=sSdiff)
@@ -106,30 +112,26 @@ if (do.parallel) {
 sampled.edge.testes <- t( replicate(nreps, sample.values() ) )
 sampled.sp.edge.testes <- sampled.edge.testes[ , tree.translate ]
 
-usedata <- have.pelvic
-datavec <- pelvic.speciesdiff[ut][usedata]
-pelvic.sgrids <- this.lapply( 1:nreps, function (k) {
+sample.lik <- function (...) {
         # k <- sample(1:nrow(sampled.sp.edge.testes),1)
         edge.weights <- sampled.sp.edge.testes[k,]
         apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
-    } )
+    }
+sample.lik <- function (...) { list(...) }
+
+usedata <- have.pelvic
+datavec <- pelvic.speciesdiff[ut][usedata]
+pelvic.sgrids <- this.lapply( 1:nreps, sample.lik )
 
 usedata <- have.ribs
 datavec <- rib.speciesdiff[ut][usedata]
-rib.sgrids <- this.lapply( 1:nreps, function (k) {
-        # k <- sample(1:nrow(sampled.sp.edge.testes),1)
-        edge.weights <- sampled.sp.edge.testes[k,]
-        apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
-    } )
+rib.sgrids <- this.lapply( 1:nreps, sample.lik )
 
 usedata <- ( have.pelvic & have.ribs )
 datavec <- pelvic.speciesdiff[ut][usedata]
-sub.pelvic.sgrids <- this.lapply( 1:nreps, function (k) {
-        # k <- sample(1:nrow(sampled.sp.edge.testes),1)
-        edge.weights <- sampled.sp.edge.testes[k,]
-        sub.pelvic.sgrid <- apply( pargrid, 1, function (x) lud( x[1:3], edge.weights=edge.weights ) )
-    } )
+sub.pelvic.sgrids <- this.lapply( 1:nreps, sample.lik )
 
 run.id <- sprintf( sample(1e4,1), fmt="%04.0f" )
-if (exists(no.females) && no.females) { run.id <- paste("no-females-",run.id,sep='') }
-save( pargrid, pelvic.sgrids, rib.sgrids, sub.pelvic.sgrids, make.spmat, thesepars, lud, prior.means, sampled.edge.testes, sampled.sp.edge.testes, file=paste("shape-likelihood-surface/likelihood-surface-", run.id, ".RData",sep='') )
+filename <- paste("shape-likelihood-surface/likelihood-surface-", run.id, ".RData",sep='')
+if (!exists(no.females) || !no.females) { filename <- paste("yes-females-",filename,sep='') }
+save( pargrid, pelvic.sgrids, rib.sgrids, sub.pelvic.sgrids, make.spmat, thesepars, lud, prior.means, sampled.edge.testes, sampled.sp.edge.testes, file=filename )
