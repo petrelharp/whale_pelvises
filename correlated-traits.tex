@@ -563,7 +563,36 @@ we get the following correlation matrix:
 \end{matrix}  .
 \end{align}
 The marginal posterior distributions for these three parameters
-are shown in figure \ref{fig:posterior_cors}.
+are shown in figure \ref{fig:posterior_cors},
+and summary statistics are shown in table \ref{tab:posterior_cors}.
+% species.covmat[5,5] / species.notestes.covmat[4,4]
+The ratio of variance per unit time of pelvic bone size change
+with and without the effect of testes size
+is 1.28; the corresponding quantity for ribs is 1.00.
+
+% Mon Sep  9 03:28:40 2013
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+        &  testes--ribs & testes--pelvis & ribs--pelvis \\
+  \hline
+ Min. &       -0.69880 &       -0.1143 &    -0.58270 \\
+ 2.5\% &      -0.53270 &        0.1788 &    -0.33544 \\
+ 1st Qu. &    -0.28530 &        0.4401 &    -0.14800 \\
+ Median &     -0.09575 &        0.5697 &    -0.04419 \\
+ Mean &       -0.09502 &        0.5457 &    -0.05181 \\
+ 3rd Qu. &     0.07716 &        0.6741 &     0.03618 \\
+ 97.5\%  &     0.39695 &        0.8008 &     0.24720 \\
+ Max. &        0.63000 &        0.8752 &     0.48420 \\
+   \hline
+\end{tabular}
+  \caption{Marginal posterior distributions of correlations, with length fixed,
+  between changes in rib size, pelvic bone size, and testes size.
+  \label{tab:posterior_cors}
+}
+\end{table}
+
 
 \begin{figure}[ht]
   \begin{center}
@@ -571,8 +600,6 @@ are shown in figure \ref{fig:posterior_cors}.
   \end{center}
   \caption{Marginal posterior distributions of correlations, with length fixed,
   between changes in rib size, pelvic bone size, and testes size.
-  \emph{Note:} I'd constrained these to be nonnegative.  
-  Re-running the MCMC without that constraint, so that correlations with ribs should be centered at zero.
   \label{fig:posterior_cors}
   }
 \end{figure}

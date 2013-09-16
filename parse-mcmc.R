@@ -98,7 +98,14 @@ species.covmat <- as.matrix( tcrossprod(species.transmat) )
 sample.covmat <- as.matrix( tcrossprod(sample.transmat) )
 species.subcovmat <- as.matrix( tcrossprod(species.transmat[-1,-1]) )
 sample.subcovmat <- as.matrix( tcrossprod(sample.transmat[-1,-1]) )
+species.notestes.covmat <- as.matrix( tcrossprod(species.transmat[-2,-2]) )
+sample.notestes.covmat <- as.matrix( tcrossprod(sample.transmat[-2,-2]) )
 
+# how much faster do pelvic bones evolve with testes doing their thing?
+species.covmat[5,5] / species.notestes.covmat[4,4]
+# [1] 1.280029
+
+# correlation matrices
 xtable( cov2cor(species.covmat)[c(1,2,3,5),c(1,2,3,5)], digits=2 )
 xtable( cov2cor(sample.covmat)[c(1,3:6),c(1,3:6)], digits=2 )
 xtable( cov2cor(species.subcovmat[c(1,2,4),c(1,2,4)]) )
@@ -124,6 +131,17 @@ hist( posterior.cors[2,3,], breaks=30, col=adjustcolor('blue',.5), add=TRUE, fre
 legend("topright", fill=adjustcolor(c('black','red','blue'),.5), legend=c("testes-ribs", "testes-pelvis", "ribs-pelvis"), title="correlations" )
 dev.off()
 
+cors.df <-  data.frame( 'testes-ribs'=posterior.cors[1,2,], 'testes-pelvis'=posterior.cors[1,3,], 'ribs-pelvis'=posterior.cors[2,3,] )
+rbind( sapply( cors.df, quantile, prob=c(.025,.975)), sapply( cors.df, summary ) )
+#         testes.ribs testes.pelvis ribs.pelvis
+# 2.5%     -0.5327032     0.1788103  -0.3354422
+# 97.5%     0.3969590     0.8008125   0.2472017
+# Min.       -0.69880       -0.1143    -0.58270
+# 1st Qu.    -0.28530        0.4401    -0.14800
+# Median     -0.09575        0.5697    -0.04419
+# Mean       -0.09502        0.5457    -0.05181
+# 3rd Qu.     0.07716        0.6741     0.03618
+# Max.        0.63000        0.8752     0.48420
 
 ###
 # pairwise correlations
