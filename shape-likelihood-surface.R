@@ -6,31 +6,45 @@ require(Matrix)
 runfiles <- list.files(path="shape-likelihood-surface",pattern=".*RData",full.names=TRUE)
 runs <- lapply( runfiles, function (x) { tmpenv <- environment(); load(x,envir=tmpenv); as.list(tmpenv) } )
 
-pargrid <- runs[[1]]$pargrid
-stopifnot( all( sapply( runs, function (x) all.equal(pargrid, x$pargrid) ) ) )
+pargrids <- lapply( runs, '[[', 'pargrid' )
+grid1 <- ( sapply(pargrids,nrow) == 6400 )
+pargrid1 <- pargrids[[ min(which(grid1)) ]]
+pargrid2 <- pargrids[[ min(which(!grid1)) ]]
+tmp1 <- cbind( pargrid1, kk=1:nrow(pargrid1) )
+tmp2 <- cbind( pargrid2, kk=1:nrow(pargrid2) )
+tmp <- merge(tmp1,tmp2,by=names(pargrid1),all=TRUE)
+tmp <- tmp[do.call(order,tmp[1:3]),]
+pargrid <- tmp[,1:3]
 sigma2S.vals <- sort( unique( pargrid$sigma2S ) )
 gammaP.vals <- sort( unique( pargrid$gammaP ) )
 
-pelvic.sgrids <- do.call( cbind, do.call( c, lapply( runs, "[[", "pelvic.sgrids" ) ) )
-sub.pelvic.sgrids <- do.call( cbind, do.call( c, lapply( runs, "[[", "sub.pelvic.sgrids" ) ) )
-rib.sgrids <- do.call( cbind, do.call( c, lapply( runs, "[[", "rib.sgrids" ) ) )
+pelvic.sgrids1 <- do.call( cbind, do.call( c, lapply( runs[grid1], "[[", "pelvic.sgrids" ) ) )
+pelvic.sgrids2 <- do.call( cbind, do.call( c, lapply( runs[!grid1], "[[", "pelvic.sgrids" ) ) )
+pelvic.sgrids <- cbind( pelvic.sgrids1[tmp$kk.x,], pelvic.sgrids2[tmp$kk.y] )
+sub.pelvic.sgrids1 <- do.call( cbind, do.call( c, lapply( runs[grid1], "[[", "sub.pelvic.sgrids" ) ) )
+sub.pelvic.sgrids2 <- do.call( cbind, do.call( c, lapply( runs[!grid1], "[[", "sub.pelvic.sgrids" ) ) )
+sub.pelvic.sgrids <- cbind( sub.pelvic.sgrids1[tmp$kk.x,], sub.pelvic.sgrids2[tmp$kk.y] )
+rib.sgrids1 <- do.call( cbind, do.call( c, lapply( runs[grid1], "[[", "rib.sgrids" ) ) )
+rib.sgrids2 <- do.call( cbind, do.call( c, lapply( runs[!grid1], "[[", "rib.sgrids" ) ) )
+rib.sgrids <- cbind( rib.sgrids1[tmp$kk.x,], rib.sgrids2[tmp$kk.y] )
+
 
 ## normalize, within each
-pelvic.normed <- exp(pelvic.sgrids-max(pelvic.sgrids)) 
-pelvic.normed <- sweep( pelvic.normed, 2, colSums(pelvic.normed), "/" )
-rib.normed <- exp(rib.sgrids-max(rib.sgrids)) 
-rib.normed <- sweep( rib.normed, 2, colSums(rib.normed), "/" )
-sub.pelvic.normed <- exp(sub.pelvic.sgrids-max(sub.pelvic.sgrids)) 
-sub.pelvic.normed <- sweep( sub.pelvic.normed, 2, colSums(sub.pelvic.normed), "/" )
+pelvic.normed <- exp(pelvic.sgrids-max(pelvic.sgrids,na.rm=TRUE)) 
+pelvic.normed <- sweep( pelvic.normed, 2, colSums(pelvic.normed,na.rm=TRUE), "/" )
+rib.normed <- exp(rib.sgrids-max(rib.sgrids,na.rm=TRUE)) 
+rib.normed <- sweep( rib.normed, 2, colSums(rib.normed,na.rm=TRUE), "/" )
+sub.pelvic.normed <- exp(sub.pelvic.sgrids-max(sub.pelvic.sgrids,na.rm=TRUE)) 
+sub.pelvic.normed <- sweep( sub.pelvic.normed, 2, colSums(sub.pelvic.normed,na.rm=TRUE), "/" )
 
-pargrid$pelvic <- rowMeans( pelvic.normed )
-pargrid$rib <- rowMeans( rib.normed )
-pargrid$sub.pelvic <- rowMeans( sub.pelvic.normed )
-scalefac <- 500
+pargrid$pelvic <- rowMeans( pelvic.normed,na.rm=TRUE )
+pargrid$rib <- rowMeans( rib.normed,na.rm=TRUE )
+pargrid$sub.pelvic <- rowMeans( sub.pelvic.normed,na.rm=TRUE )
+scalefac <- 100
 
 ##
 # marginal likelihoods of ks
-sapply( c("pelvic","sub.pelvic","rib"), function (x) tapply( pargrid[[x]]/sum(pargrid[[x]]), pargrid$ks, sum ) )
+sapply( c("pelvic","sub.pelvic","rib"), function (x) tapply( pargrid[[x]]/sum(pargrid[[x]]), pargrid$ks, sum, na.rm=TRUE ) )
 
 # joint distributions:
 pdf(file="joint-shape-posteriors.pdf",width=8,height=8,pointsize=10)
@@ -48,14 +62,14 @@ dev.off()
 pdf(file="hist-shape-posteriors.pdf",width=7,height=5,pointsize=10)
 layout(t(1:2))
 gP.dists <- lapply( c("pelvic","sub.pelvic","rib"), function (type) {
-            tapply( pargrid[[type]], pargrid$gammaP, sum ) } )
+            tapply( pargrid[[type]], pargrid$gammaP, sum, na.rm=TRUE ) } )
 plot( 0, type='n', xlab='gammaP', ylab='probability', xlim=range(pargrid$gammaP), ylim=range(gP.dists) )
 fillcols <- adjustcolor(c('red','blue','grey'),.3)
 for (k in 1:3) {
     polygon( c( min(gammaP.vals), gammaP.vals, max(gammaP.vals) ), c(0,gP.dists[[k]],0), col=fillcols[k] )
 }
 sS.dists <- lapply( c("pelvic","sub.pelvic","rib"), function (type) {
-            tapply( pargrid[[type]], pargrid$sigma2S, sum ) } )
+            tapply( pargrid[[type]], pargrid$sigma2S, sum, na.rm=TRUE ) } )
 plot( 0, type='n', xlab='sigma2S', ylab='probability', xlim=range(pargrid$sigma2S), ylim=range(sS.dists) )
 fillcols <- adjustcolor(c('red','blue','grey'),.3)
 for (k in 1:3) {
