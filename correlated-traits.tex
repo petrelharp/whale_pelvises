@@ -365,7 +365,7 @@ say $s$ and $t$ by
     S_t - S_s = \sum_{e \in s \to t} Y_e ,
 \end{align*}
 with the $Y_e$ a vector of independent Gaussians with variance we define to be $\tau'_e$, 
-which is either $(\sigma^2_S + \gamma_P C_e) \tau_e$ on internal edges, or $\xi^2$ on the tips.
+which is either $\sigma^2_S \exp\left( \gamma_P C_e /\sigma^2_S \right) \tau_e$ on internal edges, or $\xi^2$ on the tips.
 The parameters only enter through these rescaled branch lengths.
 Now 
 \begin{align}
