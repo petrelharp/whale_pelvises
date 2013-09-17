@@ -100,7 +100,7 @@ if (interactive()) {
 }
 
 # effect of sampling from posterior on testes size?
-nreps <- 100
+nreps <- 20
 do.parallel <- FALSE
 if (do.parallel) {
     require(parallel)
