@@ -28,25 +28,35 @@ shapediff$species1 <- whales$species[match(shapediff$specimen1,whales$specimen)]
 shapediff$species2 <- whales$species[match(shapediff$specimen2,whales$specimen)]
 # restrict to same-bone comparisons and ones observed in the data
 shapediff <- subset( shapediff, ( bone1==bone2 ) & ( specimen1 %in% rownames(thedata) ) & ( specimen2 %in% rownames(thedata) ) )
-if (interactive()) {
-    shapediff$treedist <- species.treedist[ as.matrix( shapediff[c("species1","species2")] ) ]
-    shapediff$sex1 <- whales$sex[ match(shapediff$specimen1,whales$specimen) ]
-    shapediff$sex2 <- whales$sex[ match(shapediff$specimen2,whales$specimen) ]
-    layout(1:2)
-    for (type in c('rib','pelvic')) {
-        plot( shape_difference ~ treedist, data=shapediff, subset=(bone1==type), col=adjustcolor(c('black','red'),.2)[ifelse(sex1==sex2,1,2)], pch=20 )
-        ltmp <- loess( shape_difference ~ treedist, data=shapediff, subset=(bone1==type & sex1==sex2), span=.3 )
-        lines( seq( 0, max(shapediff$treedist), length.out=100 ), predict( ltmp, newdata=data.frame(treedist=seq( 0, max(shapediff$treedist), length.out=100 )) ) )
-        ltmp <- loess( shape_difference ~ treedist, data=shapediff, subset=(bone1==type & sex1!=sex2), span=.3 )
-        lines( seq( 0, max(shapediff$treedist), length.out=100 ), predict( ltmp, newdata=data.frame(treedist=seq( 0, max(shapediff$treedist), length.out=100 )) ), col='red' )
-    }
-}
 
 # remove females
 no.females <- TRUE
 if (no.females) {
     males <- whales$specimen[ whales$sex == "M" ]
     shapediff <- subset( shapediff, specimen1 %in% males & specimen2 %in% males )
+}
+
+# treedist
+adjtree <- tree
+adjtree$edge.length[tip.edges] <- (.05/3.16)^2  # reasonable value from initial-values.R
+all.treedist <- treedist( adjtree )
+rownames(all.treedist) <- colnames(all.treedist) <- rownames(thedata)
+species.order <- match( levels(shapediff$species1), species.tree$tip.label  )
+species.treedist <- treedist(species.tree)[ species.order, species.order ]
+rownames(species.treedist) <- colnames(species.treedist) <- species.tree$tip.label[species.order]
+
+if (interactive()) {
+    shapediff$treedist <- species.treedist[ as.matrix( shapediff[c("species1","species2")] ) ]
+    shapediff$sex1 <- whales$sex[ match(shapediff$specimen1,whales$specimen) ]
+    shapediff$sex2 <- whales$sex[ match(shapediff$specimen2,whales$specimen) ]
+    layout(1:2)
+    for (type in c('rib','pelvic')) {
+        plot( shape_difference ~ treedist, data=shapediff, subset=(bone1==type), col=adjustcolor(c('black','red'),.2)[ifelse(sex1==sex2,1,2)], pch=20, main=type )
+        ltmp <- loess( shape_difference ~ treedist, data=shapediff, subset=(bone1==type & sex1==sex2), span=.3 )
+        lines( seq( 0, max(shapediff$treedist), length.out=100 ), predict( ltmp, newdata=data.frame(treedist=seq( 0, max(shapediff$treedist), length.out=100 )) ) )
+        ltmp <- loess( shape_difference ~ treedist, data=shapediff, subset=(bone1==type & sex1!=sex2), span=.3 )
+        lines( seq( 0, max(shapediff$treedist), length.out=100 ), predict( ltmp, newdata=data.frame(treedist=seq( 0, max(shapediff$treedist), length.out=100 )) ), col='red' )
+    }
 }
 
 ## sample-by-sample
@@ -81,15 +91,6 @@ pelvic.denom <- with( subset(shapediff, bone1==bone2 & bone1=="pelvic" & ( speci
 pelvic.denom[is.na(pelvic.denom)] <- 0
 pelvic.denom <- pelvic.denom + t(pelvic.denom) - diag(diag(pelvic.denom))
 pelvic.speciesdiff <- pelvic.speciesdiff / pelvic.denom
-
-# treedist
-adjtree <- tree
-adjtree$edge.length[tip.edges] <- (.05/3.16)^2  # reasonable value from initial-values.R
-all.treedist <- treedist( adjtree )
-rownames(all.treedist) <- colnames(all.treedist) <- rownames(thedata)
-species.order <- match( levels(shapediff$species1), species.tree$tip.label  )
-species.treedist <- treedist(species.tree)[ species.order, species.order ]
-rownames(species.treedist) <- colnames(species.treedist) <- species.tree$tip.label[species.order]
 
 
 ####
