@@ -36,7 +36,7 @@ if (!new.mcmc) { load(mcmcfile) }
 # Likelihood, species tree
 
 # Estimation:
-initpar <- c( kS=20, ( 5 * sptree$edge.length ) )
+initpar <- c( kS=20, xi2P=, ( 5 * sptree$edge.length ) )
 parscale <- c(.5,initpar[-1]/50)
 stopifnot( class(shared.paths) == "dsyMatrix"  & shared.paths@uplo == "U" )  # if so, changing upper tri also changes lower tri
 make.spmat <- function ( edgelens ) {

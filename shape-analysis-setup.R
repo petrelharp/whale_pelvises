@@ -45,10 +45,10 @@ species.order <- match( levels(shapediff$species1), species.tree$tip.label  )
 species.treedist <- treedist(species.tree)[ species.order, species.order ]
 rownames(species.treedist) <- colnames(species.treedist) <- species.tree$tip.label[species.order]
 
+shapediff$treedist <- species.treedist[ as.matrix( shapediff[c("species1","species2")] ) ]
+shapediff$sex1 <- whales$sex[ match(shapediff$specimen1,whales$specimen) ]
+shapediff$sex2 <- whales$sex[ match(shapediff$specimen2,whales$specimen) ]
 if (interactive()) {
-    shapediff$treedist <- species.treedist[ as.matrix( shapediff[c("species1","species2")] ) ]
-    shapediff$sex1 <- whales$sex[ match(shapediff$specimen1,whales$specimen) ]
-    shapediff$sex2 <- whales$sex[ match(shapediff$specimen2,whales$specimen) ]
     layout(1:2)
     for (type in c('rib','pelvic')) {
         plot( shape_difference ~ treedist, data=shapediff, subset=(bone1==type), col=adjustcolor(c('black','red'),.2)[ifelse(sex1==sex2,1,2)], pch=20, main=type )
@@ -154,6 +154,7 @@ if (interactive()) {
 
 ######
 # BACK-OF-THE-ENVELOPE:
+
 
 ###
 # all the data
@@ -291,6 +292,32 @@ initpar <- c(
         xi2P = est.xi2P
     )
 names(initpar) <- c('ks','sigma2S','gammaP','xi2P')
+
+######
+# look at these
+tdistmat <- with( shapediff, tapply( treedist, list(species1,species2), mean ) )
+ut <- upper.tri(tdistmat,diag=TRUE)
+
+nls.fits <- lapply( c(rib='rib',pelvic='pelvic'), function (type) {
+        sdiff <- get(paste(type,".speciesdiff",sep=''))[ut]
+        tdiff <- tdistmat[ut]
+        nls( sdiff^2 ~ 2 * xi2P + ksig * tdiff, start=list(xi2P=.8,ksig=2) )
+    } )
+
+tvals <- seq(0,max(shapediff$treedist),length.out=100)
+layout(matrix(1:4,nrow=2))
+for (type in c('rib','pelvic')) {
+    with(subset(shapediff,bone1==type), plot(treedist, shape_difference, cex=.25, pch=20, log='y' ) )
+    with(subset(shapediff,bone1==type), lines( tvals, predict(loess(shape_difference ~ treedist, subset=(treedist>0)),newdata=data.frame(treedist=tvals)), col='red' ) )
+    points( tdistmat[ut], get(paste(type,".speciesdiff",sep=''))[ut], col='red' )
+    with(as.list(initpar), lines( tvals, sqrt((2*xi2P + tvals*sigma2S)*ks), col='blue' ) )
+    with( as.list(coef(nls.fits[[type]])), lines( tvals, sqrt( 2*xi2P + tvals*ksig ), col='green', lty=2 ) )
+    with(subset(shapediff,bone1==type), plot(treedist, shape_difference, cex=.25, pch=20, xlim=c(0,.08), log='y' ) )
+    with(subset(shapediff,bone1==type), lines( tvals, predict(loess(shape_difference ~ treedist, subset=(treedist>0)),newdata=data.frame(treedist=tvals)), col='red' ) )
+    points( tdistmat[ut], get(paste(type,".speciesdiff",sep=''))[ut], col='red' )
+    with(as.list(initpar), lines( tvals, sqrt((2*xi2P + tvals*sigma2S)*ks), col='blue' ) )
+    with( as.list(coef(nls.fits[[type]])), lines( tvals, sqrt( 2*xi2P + tvals*ksig ), col='green', lty=2 ) )
+}
 
 
 ####

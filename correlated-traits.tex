@@ -425,7 +425,7 @@ which then is used to make the covariance matrix between the $\|S_t - S_u\|^2$.
 Also: there's too many pairs of bones to look at the full ${n \choose 2} \times {n \choose 2}$ covariance matrix
 between all shape comparisons.
 But, we don't actually lose anything by averaging by species, 
-i.e.\ for each pair of species $(s,t)$ letting $M_{s,t}$ be the mean shape difference across all pairs of bones belonging to the two species.
+i.e.\ for each pair of species $(s,t)$ letting $M_{s,t}$ be the mean squared shape difference across all pairs of bones belonging to the two species.
 Recall that the within-species variance here is $\xi^2$ (either $\xi^2_P$ or $\xi^2_R$ for pelvic bones or ribs),
 and that the within-individual variance is $\nu^2$ (either $\nu^2_P$ or $\nu^2_R$ for pelvic bones or ribs).
 Let $i_1$ and $i_2$ be indices of bones in species $s$, and $j_1$, $j_2$ be bones in species $t$,
@@ -457,6 +457,7 @@ S_{i_2,j_2}
     2 k_s ( \tau'_{s,t} + 2 \xi^2 )^2   
 \end{bmatrix}
 \end{align}
+
 
 
 \section{Results}
