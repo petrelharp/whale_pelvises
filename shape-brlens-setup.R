@@ -48,11 +48,13 @@ shapediff$sex2 <- whales$sex[ match(shapediff$specimen2,whales$specimen) ]
 if (interactive() & !no.females) {
     layout(1:2)
     for (type in c('rib','pelvic')) {
-        plot( shape_difference ~ treedist, data=shapediff, subset=(bone1==type), col=adjustcolor(c('black','red'),.2)[ifelse(sex1==sex2,1,2)], pch=20, main=type )
-        ltmp <- loess( shape_difference ~ treedist, data=shapediff, subset=(bone1==type & sex1==sex2), span=.3 )
-        lines( seq( 0, max(shapediff$treedist), length.out=100 ), predict( ltmp, newdata=data.frame(treedist=seq( 0, max(shapediff$treedist), length.out=100 )) ) )
+        plot( shape_difference ~ jitter(treedist), data=shapediff, subset=(bone1==type), col=adjustcolor(c('blue','green','black'),.2)[ifelse(sex1==sex2,ifelse(sex1=='M',1,2),3)], pch=20, main=type, cex=.5 )
+        ltmp <- loess( shape_difference ~ treedist, data=shapediff, subset=(bone1==type & sex1==sex2 & sex1=='M'), span=.3 )
+        lines( seq( 0, max(shapediff$treedist), length.out=100 ), predict( ltmp, newdata=data.frame(treedist=seq( 0, max(shapediff$treedist), length.out=100 )) ), col='blue' )
+        ltmp <- loess( shape_difference ~ treedist, data=shapediff, subset=(bone1==type & sex1==sex2 & sex1=='F'), span=.3 )
+        lines( seq( 0, max(shapediff$treedist), length.out=100 ), predict( ltmp, newdata=data.frame(treedist=seq( 0, max(shapediff$treedist), length.out=100 )) ), col='green' )
         ltmp <- loess( shape_difference ~ treedist, data=shapediff, subset=(bone1==type & sex1!=sex2), span=.3 )
-        lines( seq( 0, max(shapediff$treedist), length.out=100 ), predict( ltmp, newdata=data.frame(treedist=seq( 0, max(shapediff$treedist), length.out=100 )) ), col='red' )
+        lines( seq( 0, max(shapediff$treedist), length.out=100 ), predict( ltmp, newdata=data.frame(treedist=seq( 0, max(shapediff$treedist), length.out=100 )) ), col='black' )
     }
 }
 
@@ -117,6 +119,16 @@ if (interactive()) {
 }
 
 initpar <- lapply( nls.fits, coef )
+# $rib
+#      xi2P      ksig 
+#      0.3434719 2.7130137 
+#  $pelvic
+#      xi2P     ksig 
+#      0.831679 9.190673 
+
+# check xi2P is reasonable
+(1/2) * with( subset(shapediff,species1==species2), tapply( shape_difference^2, list(bone1,ifelse(specimen1==specimen2,'same','diff')), mean ) )
+#  ... pretty close... within-individual variance is about 1/3.5 times this.
 
 ####
 # setup for likelihood on the species tree
