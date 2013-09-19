@@ -29,6 +29,8 @@ require(Matrix)
 require(mcmc)
 
 load("shape-stuff.RData")
+load("spmapping.RData")
+load("shared-num-bones.RData")
 new.mcmc <- is.null(opt$mcmcfile)
 if (!new.mcmc) { load(mcmcfile) }
 
@@ -36,40 +38,59 @@ if (!new.mcmc) { load(mcmcfile) }
 # Likelihood, species tree
 
 # Estimation:
-initpar <- c( kS=20, xi2P=, ( 5 * sptree$edge.length ) )
+initpar <- c( initpar[[type]][c('ks','xi2P','xi2P')]/c(1,2,2), ( 5 * sptree$edge.length ) )
 parscale <- c(.5,initpar[-1]/50)
 stopifnot( class(shared.paths) == "dsyMatrix"  & shared.paths@uplo == "U" )  # if so, changing upper tri also changes lower tri
 make.spmat <- function ( edgelens ) {
     shared.paths@x[ sput ][spmap.nonz] <- as.vector( sp.mapping %*% (edgelens) )  # note: update @x rather than entries to preserve symmetry
     return( shared.paths )
 }
-lud <- function (par, ...) {
-    # par = ks, (edgelens)
-    ks <- par[1]
-    edgelens <- par[-1]
-    if (any(par<=0)) { return( -Inf ) }
-    spmat <- make.spmat( edgelens, ... )[usedata,usedata]
-    x <- ( datavec - ks * diag(spmat) )
-    fchol <- chol(2*ks*spmat^2)
-    return( sum( (par / prior.means) ) - sum( backsolve( fchol, x, transpose=TRUE )^2 )/2 - sum(log(diag(fchol))) ) 
-}
+
 # priors: exponential
 prior.means <- c(20,rep(.1,length=length(sptree$edge.length)))
 
-have.pelvic <- !is.na(pelvic.speciesdiff[ut])
-have.rib <- !is.na(rib.speciesdiff[ut])
+lud <- function (par, ...) {
+    # par = ks, xi2i, xi2s, (edgelens)
+    ks <- par[1]
+    xi2i <- par[2]
+    xi2s <- par[3]
+    edgelens <- par[-(1:3)]
+    if (any(par<=0)) { return( -Inf ) }
+    #   covariances between the means of all species-species comparisons is,
+    #     with y = shared.indivs * xi2i
+    #          z = shared.samples * xi2s
+    #     and y.z = shared.samples.indivs * xi2i * xi2s
+    #     and y.sq = shared.indivs.sq * xi2i^2
+    #          z.sq = shared.samples.sq * xi2s^2
+    #     shared.paths^2 + 2 * shared.paths * (y+z) + 2 * y.z + y.sq + z.sq
+    spmat <- make.spmat( edgelens, ... )[usedata,usedata]
+    covmat <- ( spmat^2 + 
+            2 * spmat * ( shared.indivs * xi2i + shared.samples * xi2s ) + 
+            2 * shared.samples.indivs * xi2i * xi2s +
+            shared.indivs.sq * xi2i^2 +
+            shared.samples.sq * xi2s^2 )
+    x <- ( datavec - ks * diag(spmat) )
+    fchol <- chol(2*ks*covmat)
+    return( sum( (par / prior.means) ) - sum( backsolve( fchol, x, transpose=TRUE )^2 )/2 - sum(log(diag(fchol))) ) 
+}
+
+have.pelvic <- !is.na(pelvic.speciesdiffsq[ut])
+have.rib <- !is.na(rib.speciesdiffsq[ut])
 have.both <- have.pelvic & have.rib
 
-
+sharenames <- c( "shared.indivs", "shared.samples", "shared.samples.indivs", "shared.samples.sq", "shared.indivs.sq" )
 if (type=='pelvic') {
     usedata <- have.pelvic
-    datavec <- pelvic.speciesdiff[ut][usedata]
+    datavec <- pelvic.speciesdiffsq[ut][usedata]
+    for (x in sharenames) { assign( x, get(paste(type,x,sep='.')) )[usedata,usedata] }
 } else if (type == "rib") {
     usedata <- have.rib
-    datavec <- rib.speciesdiff[ut][usedata]
+    datavec <- rib.speciesdiffsq[ut][usedata]
+    for (x in sharenames) { assign( x, get(paste(type,x,sep='.')) )[usedata,usedata] }
 } else if (type == "sub.pelvic") {
     usedata <- have.both
-    datavec <- pelvic.speciesdiff[ut][usedata]
+    datavec <- pelvic.speciesdiffsq[ut][usedata]
+    stop("haven't done this yet")
 } else {
     stop( "type must be 'pelvic', 'rib', or 'sub.pelvic'." )
 }

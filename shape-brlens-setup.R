@@ -167,7 +167,7 @@ initpar <- lapply( optim.fits, "[[", 'par' )
 #          z = shared.samples * xi2s
 #     and y.z = shared.samples.indivs * xi2i * xi2s
 #     and y.sq = shared.indivs.sq * xi2i^2
-#          z = shared.samples.sq * xi2s^2
+#          z.sq = shared.samples.sq * xi2s^2
 #     shared.paths^2 + 2 * shared.paths * (y+z) + 2 * y.z + y.sq + z.sq
 ut <- upper.tri(pelvic.speciesdiffsq)
 ## shared.paths
@@ -260,6 +260,6 @@ if (!file.exists("shared-num-bones.RData")) {
 
 
 #####
-## just save everything
-save( list=ls(), file="shape-brlens-stuff.RData" )
+## save stuff mcmc needs
+save( initpar, shared.paths, sput, spmap.nonz, pelvic.speciesdiffsq, rib.speciesdiffsq, file="shape-brlens-stuff.RData" )
 
