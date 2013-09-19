@@ -103,7 +103,7 @@ ut <- upper.tri(tdistmat,diag=TRUE)
 nls.fits <- lapply( c(rib='rib',pelvic='pelvic'), function (type) {
         sdiff <- get(paste(type,".speciesdiffsq",sep=''))[ut]
         tdiff <- tdistmat[ut]
-        nls( sdiff ~ 2 * xi2P + ksig * tdiff, start=list(xi2P=.8,ksig=2) )
+        nls( sdiff ~ 2 * kxi2P + ksig * tdiff, start=list(kxi2P=.8,ksig=2) )
     } )
 
 optim.fits <- lapply( c(rib='rib',pelvic='pelvic'), function (type) {
@@ -113,33 +113,41 @@ optim.fits <- lapply( c(rib='rib',pelvic='pelvic'), function (type) {
             #  par = (xi2P, ks, sigma2P) 
             xi2P <- par[1]; ks <- par[2]; sigma2P <- par[3]
             brlens <- 2 * xi2P + sigma2P * treevec
-            (-1) * sum( dchisq( datavec/brlens, df=ks, log=TRUE ) ) + sum( log(brlens) )
+            retval <- (-1) * sum( dchisq( datavec/brlens, df=ks, log=TRUE ) ) + sum( log(brlens) )
+            if (!is.finite(retval)) { browser() } else { return(retval) }
         }
-        optim( par=c( coef(nls.fits[[type]])['xi2P'], 20, coef(nls.fits[[type]])['ksig']/20 ), fn=llikfun, lower=c(0,0,0), method="L-BFGS-B" )
+        ans <- optim( par=c( xi2P=coef(nls.fits[[type]])['kxi2P']/20, ks=20, sigma2P=coef(nls.fits[[type]])['ksig']/20 ), fn=llikfun, lower=c(0.01,0.1,0.1), method="L-BFGS-B", control=list(parscale=c(.1,.1,.1),fnscale=1e4) )
+        names(ans$par) <- c('xi2P','ks','sigma2P')
+        ans
     } )
 
 if (interactive()) {
     tvals <- seq(0,max(shapediff$treedist),length.out=100)
     layout(matrix(1:4,nrow=2))
     for (type in c('rib','pelvic')) {
-        with(subset(shapediff,bone1==type), plot(treedist, sqdist, cex=.25, pch=20, log='y' ) )
+        with(subset(shapediff,bone1==type), plot(treedist, sqdist, cex=.25, pch=20, log='y', main=type, ylab='squared distance', xlab='tree distance' ) )
         with(subset(shapediff,bone1==type), lines( tvals, predict(loess(sqdist ~ treedist, subset=(treedist>0)),newdata=data.frame(treedist=tvals)), col='red' ) )
         points( tdistmat[ut], get(paste(type,".speciesdiffsq",sep=''))[ut], col='red' )
-        with( as.list(coef(nls.fits[[type]])), lines( tvals, ( 2*xi2P + tvals*ksig ), col='green', lty=2 ) )
-        with(subset(shapediff,bone1==type), plot(treedist, sqdist, cex=.25, pch=20, xlim=c(0,.08), log='y' ) )
+        with( as.list(coef(nls.fits[[type]])), lines( tvals, ( 2*kxi2P + tvals*ksig ), col='green', lty=2 ) )
+        with( as.list( optim.fits[[type]]$par ), lines( tvals, ( 2*xi2P + tvals ) * ks * sigma2P, col='purple' ) )
+        with( as.list( optim.fits[[type]]$par ), lines( tvals, qchisq( p=.25, df=ks ) * ( 2*xi2P + tvals ), col='purple', lty=3 ) )
+        with( as.list( optim.fits[[type]]$par ), lines( tvals, qchisq( p=.75, df=ks ) * ( 2*xi2P + tvals ), col='purple', lty=3 ) )
+        with(subset(shapediff,bone1==type), plot(treedist, sqdist, cex=.25, pch=20, xlim=c(0,.08), log='y', main=type, ylab='squared distance', xlab='tree distance' ) )
         with(subset(shapediff,bone1==type), lines( tvals, predict(loess(sqdist ~ treedist, subset=(treedist>0)),newdata=data.frame(treedist=tvals)), col='red' ) )
         points( tdistmat[ut], get(paste(type,".speciesdiffsq",sep=''))[ut], col='red' )
-        with( as.list(coef(nls.fits[[type]])), lines( tvals, ( 2*xi2P + tvals*ksig ), col='green', lty=2 ) )
+        with( as.list(coef(nls.fits[[type]])), lines( tvals, ( 2*kxi2P + tvals*ksig ), col='green', lty=2 ) )
+        with( as.list( optim.fits[[type]]$par ), lines( tvals, ( 2*xi2P + tvals ) * ks * sigma2P, col='purple' ) )
+        with( as.list( optim.fits[[type]]$par ), lines( tvals, qchisq( p=.25, df=ks ) * ( 2*xi2P + tvals ), col='purple', lty=3 ) )
+        with( as.list( optim.fits[[type]]$par ), lines( tvals, qchisq( p=.75, df=ks ) * ( 2*xi2P + tvals ), col='purple', lty=3 ) )
     }
 }
 
-initpar <- lapply( nls.fits, coef )
+initpar <- lapply( optim.fits, "[[", 'par' )
 
-#  $rib :  xi2P      ksig 
-#       0.3702152 2.6573372 
-#  $pelvic  xi2P     ksig 
-#       0.8626725 9.4201638 
-#
+# $rib:  xi2P         ks    sigma2P 
+# 0.05750125 5.93839502 0.43632759 
+# $pelvic:  xi2P         ks    sigma2P 
+# 0.09504044 8.88862550 0.97149192 #
 # check xi2P is reasonable
 (1/2) * with( subset(shapediff,species1==species2), tapply( sqdist, list(bone1,ifelse(specimen1==specimen2,'same','diff')), mean ) )
 #  ... pretty close... within-individual variance is about 1/3.5 times this.
@@ -154,7 +162,7 @@ initpar <- lapply( nls.fits, coef )
 #   *.shared.indivs.sq gives the sum of shared individuals across all comparisons, squared
 #   *.shared.samples.sq gives the sum of shared samples across all comparisons, squared
 # THEN
-#   covariances between the sums of all species-species comparisons is,
+#   covariances between the means of all species-species comparisons is,
 #     with y = shared.indivs * xi2i
 #          z = shared.samples * xi2s
 #     and y.z = shared.samples.indivs * xi2i * xi2s
@@ -201,9 +209,11 @@ shared.paths[ upper.tri(shared.paths,diag=TRUE) ][spmap.nonz] <- as.vector( sp.m
 shared.paths[lower.tri(shared.paths)] <- t(shared.paths)[lower.tri(shared.paths)]
 shared.paths <- Matrix( shared.paths )
 stopifnot( class(shared.paths) == "dsyMatrix"  & shared.paths@uplo == "U" )  # if so, changing upper tri also changes lower tri
+###
 # *.shared.{indivs,samples}.*
 rownames.ut <- rownames(pelvic.speciesdiffsq)[row(pelvic.speciesdiffsq)[ut]]
 colnames.ut <- colnames(pelvic.speciesdiffsq)[col(pelvic.speciesdiffsq)[ut]]
+both.specimens <- intersect( with(subset(shapediff,bone1=='rib'),c(specimen1,specimen2)), with(subset(shapediff,bone1=='pelvic'),c(specimen1,specimen2)) )
 if (!file.exists("shared-num-bones.RData")) {
     for (type in c('rib','pelvic')) {
         sharenames <- c( "shared.indivs", "shared.samples", "shared.samples.indivs", "shared.samples.sq", "shared.indivs.sq" )
@@ -217,7 +227,8 @@ if (!file.exists("shared-num-bones.RData")) {
             if ( length( intersect( c(jx,jy), c(kx,ky) ) ) > 0 ) {
                 j.obs <- subset( shapediff, ( ( species1==jx & species2==jy ) | ( species2==jx & species1==jy ) ) & ( bone1 == type ) )
                 k.obs <- subset( shapediff, ( ( species1==kx & species2==ky ) | ( species2==kx & species1==ky ) ) & ( bone1 == type ) )
-                if ( nrow(j.obs) * nrow(k.obs) > 0 ) {
+                jk.denom <- ( nrow(j.obs) * nrow(k.obs) ) / ( 1 + (j==k) )
+                if ( jk.denom > 0 ) {
                     shindivs <- outer( 1:nrow(j.obs), 1:nrow(k.obs), function (jj,kk) { 
                                 ( j.obs$specimen1[jj] == k.obs$specimen1[kk] ) + 
                                 ( j.obs$specimen1[jj] == k.obs$specimen2[kk] ) + 
@@ -228,11 +239,11 @@ if (!file.exists("shared-num-bones.RData")) {
                                 ( j.obs$specimen1[jj] == k.obs$specimen2[kk] ) & ( j.obs$side1[jj] == k.obs$side2[kk] ) + 
                                 ( j.obs$specimen2[jj] == k.obs$specimen1[kk] ) & ( j.obs$side2[jj] == k.obs$side1[kk] ) + 
                                 ( j.obs$specimen2[jj] == k.obs$specimen2[kk] ) & ( j.obs$side2[jj] == k.obs$side2[kk] ) } )
-                    shared.indivs[j,k] <- sum( shindivs )
-                    shared.samples[j,k] <- sum( shsamples )
-                    shared.samples.indivs[j,k] <- sum( shindivs*shsamples )
-                    shared.indivs.sq[j,k] <- sum( shindivs^2 )
-                    shared.samples.sq[j,k] <- sum( shsamples^2 )
+                    shared.indivs[j,k] <- sum( shindivs ) / jk.denom^2
+                    shared.samples[j,k] <- sum( shsamples ) / jk.denom^2
+                    shared.samples.indivs[j,k] <- sum( shindivs*shsamples ) / jk.denom^2
+                    shared.indivs.sq[j,k] <- sum( shindivs^2 ) / jk.denom^2
+                    shared.samples.sq[j,k] <- sum( shsamples^2 ) / jk.denom^2
                 }
             }
             m <- m+1
@@ -246,8 +257,6 @@ if (!file.exists("shared-num-bones.RData")) {
 } else {
     load("shared-num-bones.RData")
 }
-
-
 
 
 #####
