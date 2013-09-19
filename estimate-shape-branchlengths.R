@@ -92,7 +92,7 @@ if (type=='pelvic') {
 } else if (type == "sub.pelvic") {
     usedata <- have.both
     datavec <- pelvic.speciesdiffsq[ut][usedata]
-    stop("haven't done this yet")
+    for (x in sharenames) { assign( x, get(paste(type,x,sep='.'))[usedata,usedata] ) }
 } else {
     stop( "type must be 'pelvic', 'rib', or 'sub.pelvic'." )
 }
@@ -107,4 +107,4 @@ if (new.mcmc) {
 colnames(mcrun$batch) <- names(initpar)
 
 
-save( mcrun, lud, havedata, datavec, make.spmat, opt, file=outfile )
+save( mcrun, lud, usedata, datavec, make.spmat, opt, file=outfile )

@@ -213,7 +213,7 @@ stopifnot( class(shared.paths) == "dsyMatrix"  & shared.paths@uplo == "U" )  # i
 # *.shared.{indivs,samples}.*
 rownames.ut <- rownames(pelvic.speciesdiffsq)[row(pelvic.speciesdiffsq)[ut]]
 colnames.ut <- colnames(pelvic.speciesdiffsq)[col(pelvic.speciesdiffsq)[ut]]
-both.specimens <- intersect( with(subset(shapediff,bone1=='rib'),c(specimen1,specimen2)), with(subset(shapediff,bone1=='pelvic'),c(specimen1,specimen2)) )
+both.specimens <- levels(shapediff$specimen1)[intersect( with(subset(shapediff,bone1=='rib'),c(specimen1,specimen2)), with(subset(shapediff,bone1=='pelvic'),c(specimen1,specimen2)) )]
 if (!file.exists("shared-num-bones.RData")) {
     for (stype in c('rib','pelvic','sub.pelvic')) {
         type <- gsub("sub.",'',stype)
@@ -227,7 +227,7 @@ if (!file.exists("shared-num-bones.RData")) {
             ky <- colnames.ut[k]
             if ( length( intersect( c(jx,jy), c(kx,ky) ) ) > 0 ) {
                 if (stype=='sub.pelvic') {
-                    usethese <- ( specimen1 %in% both.specimens ) & ( specimen2 %in% both.specimens )
+                    usethese <- with(shapediff, ( specimen1 %in% both.specimens ) & ( specimen2 %in% both.specimens ) )
                 } else {
                     usethese <- TRUE
                 }
