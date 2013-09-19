@@ -33,7 +33,7 @@ shapediff <- subset( shapediff, ( bone1==bone2 ) & ( specimen1 %in% rownames(the
 no.females <- TRUE
 if (no.females) {
     males <- whales$specimen[ whales$sex == "M" ]
-    shapediff <- subset( shapediff, specimen1 %in% males & specimen2 %in% males )
+    shapediff <- subset( shapediff, (specimen1 %in% males) & (specimen2 %in% males) )
 }
 
 # treedist
@@ -131,10 +131,10 @@ sample.values <- function (dothese=(istestes & ! havedata)) {
     return( edge.values[,"scaled.testes"] )
 }
 
-sampled.edge.testes <- t( replicate(500, sample.values() ) )
+sampled.edge.testes <- t( replicate(1000, sample.values() ) )
+# save( edge.testes, sample.values, sampled.edge.testes, file="sampled-edge-testes.RData" )  # SAVE THIS LATER
 
 # matplot(t(sweep(sampled.edge.testes,2,edge.testes,"-")),type='l')
-
 
 # and testes-weighted relative time in the tree:
 internal.lengths <- tree$edge.length
@@ -385,6 +385,8 @@ sampled.sp.edge.testes <- sampled.edge.testes[ , tree.translate ]
 #   plot(adjtree, edge.color=ifelse(edge.testes>0,'red','blue') )
 #   plot(sptree, edge.color=ifelse(sp.edge.testes>0,'red','blue') )
 
+# much of this computed above
+save( sp.edge.testes, sampled.sp.edge.testes, file="sampled-edge-testes.RData" )  # SAVE THIS LATER
 
 #####
 ## just save everything

@@ -142,6 +142,35 @@ if (interactive()) {
     }
 }
 
+require(parallel)
+optim.initpars <- lapply(  c(rib='rib',pelvic='pelvic'), function (type) {
+        this.initpar <- c( xi2P=coef(nls.fits[[type]])['kxi2P']/20, ks=20, sptree$edge.length * coef(nls.fits[[type]])['ksig']/20 )
+        names(this.initpar) <- c('xi2P','ks',paste('edge',1:Nedge(sptree),sep='.'))
+        this.initpar
+    } )
+optim.brlen.fits <- mclapply( c(rib='rib',pelvic='pelvic'), function (type) {
+        datavec <- subset( shapediff, bone1==bone2 & bone1==type )$sqdist
+        treedist <- cophenetic(sptree)
+        whichdist <- matrix( 1:length(treedist), nrow=nrow(treedist) )[ with( subset( shapediff, bone1==bone2 & bone1==type ), cbind( as.numeric(species1), as.numeric(species2) ) ) ]
+        llikfun <- function (par) {
+            #  par = (xi2P, ks, internal brlens)
+            xi2P <- par[1]; ks <- par[2]
+            sptree$edge.length <- par[-(1:2)]
+            treedist[] <- cophenetic(sptree)
+            brlens <- treedist[whichdist] + 2 * xi2P
+            retval <- (-1) * sum( dchisq( datavec/brlens, df=ks, log=TRUE ) ) + sum( log(brlens) )
+            if (!is.finite(retval)) { browser() } else { return(retval) }
+        }
+        this.initpar <- optim.initpars[[type]]
+        this.parscale <- this.initpar/40
+        ans <- optim( par=this.initpar, fn=llikfun, lower=rep(.001,length(this.initpar)), method="L-BFGS-B", control=list(parscale=this.parscale,fnscale=1e4,maxit=1000) )
+        ans
+    }, mc.cores=2 )
+if (any(sapply(optim.brlen.fits,"[[","convergence")!=0)) { 
+    optim.initpars <- lapply( optim.brlen.fits, "[[", "par" )
+}
+optim.trees <- lapply( optim.brlen.fits, function (x) { sptree$edge.length <- x$par[-(1:2)]; sptree } )
+
 initpar <- lapply( optim.fits, "[[", 'par' )
 
 # $rib:  xi2P         ks    sigma2P 

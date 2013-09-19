@@ -1,108 +1,81 @@
 #/usr/bin/R --vanilla
 # parse the mcmc output to infer parameters for shape evolution
 
-mcmcfiles <- list( pelvic="pelvic-shape-mcmc/7997-mcmc-run.RData",
-            rib="rib-shape-mcmc/1796-mcmc-run.RData",
-            'sub-pelvic'="sub-pelvic-shape-mcmc/6676-mcmc-run.RData" )
+source("correlated-traits-fns.R")
+require(ape)
+require(Matrix)
+require(colorspace)
+
+mcmcfiles <- list( pelvic='pelvic-shape-brlens/5678-mcmc-run.RData',
+            rib="rib-shape-brlens/0806-mcmc-run.RData",
+            'sub-pelvic'="sub.pelvic-shape-brlens/7401-mcmc-run.RData" )
 mcruns <- lapply( mcmcfiles, function (x) { tmpenv <- environment(); load(x,envir=tmpenv); as.list(tmpenv) } )
 sapply(lapply(mcruns, "[[", 'mcrun'), "[[", "accept")
-#     pelvic        rib sub-pelvic 
-#   0.682150   0.598979   0.767871 
+
+layout(matrix(1:6,nrow=3))
+lapply( mcruns, function (x) matplot(x$mcrun$batch[floor(seq(1,nrow(x$mcrun$batch),length.out=500)),],type='l' ) )
+lapply( mcruns, function (x) matplot(x$mcrun$batch[floor(seq(1,nrow(x$mcrun$batch),length.out=500)),],type='l', log='y') )
+
+load("shape-brlens-stuff.RData")
+load("spmapping.RData")
+load("shared-num-bones.RData")
+load("sampled-edge-testes.RData")
+
+# which branches are irrelevant for rib analysis?
+missing.taxa <- lapply( list(pelvic=pelvic.speciesdiffsq, rib=rib.speciesdiffsq), function (x) names( which( apply(is.na(x),1,all) ) ) )
+stopifnot( all( missing.taxa[[1]] %in% missing.taxa[[2]] ) )
+spdesc <- get.descendants(sptree)
+sp.edge.indices <- sptree$edge[,2] # associate each edge with the downstream node
+spedgedesc <- spdesc[sp.edge.indices,]
+missing.tipindices <- lapply( missing.taxa, function (x) match(x,sptree$tip.label) )
+missing.edges <- lapply( missing.tipindices, function (x) { rowSums( spedgedesc[,setdiff(1:Ntip(sptree),x)] ) == 0 } )
+missing.edges['sub-pelvic'] <- missing.edges['rib']
+
+testes.tree <- sptree
+testes.tree$edge.length <- abs(sp.edge.testes) * sptree$edge.length
+
+branch.pars <- 4:ncol(mcruns[[1]]$mcrun$batch)
+burnin <- min(sapply(mcruns,function(x)nrow(x$mcrun$batch)))/2
+posterior.means <- lapply( seq_along(mcruns), function (k) {
+            x <- mcruns[[k]]$mcrun$batch
+            z <- colMeans(x[burnin:nrow(x),]) 
+            # z[branch.pars][ missing.edges[[ names(mcruns)[k] ]] ] <- 0
+            return(z)
+        } )
+names(posterior.means) <- names(mcruns)
+mean.trees <- lapply( posterior.means, function (x) { sptree$edge.length <- x[branch.pars]; sptree } )
+
+edge.widths <- lapply( seq_along(mean.trees), function (k) {
+            medges <- if (names(mean.trees)[k]=='pelvic') { missing.edges[['pelvic']] } else { missing.edges[['rib']] }
+            ifelse( medges, 0, 3 )
+        } )
+edge.cols <- diverge_hcl(32,c=100,l=c(20,50))[cut(sp.edge.testes,32)]
 
 
-
-# all the data
-layout(1:3)
-for (k in 1:3) {
-    tmp <- hist(c(pelvic.mcrun$batch[,k],rib.mcrun$batch[,k]),breaks=50,plot=FALSE)
-    hist(rib.mcrun$batch[,k],breaks=50,col=adjustcolor('blue',.5),main=names(initpar)[k],xlim=range(tmp$breaks))
-    hist(pelvic.mcrun$batch[,k],breaks=50,col=adjustcolor('red',.5),add=TRUE)
+layout(matrix(1:6,nrow=3))
+plot(sptree, edge.color=edge.cols, edge.width=3 ) 
+mtext('phylogeny',3)
+plot( testes.tree, edge.color=edge.cols, edge.width=3 )
+mtext('testes-weighted', 3)
+legend("bottomright",fill=edge.cols[c(which.max(sp.edge.testes),which.min(sp.edge.testes))], legend=c(max(sp.edge.testes),min(sp.edge.testes)), title='value' )
+for (k in seq_along(mean.trees)) {
+    plot(mean.trees[[k]], edge.color=edge.cols, edge.width=edge.widths[[k]] )
+    mtext(names(mean.trees)[k],3)
 }
 
-# complete obs
-layout(1:3)
-for (k in 1:3) {
-    tmp <- hist(c(sub.pelvic.mcrun$batch[,k],sub.rib.mcrun$batch[,k]),breaks=50,plot=FALSE)
-    hist(sub.rib.mcrun$batch[,k],breaks=50,col=adjustcolor('blue',.5),main=names(initpar)[k],xlim=range(tmp$breaks))
-    hist(sub.pelvic.mcrun$batch[,k],breaks=50,col=adjustcolor('red',.5),add=TRUE)
-}
+layout(matrix(1:4,nrow=2))
+whichedges <- lapply( seq_along(mean.trees), function (k) {
+        pmeans <- posterior.means[[k]][branch.pars]
+        usethese <- !missing.edges[[ names(mean.trees)[k] ]]
+        plot( sp.edge.testes[usethese], (pmeans/sptree$edge.length)[usethese], main=names(posterior.means)[k], xlab='relative testes size', ylab='speed of shape evolution' )
+        which(usethese)[identify( sp.edge.testes[usethese], (pmeans/sptree$edge.length)[usethese], labels=which(usethese) )]
+    } )
+usethese <- !missing.edges[[ 'rib' ]]
+plot( posterior.means[['rib']][branch.pars][usethese], posterior.means[['sub-pelvic']][branch.pars][usethese], xlab='speed of rib shape evolution', ylab='speed of pelvic shape evolution' )
+whichedges <- c( whichedges, list( which(usethese)[identify( posterior.means[['rib']][branch.pars][usethese], posterior.means[['sub-pelvic']][branch.pars][usethese], labels=which(usethese) )] ) )
+plot(sptree)
+edgelabels(edge=do.call(c,whichedges))
 
-if (FALSE) {
-
-    ####
-    # update branch lengths function
-    # internal branches setup
-    internal.lengths <- tree$edge.length
-    internal.lengths[ tip.edges ] <- 0
-    # and, the tips
-    tip.lengths <- tree$edge.length
-    tip.lengths[ - tip.edges ] <- 0
-
-    # given parameters get rescaled branch lengths
-    scale.brlens <- function (par) {
-        # par = sigma2S, gammaP, xi2P
-        sigma2S <- par[1]
-        gammaP <- par[2]
-        xi2P <- par[3]
-        return( internal.lengths * ( sigma2S + gammaP * edge.testes ) + tip.lengths * xi2P )
-    }
-
-    treemat <- treedist( adjtree, edge.length=scale.brlens(initpar[2:4]), descendants=descendants )
-
-    # moment estimate
-    have.dpelvic <- !is.na(pelvicdiff)
-    have.both <- !is.na(pelvicdiff) & !is.na(ribdiff)
-    # usethese <- have.both
-    usethese <- have.dpelvic
-    datavec <- pelvicdiff[usethese] / initpar[1]
-    f1 <- function (spar) {
-        sigma2S <- spar[1]
-        gammaP <- spar[2]
-        xi2P <- spar[3]
-        elens <- ( internal.lengths * ( sigma2S + gammaP * edge.testes ) + tip.lengths * xi2P )
-        treemat <- treedist( adjtree, edge.length=elens, descendants=descendants )
-        return( sum( ( datavec - treemat[usethese] )^2 ) )
-    }
-
-    est.vals <- optim( par=initpar[2:4], fn=f1, method="BFGS", control=list(fnscale=1e4,maxit=100) )
-    est.vals <- optim( par=est.vals$par, fn=f1, method="BFGS", control=list(fnscale=1e4,maxit=10) )
-    est.vals <- optim( par=est.vals$par, fn=f1, method="BFGS", control=list(fnscale=1e4,maxit=1000) )
-    # Using everything:
-    # only took 31 iterations
-    #    sigma2S     gammaP       xi2P 
-    # 0.11451506 0.02237210 0.03384165 
-    #
-    # Using only ones with ribs also:
-    #    sigma2S     gammaP       xi2P 
-    # 0.09869252 0.01409928 0.03361052 
-
-    new.treemat <- treedist( adjtree, edge.length=scale.brlens(est.vals$par), descendants=descendants )
-
-    if (interactive()) {
-        layout(t(1:2))
-        plot( treemat[usethese], datavec )
-        abline(0,1)
-        plot( new.treemat[usethese], datavec )
-        abline(0,1)
-    }
-}
-
-if (FALSE) {
-
-##############
-# pseudolikelihood NOT WORKING
-have.dpelvic <- !is.na(pelvicdiff)
-chisq.datavec <- pelvicdiff[have.dpelvic]
-f2 <- function (spar) {
-    sigma2S <- spar[1]
-    gammaP <- spar[2]
-    xi2P <- spar[3]
-    elens <- ( internal.lengths * ( sigma2S + gammaP * edge.testes ) + tip.lengths * xi2P )
-    treemat <- treedist( adjtree, edge.length=elens, descendants=descendants )
-    return( (-1)*sum( dchisq( chisq.datavec/treemat[have.dpelvic], initpar[1], log=TRUE ) ) )
-}
-
-est.vals <- optim( par=initpar[2:4], fn=f2, method="BFGS", control=list(fnscale=1e4,maxit=10) )
-est.vals <- optim( par=est.vals$par, fn=f2, method="BFGS", control=list(fnscale=1e4,maxit=10) )
-
-}
+###
+# back to the ol' lm
+edgedata <- as.data.frame( 
