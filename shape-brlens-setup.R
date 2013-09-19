@@ -106,6 +106,18 @@ nls.fits <- lapply( c(rib='rib',pelvic='pelvic'), function (type) {
         nls( sdiff ~ 2 * xi2P + ksig * tdiff, start=list(xi2P=.8,ksig=2) )
     } )
 
+optim.fits <- lapply( c(rib='rib',pelvic='pelvic'), function (type) {
+        datavec <- subset( shapediff, bone1==bone2 & bone1==type )$sqdist
+        treevec <- subset( shapediff, bone1==bone2 & bone1==type )$treedist
+        llikfun <- function (par) {
+            #  par = (xi2P, ks, sigma2P) 
+            xi2P <- par[1]; ks <- par[2]; sigma2P <- par[3]
+            brlens <- 2 * xi2P + sigma2P * treevec
+            (-1) * sum( dchisq( datavec/brlens, df=ks, log=TRUE ) ) + sum( log(brlens) )
+        }
+        optim( par=c( coef(nls.fits[[type]])['xi2P'], 20, coef(nls.fits[[type]])['ksig']/20 ), fn=llikfun, lower=c(0,0,0), method="L-BFGS-B" )
+    } )
+
 if (interactive()) {
     tvals <- seq(0,max(shapediff$treedist),length.out=100)
     layout(matrix(1:4,nrow=2))
