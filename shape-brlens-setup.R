@@ -225,7 +225,10 @@ if (!file.exists("shared-num-bones.RData")) {
             }
             m <- m+1
         }
-        for (x in sharenames) { assign(paste(type,x,sep='.'),get(x)) }
+        for (x in sharenames) { 
+            z <- get(x)
+            assign( paste(type,x,sep='.'), Matrix(z + t(z) - diag(diag(z))) )
+        }
     }
     save( list=outer( c('rib','pelvic'), sharenames, paste, sep='.' ), file="shared-num-bones.RData" )
 } else {
