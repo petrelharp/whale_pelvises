@@ -39,7 +39,8 @@ if (!new.mcmc) { load(mcmcfile) }
 # Likelihood, species tree
 
 # Estimation:
-initpar <- c( initpar[[type]][c('ks','xi2P','xi2P')]/c(1,2,2), ( 5 * sptree$edge.length ) )
+stype <- gsub("sub.","",type)
+initpar <- c( initpar[[stype]][c('ks','xi2P','xi2P')]/c(1,2,2), ( 5 * sptree$edge.length ) )
 parscale <- c(.5,initpar[-1]/50)
 stopifnot( class(shared.paths) == "dsyMatrix"  & shared.paths@uplo == "U" )  # if so, changing upper tri also changes lower tri
 ut <- upper.tri(pelvic.speciesdiffsq)
