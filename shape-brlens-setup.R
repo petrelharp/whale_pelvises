@@ -215,7 +215,8 @@ rownames.ut <- rownames(pelvic.speciesdiffsq)[row(pelvic.speciesdiffsq)[ut]]
 colnames.ut <- colnames(pelvic.speciesdiffsq)[col(pelvic.speciesdiffsq)[ut]]
 both.specimens <- intersect( with(subset(shapediff,bone1=='rib'),c(specimen1,specimen2)), with(subset(shapediff,bone1=='pelvic'),c(specimen1,specimen2)) )
 if (!file.exists("shared-num-bones.RData")) {
-    for (type in c('rib','pelvic')) {
+    for (stype in c('rib','pelvic','sub.pelvic')) {
+        type <- gsub("sub.",'',stype)
         sharenames <- c( "shared.indivs", "shared.samples", "shared.samples.indivs", "shared.samples.sq", "shared.indivs.sq" )
         for (x in sharenames) { assign(x,matrix( 0, nrow=choose(Ntip(sptree),2), ncol=choose(Ntip(sptree),2) ) ) }
         m <- 1
@@ -225,8 +226,13 @@ if (!file.exists("shared-num-bones.RData")) {
             kx <- rownames.ut[k]
             ky <- colnames.ut[k]
             if ( length( intersect( c(jx,jy), c(kx,ky) ) ) > 0 ) {
-                j.obs <- subset( shapediff, ( ( species1==jx & species2==jy ) | ( species2==jx & species1==jy ) ) & ( bone1 == type ) )
-                k.obs <- subset( shapediff, ( ( species1==kx & species2==ky ) | ( species2==kx & species1==ky ) ) & ( bone1 == type ) )
+                if (stype=='sub.pelvic') {
+                    usethese <- ( specimen1 %in% both.specimens ) & ( specimen2 %in% both.specimens )
+                } else {
+                    usethese <- TRUE
+                }
+                j.obs <- subset( shapediff, ( ( species1==jx & species2==jy ) | ( species2==jx & species1==jy ) ) & ( bone1 == type ) & usethese )
+                k.obs <- subset( shapediff, ( ( species1==kx & species2==ky ) | ( species2==kx & species1==ky ) ) & ( bone1 == type ) & usethese )
                 jk.denom <- ( nrow(j.obs) * nrow(k.obs) ) / ( 1 + (j==k) )
                 if ( jk.denom > 0 ) {
                     shindivs <- outer( 1:nrow(j.obs), 1:nrow(k.obs), function (jj,kk) { 
@@ -250,10 +256,10 @@ if (!file.exists("shared-num-bones.RData")) {
         }
         for (x in sharenames) { 
             z <- get(x)
-            assign( paste(type,x,sep='.'), Matrix(z + t(z) - diag(diag(z))) )
+            assign( paste(stype,x,sep='.'), Matrix(z + t(z) - diag(diag(z))) )
         }
     }
-    save( list=outer( c('rib','pelvic'), sharenames, paste, sep='.' ), file="shared-num-bones.RData" )
+    save( list=outer( c('rib','pelvic','sub.pelvic'), sharenames, paste, sep='.' ), file="shared-num-bones.RData" )
 } else {
     load("shared-num-bones.RData")
 }

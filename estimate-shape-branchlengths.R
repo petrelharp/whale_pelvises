@@ -12,6 +12,7 @@ option_list <- list(
 opt <- parse_args(OptionParser(option_list=option_list,description=usage))
 attach(opt)
 if (interactive()) { type <- 'pelvic'; nbatches <- 100; blen <- 1; restart <- FALSE }
+if (is.null(opt$type)) { stop('type should be one of (pelvic, rib, or sub.pelvic)') }
 basedir <- paste(type,"shape-brlens",sep='-')
 basename <- paste(basedir, sprintf( sample(1e4,1), fmt="%04.0f" ), sep='/')
 
