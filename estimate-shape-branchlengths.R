@@ -11,7 +11,7 @@ option_list <- list(
     )
 opt <- parse_args(OptionParser(option_list=option_list,description=usage))
 attach(opt)
-if (interactive()) { type <- 'pelvic'; nbatches <- 100; blen <- 10; restart <- FALSE }
+if (interactive()) { type <- 'pelvic'; nbatches <- 100; blen <- 1; restart <- FALSE }
 basedir <- paste(type,"shape-brlens",sep='-')
 basename <- paste(basedir, sprintf( sample(1e4,1), fmt="%04.0f" ), sep='/')
 
@@ -28,7 +28,7 @@ require(ape)
 require(Matrix)
 require(mcmc)
 
-load("shape-stuff.RData")
+load("shape-brlens-stuff.RData")
 load("spmapping.RData")
 load("shared-num-bones.RData")
 new.mcmc <- is.null(opt$mcmcfile)
@@ -41,13 +41,14 @@ if (!new.mcmc) { load(mcmcfile) }
 initpar <- c( initpar[[type]][c('ks','xi2P','xi2P')]/c(1,2,2), ( 5 * sptree$edge.length ) )
 parscale <- c(.5,initpar[-1]/50)
 stopifnot( class(shared.paths) == "dsyMatrix"  & shared.paths@uplo == "U" )  # if so, changing upper tri also changes lower tri
+ut <- upper.tri(pelvic.speciesdiffsq)
 make.spmat <- function ( edgelens ) {
     shared.paths@x[ sput ][spmap.nonz] <- as.vector( sp.mapping %*% (edgelens) )  # note: update @x rather than entries to preserve symmetry
     return( shared.paths )
 }
 
 # priors: exponential
-prior.means <- c(20,rep(.1,length=length(sptree$edge.length)))
+prior.means <- c(20,rep(.1,length=2+length(sptree$edge.length)))
 
 lud <- function (par, ...) {
     # par = ks, xi2i, xi2s, (edgelens)
@@ -82,11 +83,11 @@ sharenames <- c( "shared.indivs", "shared.samples", "shared.samples.indivs", "sh
 if (type=='pelvic') {
     usedata <- have.pelvic
     datavec <- pelvic.speciesdiffsq[ut][usedata]
-    for (x in sharenames) { assign( x, get(paste(type,x,sep='.')) )[usedata,usedata] }
+    for (x in sharenames) { assign( x, get(paste(type,x,sep='.'))[usedata,usedata] ) }
 } else if (type == "rib") {
     usedata <- have.rib
     datavec <- rib.speciesdiffsq[ut][usedata]
-    for (x in sharenames) { assign( x, get(paste(type,x,sep='.')) )[usedata,usedata] }
+    for (x in sharenames) { assign( x, get(paste(type,x,sep='.'))[usedata,usedata] ) }
 } else if (type == "sub.pelvic") {
     usedata <- have.both
     datavec <- pelvic.speciesdiffsq[ut][usedata]

@@ -261,5 +261,5 @@ if (!file.exists("shared-num-bones.RData")) {
 
 #####
 ## save stuff mcmc needs
-save( initpar, shared.paths, sput, spmap.nonz, pelvic.speciesdiffsq, rib.speciesdiffsq, file="shape-brlens-stuff.RData" )
+save( sptree, initpar, shared.paths, sput, spmap.nonz, pelvic.speciesdiffsq, rib.speciesdiffsq, file="shape-brlens-stuff.RData" )
 
