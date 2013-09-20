@@ -131,8 +131,12 @@ sample.values <- function (dothese=(istestes & ! havedata)) {
     return( edge.values[,"scaled.testes"] )
 }
 
-sampled.edge.testes <- t( replicate(1000, sample.values() ) )
-# save( edge.testes, sample.values, sampled.edge.testes, file="sampled-edge-testes.RData" )  # SAVE THIS LATER
+if (!file.exists("sampled-edge-testes.RData")) {
+    sampled.edge.testes <- t( replicate(1000, sample.values() ) )
+    # save( edge.testes, sample.values, sampled.edge.testes, file="sampled-edge-testes.RData" )  # SAVE THIS LATER
+} else {
+    load("sampled-edge-testes.RData")
+}
 
 # matplot(t(sweep(sampled.edge.testes,2,edge.testes,"-")),type='l')
 
@@ -386,7 +390,7 @@ sampled.sp.edge.testes <- sampled.edge.testes[ , tree.translate ]
 #   plot(sptree, edge.color=ifelse(sp.edge.testes>0,'red','blue') )
 
 # much of this computed above
-save( sp.edge.testes, sampled.sp.edge.testes, file="sampled-edge-testes.RData" )  # SAVE THIS LATER
+save( sp.edge.testes, sampled.edge.testes, sampled.sp.edge.testes, file="sampled-edge-testes.RData" )  
 
 #####
 ## just save everything
