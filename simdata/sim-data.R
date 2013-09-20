@@ -1,4 +1,4 @@
-#!/usr/bin/R
+#!/usr/bin/R --vanilla
 
 require(ape)
 require(Matrix)
