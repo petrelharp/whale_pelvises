@@ -1,5 +1,15 @@
 #/usr/bin/R --vanilla
 
+
+## simulation parameters:
+# dimensionality
+ks <- nvars <- 20
+# within species and individual variance
+# xi2s <- 0.1
+# xi2i <- 0.05
+xi2s <- 0.001
+xi2i <- 0.0005
+
 require(ape)
 require(Matrix)
 
@@ -13,7 +23,7 @@ load( paste(basedir,"all-sample-tree.RData",sep='/') ) # gets tree
 whales <- read.csv(paste(basedir,"whales.csv",sep='/'),header=TRUE)
 allspecies <- intersect(tree$tip.label, species_tree$tip.label)
 
-do.simple <- TRUE
+do.simple <- FALSE
 if (do.simple) {
     ## SIMPLE EXAMPLE
     allspecies <- c( "PHOCOENOIDES_DALLI", "STENELLA_ATTENUATA", "STENELLA_LONGIROSTRIS" )
@@ -73,13 +83,6 @@ if (no.females) {
     shapediff <- subset( shapediff, specimen1 %in% males & specimen2 %in% males )
 }
 
-
-## simulation parameters:
-# dimensionality
-ks <- nvars <- 20
-# within species and individual variance
-xi2s <- 0.1
-xi2i <- 0.05
 
 
 # from parse-correlated-data.R
@@ -147,3 +150,6 @@ simdata <- fake.data()
 
 write.csv(simdata,file='full-shape-simdata.csv',row.names=FALSE)
 
+## many datasets (2m for 1000)
+simdatas <- replicate(1000, { simdata <- fake.shapes(); diffs <- rowSums( apply( simdata, 2, function (x) outer(x,x,"-") )^2 ); dim(diffs) <- c(nrow(simdata),nrow(simdata)); diffs[upper.tri(diffs)]  })
+save(simdata,simdatas,file="many-full-shape-simdata.RData")

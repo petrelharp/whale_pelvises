@@ -29,9 +29,9 @@ require(ape)
 require(Matrix)
 require(mcmc)
 
-load("shape-brlens-stuff.RData")
-load("spmapping.RData")
-load("shared-num-bones.RData")
+load("shape-brlens-stuff.RData")  # from shape-brlens-setup.R
+load("spmapping.RData")  # from shape-brlens-setup.R
+load("shared-num-bones.RData")  # from shape-brlens-setup.R
 new.mcmc <- is.null(opt$mcmcfile)
 if (!new.mcmc) { load(mcmcfile) }
 
@@ -86,18 +86,16 @@ sharenames <- c( "shared.indivs", "shared.samples", "shared.samples.indivs", "sh
 if (type=='pelvic') {
     usedata <- have.pelvic
     datavec <- pelvic.speciesdiffsq[ut][usedata]
-    for (x in sharenames) { assign( x, get(paste(type,x,sep='.'))[usedata,usedata] ) }
 } else if (type == "rib") {
     usedata <- have.rib
     datavec <- rib.speciesdiffsq[ut][usedata]
-    for (x in sharenames) { assign( x, get(paste(type,x,sep='.'))[usedata,usedata] ) }
 } else if (type == "sub.pelvic") {
     usedata <- have.both
     datavec <- pelvic.speciesdiffsq[ut][usedata]
-    for (x in sharenames) { assign( x, get(paste(type,x,sep='.'))[usedata,usedata] ) }
 } else {
     stop( "type must be 'pelvic', 'rib', or 'sub.pelvic'." )
 }
+for (x in sharenames) { assign( x, get(paste(type,x,sep='.'))[usedata,usedata] ) }
 
 stopifnot( is.finite( lud(initpar) ) )
 

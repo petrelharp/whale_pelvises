@@ -6,9 +6,9 @@ require(Matrix)
 
 ####
 ## read in data
-load("tree-stuff.RData")
-load("thedata-and-covmatrices.Rdata")
-load("mcmc-setup.RData")
+load("tree-stuff.RData")   # from parse-correlated-trait-data.R
+load("thedata-and-covmatrices.Rdata")  #  from parse-correlated-trait-data.R
+load("mcmc-setup.RData")  # from correlated-traits-analysis.R
 havedata <- !is.na(thedata)
 datavec <- crossprod( projmatrix[havedata,], thedata[havedata] )   # true data
 whales <- read.csv("whales.csv",header=TRUE)
@@ -142,6 +142,7 @@ if (interactive()) {
     }
 }
 
+## quasilikelihood on the internal branch lengths
 if (!file.exists("shape-param-point-estimates.RData")) {
     require(parallel)
     sptree <- drop.tip( species.tree, setdiff( species.tree$tip.label, levels(shapediff$species1) ) )
@@ -150,27 +151,30 @@ if (!file.exists("shape-param-point-estimates.RData")) {
             names(this.initpar) <- c('xi2P','ks',paste('edge',1:Nedge(sptree),sep='.'))
             this.initpar
         } )
-    optim.brlen.fits <- mclapply( c(rib='rib',pelvic='pelvic'), function (type) {
-            datavec <- subset( shapediff, bone1==bone2 & bone1==type )$sqdist
-            treedist <- cophenetic(sptree)
-            whichdist <- matrix( 1:length(treedist), nrow=nrow(treedist) )[ with( subset( shapediff, bone1==bone2 & bone1==type ), cbind( as.numeric(species1), as.numeric(species2) ) ) ]
-            llikfun <- function (par) {
-                #  par = (xi2P, ks, internal brlens)
-                xi2P <- par[1]; ks <- par[2]
-                sptree$edge.length <- par[-(1:2)]
-                treedist[] <- cophenetic(sptree)
-                brlens <- treedist[whichdist] + 2 * xi2P
-                retval <- (-1) * sum( dchisq( datavec/brlens, df=ks, log=TRUE ) ) + sum( log(brlens) )
-                if (!is.finite(retval)) { browser() } else { return(retval) }
-            }
-            this.initpar <- optim.initpars[[type]]
-            this.parscale <- this.initpar/40
-            ans <- optim( par=this.initpar, fn=llikfun, lower=rep(.001,length(this.initpar)), method="L-BFGS-B", control=list(parscale=this.parscale,fnscale=1e4,maxit=1000) )
-            ans
-        }, mc.cores=2 )
-    if (any(sapply(optim.brlen.fits,"[[","convergence")!=0)) { 
+    optim.converged <- c(FALSE,FALSE)
+    while( any(!optim.converged) ) {
+        optim.brlen.fits <- mclapply( c(rib='rib',pelvic='pelvic'), function (type) {
+                usethese <- with( shapediff, bone1==bone2 & bone1==type )
+                datavec <- subset( shapediff, usethese )$sqdist
+                treedist <- cophenetic(sptree)
+                tipname.map <- match( levels(shapediff$species1), rownames(treedist) )
+                whichdist <- matrix( 1:length(treedist), nrow=nrow(treedist) )[ with( subset( shapediff,  usethese ), cbind( tipname.map[as.numeric(species1)], tipname.map[as.numeric(species2)] ) ) ]
+                llikfun <- function (par) {
+                    #  par = (xi2P, ks, internal brlens)
+                    xi2P <- par[1]; ks <- par[2]
+                    sptree$edge.length <- par[-(1:2)]
+                    treedist[] <- cophenetic(sptree)
+                    brlens <- treedist[whichdist] + 2 * xi2P
+                    retval <- (-1) * sum( dchisq( datavec/brlens, df=ks, log=TRUE ) ) + sum( log(brlens) )
+                    if (!is.finite(retval)) { browser() } else { return(retval) }
+                }
+                this.initpar <- optim.initpars[[type]]
+                this.parscale <- this.initpar/40
+                ans <- optim( par=this.initpar, fn=llikfun, lower=rep(.001,length(this.initpar)), method="L-BFGS-B", control=list(parscale=this.parscale,fnscale=1e4,maxit=1000) )
+                ans
+            }, mc.cores=2 )
+        optim.converged <- ( sapply(optim.brlen.fits,"[[","convergence") == 0 )
         optim.initpars <- lapply( optim.brlen.fits, "[[", "par" )
-        stop("Some have not converged!")
     }
     save( nls.fits, optim.fits, optim.brlen.fits, sptree, file="shape-param-point-estimates.RData" )
 } else {
@@ -178,6 +182,13 @@ if (!file.exists("shape-param-point-estimates.RData")) {
 }
 
 optim.trees <- lapply( optim.brlen.fits, function (x) { sptree$edge.length <- x$par[-(1:2)]; sptree } )
+if (interactive()) {
+    missings <- lapply( c(rib='rib',pelvic='pelvic'), function (type) { with( subset(shapediff, bone1==bone2 & bone1==type ), (table( species1 ) + table(species2))  == 0 ) } )
+    layout(1:2)
+    for (k in 1:2) {
+        plot( optim.trees[[k]], tip.color=1+missings[[k]][match(optim.trees[[k]]$tip.label,names(missings[[k]]))] )
+    }
+}
 
 initpar <- lapply( optim.fits, "[[", 'par' )
 
