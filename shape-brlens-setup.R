@@ -183,11 +183,26 @@ if (!file.exists("shape-param-point-estimates.RData")) {
 
 optim.trees <- lapply( optim.brlen.fits, function (x) { sptree$edge.length <- x$par[-(1:2)]; sptree } )
 if (interactive()) {
+
     missings <- lapply( c(rib='rib',pelvic='pelvic'), function (type) { with( subset(shapediff, bone1==bone2 & bone1==type ), (table( species1 ) + table(species2))  == 0 ) } )
     layout(1:2)
     for (k in 1:2) {
         plot( optim.trees[[k]], tip.color=1+missings[[k]][match(optim.trees[[k]]$tip.label,names(missings[[k]]))] )
+        add.scale.bar(); mtext(names(missings)[k],3)
     }
+
+    brlen.fits <- lapply( optim.brlen.fits, "[[", "par" )
+    plot( brlen.fits[['rib']][-(1:2)], brlen.fits[['pelvic']][-(1:2)], log='xy' )
+
+    load("sampled-edge-testes.RData")
+    layout(1:2)
+    lapply( brlen.fits, function (x) {
+                rlens <- x[-(1:2)] / sptree$edge.length
+                plot( rlens, sp.edge.testes, xlab='speed of shape change', xlim=c(0,5) )
+                tmp.lm <- lm( sp.edge.testes ~ rlens, subset=(rlens<=5) )
+                abline(coef(tmp.lm))
+                summary(tmp.lm)
+            } )
 }
 
 initpar <- lapply( optim.fits, "[[", 'par' )

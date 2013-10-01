@@ -23,7 +23,7 @@ load( paste(basedir,"all-sample-tree.RData",sep='/') ) # gets tree
 whales <- read.csv(paste(basedir,"whales.csv",sep='/'),header=TRUE)
 allspecies <- intersect(tree$tip.label, species_tree$tip.label)
 
-do.simple <- FALSE
+do.simple <- TRUE
 if (do.simple) {
     ## SIMPLE EXAMPLE
     allspecies <- c( "PHOCOENOIDES_DALLI", "STENELLA_ATTENUATA", "STENELLA_LONGIROSTRIS" )

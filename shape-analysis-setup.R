@@ -390,7 +390,7 @@ sampled.sp.edge.testes <- sampled.edge.testes[ , tree.translate ]
 #   plot(sptree, edge.color=ifelse(sp.edge.testes>0,'red','blue') )
 
 # much of this computed above
-save( sp.edge.testes, sampled.edge.testes, sampled.sp.edge.testes, file="sampled-edge-testes.RData" )  
+save( sp.edge.testes, sampled.edge.testes, sampled.sp.edge.testes, tree, sptree, fullmean, lengthmean, edge.values, file="sampled-edge-testes.RData" )  
 
 #####
 ## just save everything
