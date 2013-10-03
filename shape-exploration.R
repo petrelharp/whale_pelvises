@@ -18,6 +18,10 @@ time.dist <- treedist(adjtree)
 length.dist <- with( as.data.frame(thedata), outer( bodylength, bodylength, "-" ) )
 testes.dist <- with( as.data.frame(thedata), outer( actual_testes_mass_max, actual_testes_mass_max, "-" ) )
 
+write.csv(time.dist,file="time-dist.csv")
+write.csv(length.dist,file="length-dist.csv")
+write.csv(testes.dist,file="testes-dist.csv")
+
 tmp1 <- with( subset(shapediff,bone1==bone2 & bone1=='pelvic'), tapply( shape_difference, list(specimen1,specimen2), length ) )
 tmp2 <- with( subset(shapediff,bone1==bone2 & bone1=='pelvic'), tapply( shape_difference, list(specimen2,specimen1), length ) )
 denoms <- ifelse( is.na(tmp1), 0, tmp1 ) + ifelse( is.na(tmp2), 0, tmp2 )
