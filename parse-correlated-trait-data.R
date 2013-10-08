@@ -4,7 +4,7 @@ require(ape)
 if (!exists("scriptdir")) {scriptdir <- "."}
 source(paste(scriptdir,"correlated-traits-fns.R",sep="/"))
 
-tree_file <- "consensusTree_ALL_CETACEA.tree"
+tree_file <- "McGowenetal2009_Cetacea.modified.tree"
 species.tree<-read.nexus(file=tree_file)
 
 bones <- read.table("62_add_centroids.out", header=TRUE)
@@ -33,7 +33,7 @@ usevars <- setdiff(names(bones),c("side","bone"))
 by.bone <- tapply( 1:nrow(bones), whichbone, function (k) bones[k,,drop=FALSE] )
 for (k in seq_along(by.bone)) {
     by.bone[[k]] <- by.bone[[k]][usevars]
-    names(by.bone[[k]])[match("centroid",names(by.bone[[k]]))] <- names(by.bone)[k]
+    names(by.bone[[k]])[match("absolute_centroid_size",names(by.bone[[k]]))] <- names(by.bone)[k]
 }
 whales <- by.bone[[1]]
 for (k in 2:length(by.bone)) { whales <- merge( whales, by.bone[[k]], all=TRUE ) }
@@ -92,17 +92,6 @@ thedata[species.nodes,intersect(names(species),colnames(thedata))] <- as.matrix(
 thedata[sample.nodes,intersect(names(whales),colnames(thedata))] <- as.matrix( whales[match(rownames(thedata)[sample.nodes],whales$specimen),intersect(names(whales),colnames(thedata))] )
 thedata <- log(thedata)
 havedata <- !is.na(thedata)
-
-if (FALSE) {  # DO THIS LATER
-    # normalize by sexual dimorphism
-    data.specimens <- match( rownames(thedata), whales$specimen )
-    females <- ( whales$sex[ data.specimens ] == "F" )
-    data.species <- whales$species[match(data.specimens,whales$specimen)]
-    renorms <- species$sexual_size_dimorphism[match(data.species,species$species)]
-    for (x in c("bodylength",levels(whichbone))) {
-        whales[[x]][ whales$sex=="F" ] <- whales[[x]][ whales$sex=="F" ] / renorms[ whales$sex=="F" ]
-    }
-}
 
 
 ### 
@@ -180,51 +169,4 @@ save( species.treemat, sample.treemat, projmatrix, n.tree.tips, thedata, normdat
 # write.csv( normdata, file="all-data-rejiggered.csv", row.names=TRUE)
 # write.csv( phylomeans, file="phylomeans.csv", row.names=FALSE )
 save( tree, file="all-sample-tree.RData" )
-
-
-if (FALSE) {  # OOPS THERE IS AN EASIER WAY THAN THE FOLLOWING
-    # "phylogenetic" mean: use imputed data to deal with missing values
-    imputed.data <- normdata
-    for (sp in levels(whales$species)) {
-        is.sp <- ( rownames(imputed.data) == sp ) | ( whales$species[ match( rownames(imputed.data), whales$specimen ) ] == sp )
-        is.sp[ is.na(is.sp) ] <- FALSE
-        sp.means <- colMeans( imputed.data[is.sp,], na.rm=TRUE )
-        if (any(is.na(sp.means))) {
-            # NA-out those species with some variables still missing
-            imputed.data[is.sp] <- NA
-        } else {
-            imputed.data[is.sp & is.na(imputed.data)] <- sp.means[ col( imputed.data )[is.sp & is.na(imputed.data)] ]
-        }
-    }
-
-    # and, the weights of each species in the phylogenetic mean:
-    # normalize by "phylogenetic" mean
-    normdata <- sweep( normdata, 2, unlist(phylomeans), "-" )
-
-
-
-    #####
-    # covariance matrices:
-
-    # "internal" edges --
-    internal.lengths <- tree$edge.length
-    internal.lengths[ tip.edges ] <- 0
-    # lengths of shared internal branches leading to the root for all pairs of nodes in the tree
-    species.shared.brlens <- shared.branchlengths( tree, internal.lengths*(1-2*edgeweights), descendants )
-    # distances in internal branches in the tree for all pairs of nodes
-    species.treedist <- treedist( tree, internal.lengths*edgeweights, descendants )
-    species.treemat <- ( species.shared.brlens - species.treedist + sum(edgeweights^2 * internal.lengths) )
-    rownames( species.treemat ) <- colnames( species.treemat ) <- c( tree$tip.label, paste("node",Ntip(tree)+1:Nnode(tree),sep='.') )
-    stopifnot(all(abs(cov2cor(species.treemat))<=1))
-
-    # and, in the tips
-    tip.lengths <- tree$edge.length
-    tip.lengths[ - tip.edges ] <- 0
-    tip.shared.brlens <- shared.branchlengths( tree, tip.lengths*(1-2*edgeweights), descendants )
-    tip.treedist <- treedist( tree, tip.lengths*edgeweights, descendants )
-    sample.treemat <- ( tip.shared.brlens - tip.treedist + sum(edgeweights^2 * tip.lengths) )
-    rownames( sample.treemat ) <- colnames( sample.treemat ) <- c( tree$tip.label, paste("node",Ntip(tree)+1:Nnode(tree),sep='.') )
-    stopifnot(all(abs(cov2cor(sample.treemat))<=1))
-
-}
 

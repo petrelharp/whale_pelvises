@@ -2,7 +2,7 @@ if (!exists("scriptdir")) {scriptdir <- "."}
 source(paste(scriptdir,"correlated-traits-fns.R",sep="/"))
 require(Matrix)
 
-tree_file <- paste(scriptdir,"consensusTree_ALL_CETACEA.tree",sep='/')
+tree_file <- paste(scriptdir,"McGowenetal2009_Cetacea.modified.tree",sep='/')
 species_tree<-read.nexus(file=tree_file)
 
 bones <- read.table("62_add_centroids.out", header=TRUE)

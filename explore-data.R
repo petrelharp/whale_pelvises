@@ -30,7 +30,7 @@ tree <- read.nexus("consensusTree_10_species.txt")
 bones$genus <- bones$species
 levels(bones$genus) <- sapply( strsplit( levels(bones$genus), "_" ), "[[", 1 )
 
-cetacean_tree <- read.nexus(file="consensusTree_ALL_CETACEA.tree")
+cetacean_tree <- read.nexus(file="McGowenetal2009_Cetacea.modified.tree")
 tree<-drop.tip(cetacean_tree, setdiff( cetacean_tree$tip.label, allspecies ) )
 species_dist <- cophenetic(tree)
 species_dist <- species_dist[ levels(bones$species),levels(bones$species)]
