@@ -1,26 +1,59 @@
-ALL : correlated-traits-analysis.R thedata-and-covmatrices.Rdata morphology_table_2013_June_27-plr.txt
+ALL : females/thedata-and-covmatrices.Rdata males/thedata-and-covmatrices.Rdata morphology_table_2013_June_27-plr.txt
 
 morphology_table_2013_June_27-plr.txt : morphology_table_2013_June_27.txt
 	cat morphology_table_2013_June_27.txt | cut -f 1-7 -d '    ' > morphology_table_2013_June_27-plr.txt
 
-thedata-and-covmatrices.Rdata : parse-correlated-trait-data.R
+# males
+males/thedata-and-covmatrices.Rdata : parse-correlated-trait-data.R
+	cd males
 	Rscript parse-correlated-trait-data.R
 
-tree-stuff.RData : parse-correlated-trait-data.R
+males/tree-stuff.RData : parse-correlated-trait-data.R
+	cd males
 	Rscript $<
 
-all-sample-tree.RData: parse-correlated-trait-data.R
+males/all-sample-tree.RData: parse-correlated-trait-data.R
+	cd males
 	Rscript $<
 
-mcmc-setup.RData : correlated-traits-analysis.R thedata-and-covmatrices.Rdata analysis-results.RData all-sample-tree.RData
+males/mcmc-setup.RData : correlated-traits-analysis.R males/thedata-and-covmatrices.Rdata males/all-sample-tree.RData
+	cd males
 	Rscript $<
 
-analysis-results.RData : correlated-traits-analysis.R thedata-and-covmatrices.Rdata all-sample-tree.RData
+males/analysis-results.RData : correlated-traits-analysis.R males/thedata-and-covmatrices.Rdata males/all-sample-tree.RData
+	cd males
 	Rscript $<
 
-results.RData : parse-mcmc.R mcmc-setup.RData thedata-and-covmatrices.Rdata
+males/results.RData : parse-mcmc.R males/mcmc-setup.RData males/thedata-and-covmatrices.Rdata
+	cd males
 	Rscript $<
 
-shape-stuff.RData : shape-analysis-setup.R tree-stuff.RData thedata-and-covmatrices.Rdata mcmc-setup.RData results.RData
+# females
+females/thedata-and-covmatrices.Rdata : parse-correlated-trait-data.R
+	cd females
+	Rscript parse-correlated-trait-data.R
+
+females/tree-stuff.RData : parse-correlated-trait-data.R
+	cd females
 	Rscript $<
+
+females/all-sample-tree.RData: parse-correlated-trait-data.R
+	cd females
+	Rscript $<
+
+females/mcmc-setup.RData : correlated-traits-analysis.R females/thedata-and-covmatrices.Rdata females/all-sample-tree.RData
+	cd females
+	Rscript $<
+
+females/analysis-results.RData : correlated-traits-analysis.R females/thedata-and-covmatrices.Rdata females/all-sample-tree.RData
+	cd females
+	Rscript $<
+
+females/results.RData : parse-mcmc.R females/mcmc-setup.RData females/thedata-and-covmatrices.Rdata
+	cd females
+	Rscript $<
+
+# # shape stuff
+# shape-stuff.RData : shape-analysis-setup.R tree-stuff.RData thedata-and-covmatrices.Rdata mcmc-setup.RData results.RData
+# 	Rscript $<
 
