@@ -83,9 +83,6 @@ samtransmat <- sample.transmat
 #####
 # Read in the data
 
-# treedist <- as.matrix( read.csv( file="all-sample-treedist.csv", header=TRUE) )
-# tipdist <- as.matrix( read.csv( file="all-sample-tipdist.csv", header=TRUE) )
-# thedata <- as.matrix( read.csv( file="all-data-rejiggered.csv", header=TRUE, row.names=1 ) )
 load("thedata-and-covmatrices.Rdata")
 havedata <- !is.na(thedata)
 pmat <- projmatrix[havedata,]
