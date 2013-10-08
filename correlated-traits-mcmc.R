@@ -9,7 +9,6 @@ option_list <- list(
         make_option( c("-i","--infile"), type="character", default='', help=".RData file from previous MCMC run." ),
         make_option( c("-n","--nbatches"), type="integer", default=1000, help="Number of MCMC batches. [default \"%default\"]" ),
         make_option( c("-o","--outdir"), type="character", default='mcmcs/', help="Directory to put output in. [default \"%default\"]" )
-
     )
 opt <- parse_args(OptionParser(option_list=option_list,description=usage))
 attach(opt)
