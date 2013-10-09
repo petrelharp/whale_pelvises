@@ -95,23 +95,23 @@ ut.pair.cols[ rbind(cbind(tmp1,tmp2)) ] <- TRUE
 pair.cols <- ( ut.pair.cols | t(ut.pair.cols) )
 
 layout(1:2)
-with( subset(alldists, sex="M-M"), plot( pelvic ~ abs(testes), col=ifelse(pair.cols,'red',adjustcolor('black',.15)), pch=ifelse(pair.cols,20,1) ) )
-with( subset(alldists, sex="M-M"), identify( abs(testes), pelvic, labels=outer(dimnames(sp.time.dist)[[1]],dimnames(sp.time.dist)[[2]],paste) ) )
-abline(coef(with( subset(alldists, sex="M-M"), lm( pelvic ~ abs(testes)) )))
-with( subset(alldists, sex="M-M"), plot( rib ~ abs(testes), col=ifelse(pair.cols,'red',adjustcolor('black',.25)), pch=ifelse(pair.cols,'o','.') ) )
-abline(coef(with( subset(alldists, sex="M-M"), lm( rib ~ abs(testes)) )))
+with( subset(alldists, sex=="M-M"), plot( pelvic ~ abs(testes), col=ifelse(pair.cols,'red',adjustcolor('black',.15)), pch=ifelse(pair.cols,20,1) ) )
+with( subset(alldists, sex=="M-M"), identify( abs(testes), pelvic, labels=outer(dimnames(sp.time.dist)[[1]],dimnames(sp.time.dist)[[2]],paste) ) )
+abline(coef(with( subset(alldists, sex=="M-M"), lm( pelvic ~ abs(testes)) )))
+with( subset(alldists, sex=="M-M"), plot( rib ~ abs(testes), col=ifelse(pair.cols,'red',adjustcolor('black',.25)), pch=ifelse(pair.cols,'o','.') ) )
+abline(coef(with( subset(alldists, sex=="M-M"), lm( rib ~ abs(testes)) )))
 
-summary(with( subset(alldists, sex="M-M"), lm( rib ~ abs(testes)), subset=ut.pair.cols ))
-summary(with( subset(alldists, sex="M-M"), lm( pelvic ~ abs(testes)), subset=ut.pair.cols ))
+summary(with( subset(alldists, sex=="M-M"), lm( rib ~ abs(testes)), subset=ut.pair.cols ))
+summary(with( subset(alldists, sex=="M-M"), lm( pelvic ~ abs(testes)), subset=ut.pair.cols ))
 
-summary(with( subset(alldists, sex="M-M"), lm( rib ~ abs(testes) + time, subset=ut.pair.cols ) ))
-summary(with( subset(alldists, sex="M-M"), lm( pelvic ~ abs(testes) + time, subset=ut.pair.cols ) ))
+summary(with( subset(alldists, sex=="M-M"), lm( rib ~ abs(testes) + time, subset=ut.pair.cols ) ))
+summary(with( subset(alldists, sex=="M-M"), lm( pelvic ~ abs(testes) + time, subset=ut.pair.cols ) ))
 
 layout( matrix(1:4,nrow=2,byrow=TRUE) )
 for (bone in c("rib","pelvic")) {
-    y <- subset(alldists, sex="M-M")[,bone]
-    with( subset(alldists, sex="M-M"), plot( y ~ abs(testes), col=ifelse(pair.cols,'red',adjustcolor('black',.15)), pch=ifelse(pair.cols,20,1), ylab=bone ) )
-    with( subset(alldists, sex="M-M"), plot( y ~ time, col=ifelse(pair.cols,'red',adjustcolor('black',.15)), pch=ifelse(pair.cols,20,1), ylab=bone ) )
+    y <- subset(alldists, sex=="M-M")[,bone]
+    with( subset(alldists, sex=="M-M"), plot( y ~ abs(testes), col=ifelse(pair.cols,'red',adjustcolor('black',.15)), pch=ifelse(pair.cols,20,1), ylab=bone ) )
+    with( subset(alldists, sex=="M-M"), plot( y ~ time, col=ifelse(pair.cols,'red',adjustcolor('black',.15)), pch=ifelse(pair.cols,20,1), ylab=bone ) )
 }
 
 

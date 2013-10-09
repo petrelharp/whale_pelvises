@@ -3,7 +3,11 @@
 load("mcmc-setup.RData")
 load("thedata-and-covmatrices.Rdata")
 
-load("mcmcs/mcmc-run-6858.RData")
+whichsex <- rev(strsplit(getwd(),"/")[[1]])[1]
+if (whichsex=="females") {
+    load("mcmcs/mcmc-run-8467.RData")
+} else if (whichsex=="males") {
+} else { stop("wrong directory -- males or females") }
 
 nonnegs <- c("sigmaL", "betaT", "sigmaR", "sigmaP", "zetaL", "zetaR", "omegaR", "zetaP", "omegaP" )
 nonneg.inds <- match( nonnegs, names(initpar) ) 
@@ -55,7 +59,6 @@ if (interactive()) {
 ####
 # Take this one
 
-load("mcmcs/mcmc-run-6858.RData")
 
 burnin <- 2e4
 usethese <- burnin + (1:(nrow(mcrun$batch)-burnin))
@@ -103,7 +106,8 @@ sample.notestes.covmat <- as.matrix( tcrossprod(sample.transmat[-2,-2]) )
 
 # how much faster do pelvic bones evolve with testes doing their thing?
 species.covmat[5,5] / species.notestes.covmat[4,4]
-# [1] 1.280029
+# both: 1.280029
+# females: 1.291685
 
 # correlation matrices
 xtable( cov2cor(species.covmat)[c(1,2,3,5),c(1,2,3,5)], digits=2 )

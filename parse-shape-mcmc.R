@@ -1,7 +1,8 @@
 #/usr/bin/R --vanilla
 # parse the mcmc output to infer parameters for shape evolution
 
-source("correlated-traits-fns.R")
+scriptdir <- ".."
+source(paste(scriptdir,"correlated-traits-fns.R",sep='/'))
 require(ape)
 require(Matrix)
 require(colorspace)
