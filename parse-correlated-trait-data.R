@@ -12,7 +12,7 @@ allbones <- droplevels( subset(allbones, ! (species %in% c("ORCINUS_ORCA")) & ! 
 allbones <- allbones[ setdiff( colnames(allbones), "absolute_volume" ) ]
 
 # separate by sex
-sexdirs <- c(M="males",F="females",CM="complete-males")
+sexdirs <- c(M="males",F="females",CM="males-complete")
 datadir <- getwd()
 
 for (whichsex in names(sexdirs)) {
