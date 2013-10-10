@@ -12,12 +12,19 @@ allbones <- droplevels( subset(allbones, ! (species %in% c("ORCINUS_ORCA")) & ! 
 allbones <- allbones[ setdiff( colnames(allbones), "absolute_volume" ) ]
 
 # separate by sex
-sexdirs <- c(M="males",F="females")
+sexdirs <- c(M="males",F="females",CM="complete-males")
 datadir <- getwd()
 
 for (whichsex in names(sexdirs)) {
     setwd(paste(datadir,sexdirs[whichsex],sep='/'))
-    bones <- droplevels( subset(allbones, sex == whichsex ) )
+    if (whichsex=="CM") {
+        # restrict to species for which we have both ribs and pelvises
+        complete.species <- with(subset(allbones,bone=='rib'), unique( species[!is.na(absolute_centroid_size)] ))
+        bones <- droplevels( subset(allbones, ( sex == "M" ) & ( species %in% complete.species ) ) )
+        stopifnot( all( with(subset(bones,!is.na(absolute_centroid_size)),table(species,bone)) > 0 ) )
+    } else {
+        bones <- droplevels( subset(allbones, sex == whichsex ) )
+    }
 
     species <- read.table(paste(datadir,"52_sexual_dimorphism.out",sep='/'), header=TRUE)
     # cat morphology_table_2013_June_27.txt | cut -f 1-7 -d '    ' > morphology_table_2013_June_27-plr.txt
