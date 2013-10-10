@@ -8,6 +8,8 @@ if (whichsex=="females") {
     load("mcmcs/mcmc-run-8467.RData")
 } else if (whichsex=="males") {
     load("mcmcs/mcmc-run-7388.RData")
+} else if (whichsex=="males-complete") {
+    load("mcmcs/mcmc-run-1060.RData") 
 } else { stop("wrong directory -- males or females") }
 
 nonnegs <- c("sigmaL", "betaT", "sigmaR", "sigmaP", "zetaL", "zetaR", "omegaR", "zetaP", "omegaP" )
