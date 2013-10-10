@@ -7,6 +7,7 @@ whichsex <- rev(strsplit(getwd(),"/")[[1]])[1]
 if (whichsex=="females") {
     load("mcmcs/mcmc-run-8467.RData")
 } else if (whichsex=="males") {
+    load("mcmcs/mcmc-run-7388.RData")
 } else { stop("wrong directory -- males or females") }
 
 nonnegs <- c("sigmaL", "betaT", "sigmaR", "sigmaP", "zetaL", "zetaR", "omegaR", "zetaP", "omegaP" )
@@ -26,10 +27,11 @@ for (k in 1:length(mcruns)) { luds[k] <- mcruns[[k]]$mcrun$lud( mcruns[[k]]$mcru
 
 ####
 # traces
+pdf(file="mcmc-traces.pdf",width=11,height=8,pointsize=10)
 layout( matrix(1:(2*length(mcruns)),nrow=2,byrow=TRUE) )
-lapply( mcruns, function (x) matplot(x$mcrun$batch,type='l') )
-lapply( mcruns, function (x) matplot(x$mcrun$batch,type='l',log='y') )
-
+lapply( mcruns, function (x) matplot(x$mcrun$batch[sort(unique(sample(nrow(x$mcrun$batch),2000,replace=TRUE))),],type='l') )
+lapply( mcruns, function (x) matplot(x$mcrun$batch[sort(unique(sample(nrow(x$mcrun$batch),2000,replace=TRUE))),],type='l',log='y') )
+dev.off()
 
 ###
 # Look at residuals
@@ -57,7 +59,7 @@ if (interactive()) {
 
 
 ####
-# Take this one
+# Look at one loaded above
 
 
 burnin <- 2e4
@@ -105,9 +107,13 @@ species.notestes.covmat <- as.matrix( tcrossprod(species.transmat[-2,-2]) )
 sample.notestes.covmat <- as.matrix( tcrossprod(sample.transmat[-2,-2]) )
 
 # how much faster do pelvic bones evolve with testes doing their thing?
-species.covmat[5,5] / species.notestes.covmat[4,4]
+species.covmat[5,5] / species.notestes.covmat[4,4]  # pelvics
 # both: 1.280029
 # females: 1.291685
+# males: 1.018714
+species.covmat[3,3] / species.notestes.covmat[2,2]  # ribs
+# males: 1.000032
+# females: 1.001814
 
 # correlation matrices
 xtable( cov2cor(species.covmat)[c(1,2,3,5),c(1,2,3,5)], digits=2 )
@@ -137,19 +143,10 @@ dev.off()
 
 cors.df <-  data.frame( 'testes-ribs'=posterior.cors[1,2,], 'testes-pelvis'=posterior.cors[1,3,], 'ribs-pelvis'=posterior.cors[2,3,] )
 rbind( sapply( cors.df, quantile, prob=c(.025,.975)), sapply( cors.df, summary ) )
-#         testes.ribs testes.pelvis ribs.pelvis
-# 2.5%     -0.5327032     0.1788103  -0.3354422
-# 97.5%     0.3969590     0.8008125   0.2472017
-# Min.       -0.69880       -0.1143    -0.58270
-# 1st Qu.    -0.28530        0.4401    -0.14800
-# Median     -0.09575        0.5697    -0.04419
-# Mean       -0.09502        0.5457    -0.05181
-# 3rd Qu.     0.07716        0.6741     0.03618
-# Max.        0.63000        0.8752     0.48420
 
 ###
 # pairwise correlations
-if (interactive()) {
+pdf(file="mcmc-correlations.pdf",width=10,height=10,pointsize=10)
     layout( matrix(1:nvars^2,nrow=nvars) )
     opar <- par(mar=c(0,0,0,0)+.1)
     subsamp <- floor( seq( 1, nrow(mcrun$batch), length.out=1000 ) )
@@ -161,5 +158,5 @@ if (interactive()) {
         }
     }
     par(opar)
-}
+dev.off()
 
