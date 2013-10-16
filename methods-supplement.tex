@@ -85,7 +85,7 @@ and now need to specify our parameterization of the covariance across each type 
 First consider the difference of two species means across an internal (species) edge of length $t$ in the phylogeny.
 Writing $X_0=(L_0,T_0,R^R_0,R^L_0,P^R_0,P^L_0)$ for the mean trait values of the ancestor,
 and $X_t=(L_t,T_t,R^R_t,R^L_t,P^R_t,P^L_t)$ for the mean trait values of the descendant,
-our model is that $X_t = X_0 + A_t Z$, with $Z$ independent standard Gaussians and $A_t$ the matrix given here:
+our model is that $X_t = X_0 + \sqrt{t} A Z$, with $Z$ independent standard Gaussians and $A_t$ the matrix given here:
 \begin{align} \label{eqn:species_matrix}
 \begin{bmatrix}
     L_t \\ T_t \\ R^R_t \\ R^L_t \\ P^R_t \\ P^L_t 
@@ -95,13 +95,14 @@ our model is that $X_t = X_0 + A_t Z$, with $Z$ independent standard Gaussians a
     L_0 \\ T_0 \\ R^R_0 \\ R^L_0 \\ P^R_0 \\ P^L_0 
 \end{bmatrix}
 +
+\sqrt{t}
 \begin{bmatrix}
     \sigma_L \sqrt{t} &  0  & 0  & 0  \\
-    \sigma_L \delta_T \sqrt{t}  &  \beta_T \sqrt{t}  & 0  &   0 \\
-    \sigma_L \delta_R \sqrt{t}  &  \beta_R \sqrt{t}  & \sigma_R \sqrt{t}  &   0 \\
-    \sigma_L \delta_R \sqrt{t}  &  \beta_R \sqrt{t}  & \sigma_R \sqrt{t}  &   0 \\
-    \sigma_L \delta_P \sqrt{t}  &  \beta_P \sqrt{t}  & 0  &   \sigma_P\sqrt{t}  \\
-    \sigma_L \delta_P \sqrt{t}  &  \beta_P \sqrt{t}  & 0  &   \sigma_P\sqrt{t}  
+    \delta_T   &  \beta_T   & 0  &   0 \\
+    \delta_R   &  \beta_R   & \sigma_R   &   0 \\
+    \delta_R   &  \beta_R   & \sigma_R   &   0 \\
+    \delta_P   &  \beta_P   & 0  &   \sigma_P  \\
+    \delta_P   &  \beta_P   & 0  &   \sigma_P  
 \end{bmatrix}
 \begin{bmatrix}
     Z_1 \\ Z_2 \\ Z_3 \\ Z_4
@@ -144,10 +145,10 @@ and $B$ parameterized by
 \begin{bmatrix}
     \zeta_L  &   0 & 0  & 0  & 0 \\
     - & - & - & - & - \\
-    \eta_R \zeta_L  &  \zeta_R  &  \omega_R  & 0 & 0 \\ 
-    \eta_R \zeta_L  & \zeta_R   & - \omega_R & 0 & 0\\ 
-    \eta_P \zeta_L  & 0 & 0 &  \zeta_P  & \omega_P  \\ 
-    \eta_P \zeta_L  & 0 & 0 &  \zeta_P  & - \omega_P
+    \eta_R  & \zeta_R   &  \omega_R  & 0 & 0 \\ 
+    \eta_R  & \zeta_R   & - \omega_R & 0 & 0\\ 
+    \eta_P  & 0 & 0 &  \zeta_P  & \omega_P  \\ 
+    \eta_P  & 0 & 0 &  \zeta_P  & - \omega_P
 \end{bmatrix}
 \begin{bmatrix}
 W_1 \\W_2 \\W_3 \\W_4 \\ W_5  \\ 
@@ -219,11 +220,11 @@ Again, we have $\Sigma$ but would like $\widetilde \Sigma$.
 Note above in equation \eqref{eqn:mean_centering} that the mean-centered data is a linear transformation of the differences across edges,
 so that it is only a matter of bookkeeping to find the matrix $C$ corresponding to this transformation.
 However, the matrix $C \Sigma C^T$ will be singular, since mean-centering reduces the number of degrees of freedom (here by four, as we subtract four trait means).
-A simple computational way around this is to let $P$ be the projection matrix into the columns space of $C$,
-and to transform both the data and the covariance by this, letting $Y = P \widetilde X$ and $Q = P C$.
+A simple computational way around this is to take $Q$ to be a projection matrix into the column space of $C$,
+and to transform both the data and the covariance matrix by $Q$ as above.
 Since weights $M$ assign zero influence to missing values in the data,
-we can ignore these henceforth.
-(Another choice would to be to let $P$ be the matrix that drops one individual; 
+$Q$ will automatically omit such missing values: the columns of $Q$ corresponding to missing values will be zero.
+(Another choice would to be to let $P$ be the matrix that drops one individual, and take $Q = PC$; 
 but this is less numerically robust
 and becomes trickier in the presence of missing data.)
 
@@ -241,9 +242,41 @@ To compute this, we do the following:
 \end{enumerate}
 The first step is simplified by precomputation of appropriate matrices to place the parameters into the appropriate slots of $\Sigma$.
 
+
+%%
 \section{Priors and Bayesian methods}
 
-Now, we place priors on the parameters \ldots
+Now that we have an easily computible likelihood function,
+we put priors on each of the parameters,
+and estimate the posterior distribution of the parameters given the data
+by a standard random-walk Markov chain Monte Carlo 
+(as implemented in the \texttt{mcmc} package \citep{geyer2013mcmc} in R, \citet{R}).
+
+% # return positive log-likelihood times posterior
+% #  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, sigmaLdeltaT, sigmaLdeltaP, sigmaLdeltaR, zetaLdeltaP, zetaLdeltaR, 
+% # priors are Gaussian with these SDs
+% prior.means <- c(3,3,3,3,3,3,.1,.1,.1,.1,.1,1,1,1,.1,.1)
+% # constrain these to be nonnegative:
+% nonnegs <- c("sigmaL", "betaT", "sigmaR", "sigmaP", "zetaL", "zetaR", "omegaR", "zetaP", "omegaP" )
+% nonneg.inds <- match( nonnegs, names(initpar) )
+% stopifnot( length(prior.means) == length(initpar) )
+% lud <- function (par) {
+%     if (any(par[nonneg.inds]<=0)) { return( -Inf ) }
+%     fullmat <- make.fullmat( par )[havedata,havedata]
+%     submat <- ( ( crossprod( pmat, fullmat) %*% pmat ) )
+%     fchol <- chol(submat)
+%     return( (-1/2) * sum( (par / prior.means)^2 ) - sum( backsolve( fchol, datavec, transpose=TRUE )^2 )/2 - sum(log(diag(fchol))) )
+% }
+
+Roughly speaking, the parameters controlling variances are 
+$\sigma_L$, $\beta_T$, $\sigma_R$, $\sigma_P$, $\zeta_L$, $\zeta_R$, $\omega_R$, $\zeta_P$, and $\omega_P$.
+Those controlling covariances are $\delta_T$, $\delta_R$, $\delta_P$, $\beta_R$, $\beta_P$, $\eta_R$, and $\eta_P$.
+We placed independent zero-mean Gaussian priors on all parameters, conditioning the variance parameters to be nonzero.
+Based on examination of variability in various traits, we set
+the prior standard deviations of $\sigma_L$, $\beta_T$, $\beta_P$, $\sigma_R$, $\sigma_P$, and $\zeta_L$ to 3,
+the prior standard deviations of $\delta_T$, $\delta_R$, and $\delta_P$ to 1,
+and the prior standard deviations of $\zeta_R$, $\omega_R$, $\zeta_P$, $\omega_P$, $\beta_R$, $\eta_R$, and $\eta_P$ to 0.1.
+
 
 \bibliography{correlated-traits}
 

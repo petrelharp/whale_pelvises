@@ -14,17 +14,17 @@ require(Matrix)
 species.paramnames <- matrix(
               c('sigmaL','','','','','',
                 'sigmaLdeltaT','betaT','','','','',
-                'sigmaLdeltaP','betaR','sigmaR','','','',
-                'sigmaLdeltaP','betaR','sigmaR','','','',
-                'sigmaLdeltaR','betaP','','sigmaP','','',
-                'sigmaLdeltaR','betaP','','sigmaP','',''), nrow=6, byrow=TRUE )
+                'sigmaLdeltaR','betaR','sigmaR','','','',
+                'sigmaLdeltaR','betaR','sigmaR','','','',
+                'sigmaLdeltaP','betaP','','sigmaP','','',
+                'sigmaLdeltaP','betaP','','sigmaP','',''), nrow=6, byrow=TRUE )
 sample.paramnames <- matrix( 
               c('zetaL','','','','','',
                 '','','','','','',
-                'zetaLdeltaP','','zetaR','-omegaR','','',
-                'zetaLdeltaP','','zetaR','omegaR','','',
-                'zetaLdeltaR','','','','zetaP','-omegaP',
-                'zetaLdeltaR','','','','zetaP','omegaP'), nrow=6, byrow=TRUE )
+                'zetaLdeltaR','','zetaR','-omegaR','','',
+                'zetaLdeltaR','','zetaR','omegaR','','',
+                'zetaLdeltaP','','','','zetaP','-omegaP',
+                'zetaLdeltaP','','','','zetaP','omegaP'), nrow=6, byrow=TRUE )
 species.justparams <- gsub("\\..*","",gsub("^[-+]","",species.paramnames))
 species.deltas <- gsub("[^.]\\.","",species.paramnames)
 species.varnames <- setdiff( unique( species.justparams ), '' )

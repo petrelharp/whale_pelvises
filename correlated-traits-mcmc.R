@@ -32,7 +32,7 @@ datavec <- crossprod( projmatrix[havedata,], thedata[havedata] )   # true data
 require(mcmc)
 
 # return positive log-likelihood times posterior
-#  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, sigmaLdeltaT, sigmaLdeltaP, sigmaLdeltaR, zetaLdeltaP, zetaLdeltaR, 
+#  parameters are: sigmaL, betaT, betaP, sigmaR, sigmaP, zetaL, zetaR, omegaR, zetaP, omegaP, sigmaLdeltaT, sigmaLdeltaR, sigmaLdeltaP, zetaLdeltaR, zetaLdeltaP, 
 # priors are Gaussian with these SDs
 prior.means <- c(3,3,3,3,3,3,.1,.1,.1,.1,.1,1,1,1,.1,.1)
 # constrain these to be nonnegative:
