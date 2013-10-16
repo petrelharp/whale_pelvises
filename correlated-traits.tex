@@ -501,9 +501,9 @@ S_{i_2,j_2}
 \end{table}
 
 The proportion of the changes in pelvic bone changes coming from changes in testes size is, at the mean values,
-%   ( 0.694 ) / ( 0.694 + ( 0.784 * 2.065) + 1.017)
+%   ( 0.065 ) / ( 0.065 + ( 0.784 * 0.550) + 0.066)
 \[
-\frac{\beta_P}{ \delta_P \sigma_L + \beta_P + \sigma_P } = 0.21 .
+\frac{\beta_P}{ \delta_P \sigma_L + \beta_P + \sigma_P } = 0.1156 .
 \]
 
 The correlation matrix for changes along a branch at the posterior mean parameter values is \\
@@ -570,10 +570,6 @@ we get the following correlation matrix:
 The marginal posterior distributions for these three parameters
 are shown in figure \ref{fig:posterior_cors},
 and summary statistics are shown in table \ref{tab:posterior_cors}.
-% % species.covmat[5,5] / species.notestes.covmat[4,4]
-% The ratio of variance per unit time of pelvic bone size change
-% with and without the effect of testes size
-% is 1.02; the corresponding quantity for ribs is 1.00003.
 
 % Wed Oct  9 07:22:41 2013
 \begin{table}[ht]
@@ -708,6 +704,32 @@ we get the following correlation matrix:
   \leftarrow \text{(pelvis)} \\
 \end{matrix}  .
 \end{align}
+The marginal posterior distributions for these three parameters
+are shown in figure \ref{fig:female_posterior_cors},
+and summary statistics are shown in table \ref{tab:female_posterior_cors}.
+
+% Wed Oct  9 07:22:41 2013
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+        &  testes--ribs & testes--pelvis & ribs--pelvis \\
+  \hline
+ Min. &    -0.8225000  &  -0.2529000 & -0.8156000 \\
+ 2.5\% &   -0.5799271  &   0.3004328 & -0.4842241 \\
+ 1st Qu. & -0.0687000  &   0.6983000 & -0.0452200 \\
+ Median &   0.2468000  &   0.8280000 &  0.1670000 \\
+ Mean &     0.2027000  &   0.7789000 &  0.1576000 \\
+ 3rd Qu. &  0.4903000  &   0.9067000 &  0.3738000 \\
+ 97.5\%  &  0.7967721  &   0.9914113 &  0.6948937 \\
+ Max. &     0.9369000  &   0.9998000 &  0.8510000 \\
+   \hline
+\end{tabular}
+\caption{\textbf{Females:} Marginal posterior distributions of correlations, with length fixed,
+  between changes in rib size, pelvic bone size, and testes size.
+  \label{tab:female_posterior_cors}
+}
+\end{table}
 
 
 \begin{figure}[ht]
@@ -716,11 +738,57 @@ we get the following correlation matrix:
   \end{center}
   \caption{\textbf{Feales:} Marginal posterior distributions of correlations, with length fixed,
   between changes in rib size, pelvic bone size, and testes size.
-  \label{fig:posterior_cors}
+  \label{fig:female_posterior_cors}
+  }
+\end{figure}
+
+%%%
+\section{Males, only complete observations}
+
+Here are some of the above results for only species we had both ribs \& pelvic bones for.
+The marginal posterior distributions for these three parameters
+are shown in figure \ref{fig:males_complete_posterior_cors},
+and summary statistics are shown in table \ref{tab:males_complete_posterior_cors}.
+
+% Wed Oct  9 07:22:41 2013
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+        &  testes--ribs & testes--pelvis & ribs--pelvis \\
+  \hline
+ Min. &    -0.7011000  & -0.34740000  & -0.5741000 \\
+ 2.5\% &   -0.5280824  & -0.04632722  & -0.3928919 \\
+ 1st Qu. & -0.1584000  &  0.42580000  & -0.0787800 \\
+ Median &   0.0371700  &  0.63120000  &  0.0126700 \\
+ Mean &     0.0605700  &  0.58490000  &  0.0372300 \\
+ 3rd Qu. &  0.2918000  &  0.78740000  &  0.1450000 \\
+ 97.5\%  &  0.6390835  &  0.92448522  &  0.4975437 \\
+ Max. &     0.8554000  &  0.96980000  &  0.7611000 \\
+   \hline
+\end{tabular}
+\caption{\textbf{Males, complete obs:} Marginal posterior distributions of correlations, with length fixed,
+  between changes in rib size, pelvic bone size, and testes size.
+  \label{tab:males_complete_posterior_cors}
+}
+\end{table}
+
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics{males-complete/posterior-correlations}
+  \end{center}
+  \caption{\textbf{Males, complete obs:} Marginal posterior distributions of correlations, with length fixed,
+  between changes in rib size, pelvic bone size, and testes size.
+  \label{fig:males_complete_posterior_cors}
   }
 \end{figure}
 
 
+
+\end{document}
+%%%%%
+% OLD STUFF
 %%%%%%%%%%%%%%
 \section{Old tree, both sexes results}
 
@@ -830,30 +898,5 @@ we get the following correlation matrix:
 \end{figure}
 
 
-\end{document}
+%%%%%%
 
-
-
-
-
-If we normalize the $X$ by subtracting off a weighted mean across species: 
-\begin{align}
-\tilde X_t = X_t - \sum_t w_t X_t,
-\end{align}
-with $\sum_t w_t = 1$,
-then $\tilde X$ does not depend on $X_\rho$:
-if we define 
-\begin{align}
-    w_e = \sum_{t : e \in \rho \to t} w_t
-\end{align}
-then
-\begin{align}
-    \tilde X_t = \sum_{e \in \rho \to t} dX_e - \sum_e w_e dX_e,
-\end{align}
-and if each branch's covariance is a constant multiplied by a common matrix $\Sigma$, $\cov[dX_e] = \tau_e \Sigma$, 
-then the covariance between two observations is just
-\begin{align}
-    \cov[\tilde X_s,\tilde X_t] &= \sum_e \left( \mathbf{1}_{e \in \rho \to s} - w_e \right) \left( \mathbf{1}_{e \in \rho \to t} - w_e \right) \cov[dX_e] \\
-                                &= \left( \sum_{e \in \rho \to t \cap \rho \to s} \tau_e - \sum_{e \in \rho \to t} w_e \tau_e - \sum_{e \in \rho \to s} w_e \tau_e + \sum_e w_e^2 \tau_e \right) \Sigma \\
-                                &= \left( \sum_{e \in \rho \to t \cap \rho \to s} (1-2w_e) \tau_e - \sum_{e \in s \to t} w_e \tau_e + \sum_e w_e^2 \tau_e \right) \Sigma .
-\end{align}
