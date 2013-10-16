@@ -9,6 +9,8 @@
 \DeclareMathOperator{\cov}{cov}
 \DeclareMathOperator{\var}{var}
 
+\bibliographystyle{plainnat}
+
 \begin{document}
 
 \section{Correlated trait evolution}
@@ -21,10 +23,15 @@ to discover whether pelvic bone and testes size changes are correlated
 after accounting for body size changes
 requires a joint model of their evolution along the phylogeny.
 
-The general framework we used to analyze these data is similar to \citet{XXX},
+The general framework we used to analyze these data is similar to those used in \citet{revell2009phylogenetic} and \citet{harmon2008geiger},
 modified to account for within-species variation,
 missing data,
 and measurement of different variables at the species and/or individual level.
+We do not account for uncertainty in the phylogeny,
+as suggested by \citet{huelsenbeck2003detecting},
+since it is unclear how much we should let body length and bone size influence branch lengths,
+and we do not think that uncertainty in phylogeny will be a significant confounding factor.
+
 Specifically, we have the following information about a number of individual whales:
 species, sex, body length,
 and the sizes of the right and left pelvic and (smallest) rib bones
@@ -37,18 +44,26 @@ There are three levels of variation:
 between species (i.e.\ changes across branches in the phylogeny),
 between individuals in a species,
 and between left and right pairs of bones in each individual.
-These three can be visually put into a common framework by 
+These can be visually put into a common framework by 
 labeling the species tips of the phylogeny as the ``species mean'',
-attaching additional edges to each species for each observed individual of that species (``individual edges''),
-and attaching two edges to each individual for the two (left and right) sides (``sample edges'').
+attaching additional edges to each species for each observed individual of that species (``individual edges'').
 Trait differences are then written as the sum over trait changes along intervening edges.
 For instance, the difference between a particular left rib size and the species mean rib size
 is the sum of the difference between the rib size and that individual's mean rib sizes 
 and the difference between that individual's mean and the species mean rib size.
 Differences between two samples from different species include terms for both individuals' deviations from their species means,
 as well as changes in species mean trait values along each edge of the phylogeny that separates the two species.
+The species-level observation of testes size is treated as direct observation of the species mean;
+since we do not observe testes size in inviduals, omitting modeling the observation error should not affect the analysis.
 
-XXX add figure of (a) cetacean phylogeny we use; and (b) schematic with indiv \& sample edges XXX
+The inclusion of within-individual variation suggests attaching two additional branches of a third type
+to each individual's tip;
+however, it simplifies the analysis to instead model left and right bone size separately,
+but to assume these are perfectly correlated on species edges.
+
+\begin{figure}
+XXX figure of (a) cetacean phylogeny we use; and (b) schematic with indiv \& sample edges XXX
+\end{figure}
 
 We then model the observed set of trait values as resulting from correlated changes across this ramified phylogeny,
 with different sets of parameters for each of the three types of edges.
@@ -56,44 +71,180 @@ Concretely, we take logarithms of all quantitative traits,
 and model their evolution as a correlated Brownian motion.
 We write these four traits as
 \begin{align}
-    L = \log \text{(body length)}, \\
-    T = \log \text{(testes volume)}, \\
-    P = \log \text{( pelvic centroid size )}, \quad \text{and} \\
-    R = \log \text{( rib centroid size )},
+    L &= \log \text{(body length)}, \\
+    T &= \log \text{(testes volume)}, \\
+    P^R &= \log \text{( right pelvic centroid size )}, \\
+    P^L &= \log \text{( left pelvic centroid size )}, \\
+    R^R &= \log \text{( right rib centroid size )}, \\
+    R^L &= \log \text{( left rib centroid size )},
 \end{align}
 and now need to specify our parameterization of the covariance across each type of branch.
 
+\subsection{Species differences}
+
 First consider the difference of two species means across an internal (species) edge of length $t$ in the phylogeny.
-Writing $(L_0,T_0,P_0,R_0)$ for the mean trait values of the ancestor,
-and $(L_t,T_t,P_t,R_t)$ for the mean trait values of the descendant,
-our model is that
-\begin{align}
+Writing $X_0=(L_0,T_0,R^R_0,R^L_0,P^R_0,P^L_0)$ for the mean trait values of the ancestor,
+and $X_t=(L_t,T_t,R^R_t,R^L_t,P^R_t,P^L_t)$ for the mean trait values of the descendant,
+our model is that $X_t = X_0 + A_t Z$, with $Z$ independent standard Gaussians and $A_t$ the matrix given here:
+\begin{align} \label{eqn:species_matrix}
 \begin{bmatrix}
-    L_t \\ T_t \\ R_t \\ P_t 
+    L_t \\ T_t \\ R^R_t \\ R^L_t \\ P^R_t \\ P^L_t 
 \end{bmatrix}
 =
 \begin{bmatrix}
-    L_r \\ T_r \\ R_r \\ P_r 
+    L_0 \\ T_0 \\ R^R_0 \\ R^L_0 \\ P^R_0 \\ P^L_0 
 \end{bmatrix}
 +
 \begin{bmatrix}
-    \sigma_L \sqrt{\tau} &  0  & 0  & 0  \\
-    \sigma_L \delta_T \sqrt{\tau}  &  \beta_T \sqrt{\tau}  & 0  &   0 \\
-    \sigma_L \delta_R \sqrt{\tau}  &  \beta_R \sqrt{\tau}  & \sigma_R \sqrt{\tau}  &   0 \\
-    \sigma_L \delta_P \sqrt{\tau}  &  \beta_P \sqrt{\tau}  & 0  &   \sigma_P\sqrt{\tau}  
+    \sigma_L \sqrt{t} &  0  & 0  & 0  \\
+    \sigma_L \delta_T \sqrt{t}  &  \beta_T \sqrt{t}  & 0  &   0 \\
+    \sigma_L \delta_R \sqrt{t}  &  \beta_R \sqrt{t}  & \sigma_R \sqrt{t}  &   0 \\
+    \sigma_L \delta_R \sqrt{t}  &  \beta_R \sqrt{t}  & \sigma_R \sqrt{t}  &   0 \\
+    \sigma_L \delta_P \sqrt{t}  &  \beta_P \sqrt{t}  & 0  &   \sigma_P\sqrt{t}  \\
+    \sigma_L \delta_P \sqrt{t}  &  \beta_P \sqrt{t}  & 0  &   \sigma_P\sqrt{t}  
 \end{bmatrix}
 \begin{bmatrix}
     Z_1 \\ Z_2 \\ Z_3 \\ Z_4
 \end{bmatrix}
-\quad \begin{matrix}
-    \leftarrow \text{length} \\
-    \leftarrow \text{testes} \\
-    \leftarrow \text{rib} \\
-    \leftarrow \text{pelvis} 
-\end{matrix}
 \end{align}
+In this parameterization, the covariance matrix of the trait differences $(X_t - X_0)$ is $\Sigma_t = A_t A_t^T$;
+effectively, we are parameterizing the covariance matrix through its Cholesky decomposition,
+subject to the constraint that left and right bone size changes are perfectly correlated.
+A direct parameterization of $\Sigma_t$ is difficult to optimize over due to the complex constraits imposed by
+the condition that $\Sigma_t$ be nonnegative definate;
+the constraints on $A_t$ are only that the diagonal elements are positive \citep{pourahmadi1999joint}.
+
+%
+\subsection{Individual variation}
+
+We use a similar parameterization for within-species and within-individual variation.
+If the species mean trait values are $X_S = (L_S,T_S,R^R_S,R^L_S,P^R_S,P^L_S)$ 
+and the trait values of an individual are $X_I = (L_I,T_I,R^R_I,R^L_I,P^R_I,P^L_I)$,
+then we write $X_I = X_S + B W$, again with $W$ independent standard Gaussians,
+and $B$ parameterized by
+\begin{align} \label{eqn:sample_matrix}
+\begin{bmatrix}
+    L_I \\
+    T_I \\
+    R^R_I \\
+    R^L_I \\
+    P^R_I \\
+    P^L_I
+\end{bmatrix}
+=
+\begin{bmatrix}
+    L_S \\
+    T_S \\
+    R^R_S \\
+    R^L_S \\
+    P^R_S \\
+    P^L_S
+\end{bmatrix}
++
+\begin{bmatrix}
+    \zeta_L  &   0 & 0  & 0  & 0 \\
+    - & - & - & - & - \\
+    \eta_R \zeta_L  &  \zeta_R  &  \omega_R  & 0 & 0 \\ 
+    \eta_R \zeta_L  & \zeta_R   & - \omega_R & 0 & 0\\ 
+    \eta_P \zeta_L  & 0 & 0 &  \zeta_P  & \omega_P  \\ 
+    \eta_P \zeta_L  & 0 & 0 &  \zeta_P  & - \omega_P
+\end{bmatrix}
+\begin{bmatrix}
+W_1 \\W_2 \\W_3 \\W_4 \\ W_5  \\ 
+\end{bmatrix}
+\end{align}
+Here the row of $B$ corresponding to testes size is omitted because we do not observe testes size in individuals;
+this will not enter the analysis.
+In this form, 
+$\zeta_R^2$ parameterizes the within-species variance of individual mean rib sizes,
+and $\omega_R^2$ parameterizes the variance of rib sizes within an individual.
+
+Note that this effectly assumes that within-species variation is of the same magnitude for each species,
+and furthermore no substructure within each species.
+If these are not good assumptions, one could add individual-level random effects (for instance);
+but we did not see evidence that this was necessary.
 
 
-Changes between species
+%%
+\section{Mean-centering the data}
+
+Above we have given a complete model for correlated trait evolution along a phylogeny,
+including within-species variation,
+given the trait values at the root.
+It is usual in phylogenetics to compute the independent contrasts -- 
+effectively, performing a linear transformation of the tip values that (a) renders them independent of the root value
+and (b) results in jointly independent values.
+The second property is merely a computational convenience, while the first property is essential.
+This would be straightforward in this model if the species-level matrices $A$ and the individual-level matrices $B$ were jointly diagonalizable 
+\citep[as in][]{revell2009phylogenetic}.
+
+Fortunately, if we subtract any unbiased estimate of the root value, we obtain values that does not depend on the root value.
+To see this, let $X_{ik}$ denote the matrix of trait values at the tips, with rows corresponding to individuals, 
+and let $M_{ik}$ be a matrix whose columns sum to 1, so that 
+$\bar X_k = \sum_i M_{ik} X_{ik}$ is an estimate of the $k^\mathrm{th}$ trait at the root.
+Also write $dX_e$ for the vector of trait differences across edge $e$ in the tree,
+and $X_\rho$ for the trait values at the root,
+so that $X_i = X_\rho + \sum_{e \in \rho \to i} dX_e$,
+where $\{e \in \rho \to i\}$ are the edges in the path from the root to tip $i$.
+Then the centered observations $\widetilde X_{ik} := X_{ik} = \bar X_k$ do not depend on $X_\rho$:
+if we assign weight $M_{ek}$ to each edge $e$ proportional to the weights that $M$ assigns to tips below it,
+i.e.\ $M_{ek} = \sum_{i : e \in \rho \to i} M_{ik}$, then
+\begin{equation} \label{eqn:mean_centering}
+  \widetilde X_{ik} = \sum_{e \in \rho \to i} dX_{ek} - \sum_e M_{ek} dX_{ek} ,
+\end{equation}
+which does not depend on the trait values at the root.
+
+For the weights $M$ that estimate the trait values at the root,
+we use the ``phylogenetic mean'' \citep{felsenstein1973maximumlikelihood},
+calculated independently for each trait,
+using fairly short values for the branch lengths of the individual edges estimated from within-species variances,
+as that should be fairly close to the minimum-variance estimator of the root values.
+Note that the columns of $M$ are \emph{not} identical,
+due to the irregular pattern of missing data.
+
+\section{Likelihood computation}
+
+Now we are in the following situation:
+we have given the covariance matrices for differences in trait values across each edge ($dX_e$ in the notation above),
+have assumed that these values are independent for each edge,
+and we need to convert this to a covariance matrix for the data we do actually observe,
+mean-centered as described above.
+Since the mean-centered data are by assumption centered Gaussian, 
+this is all we need to compute the likelihood of the data, given the covariance parameters in \eqref{eqn:species_matrix} and \eqref{eqn:sample_matrix}.
+
+Suppose that $U$ is a $n$-dimensional Gaussian vector with covariance matrix $\Sigma$ (the edge differences $dX_e$ in some order),
+and $V = Q U$ is a linear transformation of $U$ by the matrix $Q$ (the observed data),
+then $V$ is also Gaussian, with covariance matrix $\widetilde \Sigma = Q \Sigma Q^T$.
+Again, we have $\Sigma$ but would like $\widetilde \Sigma$.
+Note above in equation \eqref{eqn:mean_centering} that the mean-centered data is a linear transformation of the differences across edges,
+so that it is only a matter of bookkeeping to find the matrix $C$ corresponding to this transformation.
+However, the matrix $C \Sigma C^T$ will be singular, since mean-centering reduces the number of degrees of freedom (here by four, as we subtract four trait means).
+A simple computational way around this is to let $P$ be the projection matrix into the columns space of $C$,
+and to transform both the data and the covariance by this, letting $Y = P \widetilde X$ and $Q = P C$.
+Since weights $M$ assign zero influence to missing values in the data,
+we can ignore these henceforth.
+(Another choice would to be to let $P$ be the matrix that drops one individual; 
+but this is less numerically robust
+and becomes trickier in the presence of missing data.)
+
+Now that we have the covariance function, the computation is standard:
+recalling that $Y$ is the transformed, mean-centered data and $\widetilde \Sigma(\theta)$ is the covariance matrix of $Y$,
+which depends on the parameters $\theta$,
+\begin{equation} \label{eqn:likelihood}
+    \mathcal{L}(Y|\theta) = \frac{ 1 }{ \left( 2 \pi \det{\widetilde \Sigma(\theta)} \right)^{n/2} } \exp \left( - \frac{1}{2} Y^T {\widetilde \Sigma(\theta)} Y \right) .
+\end{equation}
+To compute this, we do the following:
+\begin{enumerate}
+    \item Compute the full covariance matrix $\Sigma(\theta)$ from the parameters $\theta$.
+    \item Compute $\widetilde \Sigma(\theta) = Q \Sigma Q^T$ (note that $Q$ does not depend on the parameters).
+    \item Compute $\det{\widetilde \Sigma(\theta)}$ and $Y^T {\widetilde \Sigma(\theta)} Y$ from the Cholesky decomposition of $\widetilde \Sigma(\theta)$ (found numerically).
+\end{enumerate}
+The first step is simplified by precomputation of appropriate matrices to place the parameters into the appropriate slots of $\Sigma$.
+
+\section{Priors and Bayesian methods}
+
+Now, we place priors on the parameters \ldots
+
+\bibliography{correlated-traits}
 
 \end{document}
