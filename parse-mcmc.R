@@ -83,6 +83,9 @@ for ( x in c("deltaT", "deltaP","deltaR") ) {
     }
 }
 pars <- rbind( pars, quants )
+
+xtable(pars)
+
 pars <- pars[ ! ( grepl("delta",names(pars)) & ( grepl("sigma",names(pars)) | grepl("zeta",names(pars)) ) ) ]
 
 samples <- mcrun$batch[ seq(burnin,nrow(mcrun$batch),length.out=1e3), ]
@@ -93,6 +96,7 @@ save( pars, samples, file="results.RData" )
 # output tables
 
 require(xtable)
+
 xtable( pars[c(3,4,2,5,6), grep("delta",names(pars),invert=TRUE) ], digits=3 )
 xtable( pars[c(3,4,2,5,6), grep("delta",names(pars)) ], digits=3 )
 
