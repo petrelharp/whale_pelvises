@@ -1,0 +1,99 @@
+\documentclass{article}
+\usepackage{fullpage}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+\DeclareMathOperator{\cov}{cov}
+\DeclareMathOperator{\var}{var}
+
+\begin{document}
+
+\section{Correlated trait evolution}
+
+It is clear that cetacean testes size, rib bone size, and pelvic bone size
+should evolve in a correlated manner over evolutionary time
+due to their common correlation with total body size 
+(which varies considerably from dolphins to baleen whales);
+to discover whether pelvic bone and testes size changes are correlated
+after accounting for body size changes
+requires a joint model of their evolution along the phylogeny.
+
+The general framework we used to analyze these data is similar to \citet{XXX},
+modified to account for within-species variation,
+missing data,
+and measurement of different variables at the species and/or individual level.
+Specifically, we have the following information about a number of individual whales:
+species, sex, body length,
+and the sizes of the right and left pelvic and (smallest) rib bones
+(although some of the measurements are missing).
+Furthermore, for each species, we have
+adult male body length and
+breeding male testes volume.
+
+There are three levels of variation:
+between species (i.e.\ changes across branches in the phylogeny),
+between individuals in a species,
+and between left and right pairs of bones in each individual.
+These three can be visually put into a common framework by 
+labeling the species tips of the phylogeny as the ``species mean'',
+attaching additional edges to each species for each observed individual of that species (``individual edges''),
+and attaching two edges to each individual for the two (left and right) sides (``sample edges'').
+Trait differences are then written as the sum over trait changes along intervening edges.
+For instance, the difference between a particular left rib size and the species mean rib size
+is the sum of the difference between the rib size and that individual's mean rib sizes 
+and the difference between that individual's mean and the species mean rib size.
+Differences between two samples from different species include terms for both individuals' deviations from their species means,
+as well as changes in species mean trait values along each edge of the phylogeny that separates the two species.
+
+XXX add figure of (a) cetacean phylogeny we use; and (b) schematic with indiv \& sample edges XXX
+
+We then model the observed set of trait values as resulting from correlated changes across this ramified phylogeny,
+with different sets of parameters for each of the three types of edges.
+Concretely, we take logarithms of all quantitative traits,
+and model their evolution as a correlated Brownian motion.
+We write these four traits as
+\begin{align}
+    L = \log \text{(body length)}, \\
+    T = \log \text{(testes volume)}, \\
+    P = \log \text{( pelvic centroid size )}, \quad \text{and} \\
+    R = \log \text{( rib centroid size )},
+\end{align}
+and now need to specify our parameterization of the covariance across each type of branch.
+
+First consider the difference of two species means across an internal (species) edge of length $t$ in the phylogeny.
+Writing $(L_0,T_0,P_0,R_0)$ for the mean trait values of the ancestor,
+and $(L_t,T_t,P_t,R_t)$ for the mean trait values of the descendant,
+our model is that
+\begin{align}
+\begin{bmatrix}
+    L_t \\ T_t \\ R_t \\ P_t 
+\end{bmatrix}
+=
+\begin{bmatrix}
+    L_r \\ T_r \\ R_r \\ P_r 
+\end{bmatrix}
++
+\begin{bmatrix}
+    \sigma_L \sqrt{\tau} &  0  & 0  & 0  \\
+    \sigma_L \delta_T \sqrt{\tau}  &  \beta_T \sqrt{\tau}  & 0  &   0 \\
+    \sigma_L \delta_R \sqrt{\tau}  &  \beta_R \sqrt{\tau}  & \sigma_R \sqrt{\tau}  &   0 \\
+    \sigma_L \delta_P \sqrt{\tau}  &  \beta_P \sqrt{\tau}  & 0  &   \sigma_P\sqrt{\tau}  
+\end{bmatrix}
+\begin{bmatrix}
+    Z_1 \\ Z_2 \\ Z_3 \\ Z_4
+\end{bmatrix}
+\quad \begin{matrix}
+    \leftarrow \text{length} \\
+    \leftarrow \text{testes} \\
+    \leftarrow \text{rib} \\
+    \leftarrow \text{pelvis} 
+\end{matrix}
+\end{align}
+
+
+Changes between species
+
+\end{document}
