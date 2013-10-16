@@ -10,7 +10,7 @@ if (whichsex=="females") {
     load("mcmcs/mcmc-run-7388.RData")
 } else if (whichsex=="males-complete") {
     load("mcmcs/mcmc-run-1060.RData") 
-} else { stop("wrong directory -- males or females") }
+} else { stop("wrong directory -- males, females, or males-complete") }
 
 nonnegs <- c("sigmaL", "betaT", "sigmaR", "sigmaP", "zetaL", "zetaR", "omegaR", "zetaP", "omegaP" )
 nonneg.inds <- match( nonnegs, names(initpar) ) 
@@ -108,15 +108,6 @@ sample.subcovmat <- as.matrix( tcrossprod(sample.transmat[-1,-1]) )
 species.notestes.covmat <- as.matrix( tcrossprod(species.transmat[-2,-2]) )
 sample.notestes.covmat <- as.matrix( tcrossprod(sample.transmat[-2,-2]) )
 
-# how much faster do pelvic bones evolve with testes doing their thing?
-species.covmat[5,5] / species.notestes.covmat[4,4]  # pelvics
-# both: 1.280029
-# females: 1.291685
-# males: 1.018714
-species.covmat[3,3] / species.notestes.covmat[2,2]  # ribs
-# males: 1.000032
-# females: 1.001814
-
 # correlation matrices
 xtable( cov2cor(species.covmat)[c(1,2,3,5),c(1,2,3,5)], digits=2 )
 xtable( cov2cor(sample.covmat)[c(1,3:6),c(1,3:6)], digits=2 )
@@ -144,6 +135,8 @@ legend("topright", fill=adjustcolor(c('black','red','blue'),.5), legend=c("teste
 dev.off()
 
 cors.df <-  data.frame( 'testes-ribs'=posterior.cors[1,2,], 'testes-pelvis'=posterior.cors[1,3,], 'ribs-pelvis'=posterior.cors[2,3,] )
+
+# posterior distribution of correlations
 rbind( sapply( cors.df, quantile, prob=c(.025,.975)), sapply( cors.df, summary ) )
 
 ###
