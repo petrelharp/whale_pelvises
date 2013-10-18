@@ -377,8 +377,19 @@ This results in following posterior mean correlation matrix:
 
 We can furthermore postprocess the MCMC samples from posterior distribution
 to obtain marginal posterior distributions for the three correlations.
-These shown in figure X of the main text,
+These shown in figure \ref{fig:males_poseterior_cors} (and in the main text);
 and summary statistics are shown in table \ref{tab:posterior_cors}.
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics{males/posterior-correlations}
+  \end{center}
+  \caption{Marginal posterior distributions of correlations, with length fixed,
+  between changes in rib size, pelvic bone size, and testes size.
+  \label{fig:males_posterior_cors}
+  }
+\end{figure}
+
 
 
 % Wed Oct  9 07:22:41 2013
@@ -451,7 +462,7 @@ mean    &  0.18        &  0.54       &  0.06       &  0.01       &  0.03        
 95\%    &  0.25        &  0.76       &  0.10       &  0.03       &  0.06        &  0.07        &  0.04       &  0.08       &  0.02        &  0.18       &  0.04        &  3.46        &  1.20        &  0.84        &  1.08      &  2.84      \\
    \hline
 \end{tabular}
-\caption{ \label{tab:female_posterior_distrns} Posterior means and quantiles of the parameters, for full dataset of bones from females.  }
+\caption{ \label{tab:females_posterior_distrns} Posterior means and quantiles of the parameters, for full dataset of bones from females.  }
 \end{table}
 
 The correlation matrix for changes along a branch at the posterior mean parameter values is 
@@ -472,15 +483,7 @@ The correlation matrix for changes along a branch at the posterior mean paramete
   \leftarrow \text{(pelvis)} 
 \end{matrix} .
 \end{align}
-The correlations are high, but this is due to shared correlations with length.
-We can remove this effect by calculating the correlation in trait changes
-after subtracting off the expected trait change based on body length change.
-(Since the trait changes are multivariate Gaussian, this is equivalent to the correlation matrix
-for the trait changes conditional on the length change,
-and does not depend on the value of the length change.)
-This can be thought of as the correlation in the residuals of trait changes after regressing out body length change,
-or as the correlation between trait changes on a hypothetical branch over which body length does not change.
-This results in following posterior mean correlation matrix:
+As above, removing the effects of length changes results in following posterior mean correlation matrix:
 %  xtable( cov2cor(species.subcovmat[c(1,2,4),c(1,2,4)]) )
 % latex table generated in R 3.0.2 by xtable 1.7-1 package
 % Wed Oct  9 07:22:41 2013
@@ -505,8 +508,19 @@ This results in following posterior mean correlation matrix:
 
 We can furthermore postprocess the MCMC samples from posterior distribution
 to obtain marginal posterior distributions for the three correlations.
-These shown in figure X of the main text,
-and summary statistics are shown in table \ref{tab:posterior_cors}.
+These are shown in figure \ref{fig:fig:female_posterior_cors},
+and summary statistics are shown in table \ref{tab:females_posterior_cors}.
+
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics{females/posterior-correlations}
+  \end{center}
+  \caption{\textbf{Females:} Marginal posterior distributions of correlations, with length fixed,
+  between changes in rib size, pelvic bone size, and testes size.
+  \label{fig:female_posterior_cors}
+  }
+\end{figure}
 
 
 % Wed Oct  9 07:22:41 2013
@@ -516,19 +530,19 @@ and summary statistics are shown in table \ref{tab:posterior_cors}.
   \hline
         &  testes--ribs & testes--pelvis & ribs--pelvis \\
   \hline
- Min. &     -0.8087000  &   0.0594300 & -0.7689000   \\
- 2.5\% &    -0.5075804  &   0.2476295 & -0.3776489   \\
- 1st Qu. &  -0.1367000  &   0.5748000 & -0.0833000   \\
- Median &    0.0759300  &   0.7001000 &  0.0432000   \\
- Mean &      0.0665400  &   0.6682000 &  0.0461500   \\
- 3rd Qu. &   0.2769000  &   0.7872000 &  0.1720000   \\
- 97.5\%  &   0.6225153  &   0.9025416 &  0.4816755   \\
- Max. &      0.8719000  &   0.9694000 &  0.8116000   \\
+ Min. &    -0.8225000  &  -0.2529000 & -0.8156000 \\
+ 2.5\% &   -0.5799271  &   0.3004328 & -0.4842241 \\
+ 1st Qu. & -0.0687000  &   0.6983000 & -0.0452200 \\
+ Median &   0.2468000  &   0.8280000 &  0.1670000 \\
+ Mean &     0.2027000  &   0.7789000 &  0.1576000 \\
+ 3rd Qu. &  0.4903000  &   0.9067000 &  0.3738000 \\
+ 97.5\%  &  0.7967721  &   0.9914113 &  0.6948937 \\
+ Max. &     0.9369000  &   0.9998000 &  0.8510000 \\
    \hline
 \end{tabular}
   \caption{Marginal posterior distributions of correlations, with length fixed,
   between changes in rib size, pelvic bone size, and testes size.
-  \label{tab:posterior_cors}
+  \label{tab:females_posterior_cors}
 }
 \end{table}
 
@@ -539,11 +553,11 @@ at the posterior mean parameter values is
 % Wed Oct  9 08:27:10 2013
 \begin{align}
 \begin{bmatrix}
-   1.00 & 0.39 & 0.39 & 0.13 & 0.13 \\ 
-   0.39 & 1.00 & 0.57 & 0.05 & 0.05 \\ 
-   0.39 & 0.57 & 1.00 & 0.05 & 0.05 \\ 
-   0.13 & 0.05 & 0.05 & 1.00 & 0.96 \\ 
-   0.13 & 0.05 & 0.05 & 0.96 & 1.00 \\ 
+   1.00 & 0.26 & 0.26 & 0.21 & 0.21 \\ 
+   0.26 & 1.00 & 0.92 & 0.05 & 0.05 \\ 
+   0.26 & 0.92 & 1.00 & 0.05 & 0.05 \\ 
+   0.21 & 0.05 & 0.05 & 1.00 & 0.91 \\ 
+   0.21 & 0.05 & 0.05 & 0.91 & 1.00 \\ 
  \end{bmatrix}
 \quad \begin{matrix}
   \leftarrow \text{(length)} \\
@@ -553,16 +567,14 @@ at the posterior mean parameter values is
   \leftarrow \text{(left pelvis)} 
 \end{matrix}  .
 \end{align}
-It is interesting to note that there is more intraspecific variation in pelvic bones than ribs (table \ref{tab:posterior_distrns}, $\zeta_P > \zeta_R$),
-despite ribs being typically larger,
-but that the two pelvic bones of an individual tend to be more similar to eachother (relative to the species mean) than are the two ribs.
 
 
+%%
 \subsection{Full dataset for males}
 
 The summary statistics of the estimated posterior distributions 
 for the parameters
-are given in table~\ref{tab:posterior_distrns}.
+are given in table~\ref{tab:complete_males_posterior_distrns}.
 
 % latex table generated in R 3.0.2 by xtable 1.7-1 package
 % Wed Oct 16 16:35:12 2013
@@ -572,15 +584,14 @@ are given in table~\ref{tab:posterior_distrns}.
 \begin{tabular}{rrrrrrrrrrrrrrrrr}
   \hline
         &  $\sigma_L$  &  $\beta_T$  &  $\beta_P$  &  $\beta_R$  &  $\sigma_R$  &  $\sigma_P$  &  $\zeta_L$  &  $\zeta_R$  &  $\omega_R$  &  $\zeta_P$  &  $\omega_P$  &  $\delta_T$  &  $\delta_R$  &  $\delta_P$  &  $\eta_R$  &  $\eta_P$  \\
-\hline
-5\%     &  0.11        &  0.38       &  0.03       &  -0.02      &  0.03        &  0.05        &  0.04       &  0.06       &  0.04        &  0.10       &  0.01        &  0.08        &  0.09        &  0.05        &  0.02      &  -0.00     \\
-25\%    &  0.14        &  0.44       &  0.05       &  -0.01      &  0.03        &  0.06        &  0.04       &  0.07       &  0.04        &  0.11       &  0.02        &  0.27        &  0.11        &  0.08        &  0.03      &  0.01      \\
-mean    &  0.55        &  0.55       &  0.07       &  0.00       &  0.04        &  0.07        &  0.04       &  0.07       &  0.04        &  0.12       &  0.02        &  1.60        &  0.51        &  0.47        &  0.03      &  0.02      \\
-75\%    &  0.51        &  0.61       &  0.08       &  0.01       &  0.05        &  0.07        &  0.05       &  0.07       &  0.04        &  0.13       &  0.02        &  3.29        &  0.43        &  0.54        &  0.04      &  0.02      \\
-95\%    &  2.28        &  0.88       &  0.11       &  0.03       &  0.06        &  0.09        &  0.05       &  0.08       &  0.05        &  0.14       &  0.02        &  4.27        &  2.00        &  1.99        &  0.05      &  0.04      \\
+5\%     &  0.22    &  0.42   &  0.01   &  -0.02  &  0.03    &  0.05    &  0.04   &  0.06   &  0.04    &  0.10   &  0.01    &  1.59     &  0.66     &    0.80     & 0.55     & -0.04    \\
+25\%    &  0.42    &  0.50   &  0.05   &  -0.01  &  0.03    &  0.07    &  0.04   &  0.07   &  0.04    &  0.11   &  0.02    &  1.88     &  0.77     &    1.09     & 0.70     & 0.15     \\
+mean  &  1.08    &  0.63   &  0.08   &  0.00   &  0.04    &  0.10    &  0.04   &  0.07   &  0.04    &  0.12   &  0.02    &  2.50     &  0.86     &    1.32     & 0.82     & 0.30     \\
+75\%    &  1.74    &  0.71   &  0.11   &  0.01   &  0.05    &  0.12    &  0.05   &  0.07   &  0.04    &  0.13   &  0.02    &  5.55     &  0.93     &    1.51     & 0.93     & 0.45     \\
+95\%    &  2.07    &  0.98   &  0.17   &  0.03   &  0.06    &  0.16    &  0.05   &  0.08   &  0.05    &  0.14   &  0.02    &  7.95     &  1.03     &    1.87     & 1.10     & 0.64     \\
    \hline
 \end{tabular}
-\caption{ \label{tab:posterior_distrns} Posterior means and quantiles of the parameters.  }
+\caption{ \label{tab:complete_males_posterior_distrns} Posterior means and quantiles of the parameters given the dataset consisting only of bones from males for which we have both ribs and pelvic bones.}
 \end{table}
 
 The correlation matrix for changes along a branch at the posterior mean parameter values is 
@@ -589,10 +600,10 @@ The correlation matrix for changes along a branch at the posterior mean paramete
 % Wed Oct  9 08:22:41 2013
 \begin{align}
 \begin{bmatrix}
-   1.00 & 0.95 & 1.00 & 0.98 \\ 
-   0.95 & 1.00 & 0.94 & 0.97 \\ 
-   1.00 & 0.94 & 1.00 & 0.98 \\ 
-   0.98 & 0.97 & 0.98 & 1.00 \\ 
+   1.00 & 0.97 & 1.00 & 1.00 \\ 
+   0.97 & 1.00 & 0.97 & 0.98 \\ 
+   1.00 & 0.97 & 1.00 & 1.00 \\ 
+   1.00 & 0.98 & 1.00 & 1.00 \\ 
  \end{bmatrix}
 \quad \begin{matrix}
   \leftarrow \text{(length)} \\
@@ -601,15 +612,7 @@ The correlation matrix for changes along a branch at the posterior mean paramete
   \leftarrow \text{(pelvis)} 
 \end{matrix} .
 \end{align}
-The correlations are high, but this is due to shared correlations with length.
-We can remove this effect by calculating the correlation in trait changes
-after subtracting off the expected trait change based on body length change.
-(Since the trait changes are multivariate Gaussian, this is equivalent to the correlation matrix
-for the trait changes conditional on the length change,
-and does not depend on the value of the length change.)
-This can be thought of as the correlation in the residuals of trait changes after regressing out body length change,
-or as the correlation between trait changes on a hypothetical branch over which body length does not change.
-This results in following posterior mean correlation matrix:
+As above, removing the effects of length changes results in following posterior mean correlation matrix:
 %  xtable( cov2cor(species.subcovmat[c(1,2,4),c(1,2,4)]) )
 % latex table generated in R 3.0.2 by xtable 1.7-1 package
 % Wed Oct  9 07:22:41 2013
@@ -621,9 +624,9 @@ This results in following posterior mean correlation matrix:
  \end{bmatrix}
  =
 \begin{bmatrix}
-  1.00 & 0.07 & 0.67 \\ 
-  0.07 & 1.00 & 0.05 \\ 
-  0.67 & 0.05 & 1.00 \\ 
+   1.00 & 0.06 & 0.63 \\ 
+   0.06 & 1.00 & 0.04 \\ 
+   0.63 & 0.04 & 1.00 \\ 
  \end{bmatrix}
 \quad \begin{matrix}
   \leftarrow \text{(testes)} \\
@@ -632,10 +635,20 @@ This results in following posterior mean correlation matrix:
 \end{matrix}  .
 \end{align}
 
-We can furthermore postprocess the MCMC samples from posterior distribution
-to obtain marginal posterior distributions for the three correlations.
-These shown in figure X of the main text,
-and summary statistics are shown in table \ref{tab:posterior_cors}.
+As above, we obtain marginal posterior distributions for the three correlations.
+Summary statistics are shown in table \ref{complete_males_tab:posterior_cors},
+and distributions are shown in figure \ref{fig:males_complete_posterior_cors}.
+
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics{males-complete/posterior-correlations}
+  \end{center}
+  \caption{\textbf{Males, complete obs:} Marginal posterior distributions of correlations, with length fixed,
+  between changes in rib size, pelvic bone size, and testes size.
+  \label{fig:males_complete_posterior_cors}
+  }
+\end{figure}
 
 
 % Wed Oct  9 07:22:41 2013
@@ -656,8 +669,9 @@ and summary statistics are shown in table \ref{tab:posterior_cors}.
    \hline
 \end{tabular}
   \caption{Marginal posterior distributions of correlations, with length fixed,
-  between changes in rib size, pelvic bone size, and testes size.
-  \label{tab:posterior_cors}
+  between changes in rib size, pelvic bone size, and testes size,
+  given only data for bones in males for which we have both ribs and pelvic bones.
+  \label{tab:complete_males_posterior_cors}
 }
 \end{table}
 
@@ -668,11 +682,11 @@ at the posterior mean parameter values is
 % Wed Oct  9 08:27:10 2013
 \begin{align}
 \begin{bmatrix}
-   1.00 & 0.39 & 0.39 & 0.13 & 0.13 \\ 
-   0.39 & 1.00 & 0.57 & 0.05 & 0.05 \\ 
-   0.39 & 0.57 & 1.00 & 0.05 & 0.05 \\ 
-   0.13 & 0.05 & 0.05 & 1.00 & 0.96 \\ 
-   0.13 & 0.05 & 0.05 & 0.96 & 1.00 \\ 
+   1.00 & 0.41 & 0.41 & 0.11 & 0.11 \\ 
+   0.41 & 1.00 & 0.58 & 0.05 & 0.05 \\ 
+   0.41 & 0.58 & 1.00 & 0.05 & 0.05 \\ 
+   0.11 & 0.05 & 0.05 & 1.00 & 0.96 \\ 
+   0.11 & 0.05 & 0.05 & 0.96 & 1.00 \\ 
  \end{bmatrix}
 \quad \begin{matrix}
   \leftarrow \text{(length)} \\
@@ -682,9 +696,9 @@ at the posterior mean parameter values is
   \leftarrow \text{(left pelvis)} 
 \end{matrix}  .
 \end{align}
-It is interesting to note that there is more intraspecific variation in pelvic bones than ribs (table \ref{tab:posterior_distrns}, $\zeta_P > \zeta_R$),
-despite ribs being typically larger,
-but that the two pelvic bones of an individual tend to be more similar to eachother (relative to the species mean) than are the two ribs.
+
+
+%%%%%%
 
 \bibliography{correlated-traits}
 
