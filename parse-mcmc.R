@@ -1,4 +1,5 @@
 #!/usr/bin/R
+require(xtable)
 
 load("mcmc-setup.RData")
 load("thedata-and-covmatrices.Rdata")
@@ -95,8 +96,6 @@ save( pars, samples, file="results.RData" )
 ####
 # output tables
 
-require(xtable)
-
 xtable( pars[c(3,4,2,5,6), grep("delta",names(pars),invert=TRUE) ], digits=3 )
 xtable( pars[c(3,4,2,5,6), grep("delta",names(pars)) ], digits=3 )
 
@@ -118,14 +117,22 @@ xtable( cov2cor(sample.covmat)[c(1,3:6),c(1,3:6)], digits=2 )
 xtable( cov2cor(species.subcovmat[c(1,2,4),c(1,2,4)]) )
 
 # get posterior distribution on the correlations
-get.correlations <- function (par) {
+get.correlations <- function (par,just.species=TRUE) {
     species.params <- par[species.parindices]
     sample.params <- par[sample.parindices]
     species.transmat[species.Tind] <- species.params[species.Sind]
     sample.transmat[sample.Tind] <- sample.params[sample.Sind] * sample.Pcoef
     species.subcovmat <- as.matrix( tcrossprod(species.transmat[-1,-1]) )
     sample.subcovmat <- as.matrix( tcrossprod(sample.transmat[-1,-1]) )
-    return( cov2cor(species.subcovmat[c(1,2,4),c(1,2,4)]) )
+    # note: this is the same thing as the correlation matrix between the trait changes
+    #  conditioned on length change (or, with this effect regressed out)
+    #  ... note that as it is MVN the covariance matrix of the conditional distribution 
+    #      doesn't depend on the length change value we condition on
+    if (just.species) {
+        return( cov2cor(species.subcovmat[c(1,2,4),c(1,2,4)]) )
+    } else {
+        return( list( species.subcovmat=species.subcovmat, sample.subcovmat=sample.subcovmat ) )
+    }
 }
 posterior.cors <- apply( samples, 1, get.correlations )
 dim( posterior.cors ) <- c(3,3,nrow(samples))
