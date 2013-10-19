@@ -3,6 +3,16 @@
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage[sort&compress,numbers,round]{natbib}
+\usepackage{titlesec} % adjust section heading style
+\usepackage{endfloat} % put floats at end
+% \usepackage{pdflscape}  % make pages landscape
+
+\titleformat{\section}
+  {\normalfont\bf\large}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\slshape}{\thesection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalfont\slshape}{\thesection}{1em}{}
 
 \renewcommand{\P}{\mathbb{P}}
 \newcommand{\E}{\mathbb{E}}
@@ -33,6 +43,14 @@
 \begin{document}
 
 \appendix
+\renewcommand{\thefigure}{S\arabic{figure}}
+\setcounter{figure}{0}
+\renewcommand{\thetable}{S\arabic{table}}
+\setcounter{table}{0}
+
+
+\noindent
+\textbf{Supplementary Materials:}
 
 \section*{Materials and Methods}
 
@@ -468,18 +486,18 @@ This results in following posterior mean correlation matrix:
 
 We can furthermore postprocess the MCMC samples from posterior distribution
 to obtain marginal posterior distributions for the three correlations.
-These shown in figure \ref{fig:males_poseterior_cors} (and in the main text);
+These shown in figure \ref{fig:males_posterior_cors} (and in the main text);
 and summary statistics are shown in table \ref{tab:posterior_cors}.
 
-\begin{figure}[ht]
-  \begin{center}
-    \includegraphics{../males/posterior-correlations}
-  \end{center}
-  \caption{Marginal posterior distributions of correlations, with length fixed,
-  between changes in rib size, pelvic bone size, and testes size.
-  \label{fig:males_posterior_cors}
-  }
-\end{figure}
+% \begin{figure}[ht]
+%   \begin{center}
+%     \includegraphics{../males/posterior-correlations}
+%   \end{center}
+%   \caption{Marginal posterior distributions of correlations, with length fixed,
+%   between changes in rib size, pelvic bone size, and testes size.
+%   \label{fig:males_posterior_cors}
+%   }
+% \end{figure}
 
 
 
@@ -599,19 +617,19 @@ As above, removing the effects of length changes results in following posterior 
 
 We can furthermore postprocess the MCMC samples from posterior distribution
 to obtain marginal posterior distributions for the three correlations.
-These are shown in figure \ref{fig:fig:female_posterior_cors},
+These are shown in figure \ref{fig:female_posterior_cors},
 and summary statistics are shown in table \ref{tab:females_posterior_cors}.
 
 
-\begin{figure}[ht]
-  \begin{center}
-    \includegraphics{../females/posterior-correlations}
-  \end{center}
-  \caption{\textbf{Females:} Marginal posterior distributions of correlations, with length fixed,
-  between changes in rib size, pelvic bone size, and testes size.
-  \label{fig:female_posterior_cors}
-  }
-\end{figure}
+% \begin{figure}[ht]
+%   \begin{center}
+%     \includegraphics{../females/posterior-correlations}
+%   \end{center}
+%   \caption{\textbf{Females:} Marginal posterior distributions of correlations, with length fixed,
+%   between changes in rib size, pelvic bone size, and testes size.
+%   \label{fig:female_posterior_cors}
+%   }
+% \end{figure}
 
 
 % Wed Oct  9 07:22:41 2013
@@ -727,19 +745,19 @@ As above, removing the effects of length changes results in following posterior 
 \end{align}
 
 As above, we obtain marginal posterior distributions for the three correlations.
-Summary statistics are shown in table \ref{complete_males_tab:posterior_cors},
+Summary statistics are shown in table \ref{tab:complete_males_posterior_cors},
 and distributions are shown in figure \ref{fig:males_complete_posterior_cors}.
 
 
-\begin{figure}[ht]
-  \begin{center}
-    \includegraphics{../males-complete/posterior-correlations}
-  \end{center}
-  \caption{\textbf{Males, complete observations:} Marginal posterior distributions of correlations, with length fixed,
-  between changes in rib size, pelvic bone size, and testes size.
-  \label{fig:males_complete_posterior_cors}
-  }
-\end{figure}
+% \begin{figure}[ht]
+%   \begin{center}
+%     \includegraphics{../males-complete/posterior-correlations}
+%   \end{center}
+%   \caption{\textbf{Males, complete observations:} Marginal posterior distributions of correlations, with length fixed,
+%   between changes in rib size, pelvic bone size, and testes size.
+%   \label{fig:males_complete_posterior_cors}
+%   }
+% \end{figure}
 
 
 % Wed Oct  9 07:22:41 2013
@@ -812,11 +830,14 @@ Table 2 of \citep{brownell1986}, and analyzed in the phylogenetic framework of \
 \end{figure}
 
 
+% \begin{landscape}
+
 \begin{figure}
 \begin{center}
   \includegraphics[width=\textwidth]{S2}
 \end{center}
 \caption{
+\small
 \textbf{Method for transforming and defining landmarks on pelvic bones.} Left panel: the two furthest points apart (red spheres 1 and 3) 
 are found from the convex hull, and a $z$-axis is drawn (red line). The point furthest away from that $z$‐axis is found (red sphere 2). All points are then transformed 
 so that point 1=0,0,0, point 2=$+x,0,+z$, and point 3=$0,0,+z$. 60 evenly-‐spaced slices of points are sampled along the z axis, where each slice thickness is 0.5\% the 
@@ -827,8 +848,10 @@ lines (green point) and is named according to its slice (i.e., P30) and its angl
 completeness. All green points correspond to the green points shown in Figure 1 of the manuscript. All other points are discarded. 
 }
 \end{figure}
+% \end{landscape}
 
  
+% \begin{landscape}
 \begin{figure}
 \begin{center}
   \includegraphics[width=\textwidth]{S3}
@@ -848,6 +871,7 @@ All green spheres are named as described in Supplementary Figure 1, and correspo
 spheres are included in downstream analyses. 
 }
 \end{figure}
+% \end{landscape}
 
  
 \begin{figure}
@@ -889,19 +913,61 @@ procedure in the R package APE \citep{paradis2004}.
 \end{figure}
 
 
-\begin{figure}
-\begin{center}
-  \includegraphics[width=\textwidth]{S7}
-\end{center}
-\caption{
-\textbf{As observed for males (Figure 3 of manuscript), the marginal posterior
+% \begin{figure}
+% \begin{center}
+%   \includegraphics[width=\textwidth]{S7}
+% \end{center}
+% \caption{
+% \textbf{As observed for males (Figure 3 of manuscript), the marginal posterior
+% distributions of correlations between changes in female pelvic bone size was significantly
+% correlated with shifts towards larger testis size.} Under a phylogenetic model of correlated trait
+% evolution (supplementary methods), the size of the pelvic bone is positively correlated with shifts
+% towards larger testes after accounting for body size evolution (red), while rib bone size does not show
+% this correlation (gray). Only sexually mature females were included in this analysis.
+% }
+% \end{figure}
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics{../males/posterior-correlations}
+  \end{center}
+  \caption{\textbf{Marginal posterior distributions of correlations}, 
+  with length fixed, between changes in rib size, pelvic bone size, and testes size.
+  Rib-testes and pelvis-testes correlations were also displayed in figure 3 of the manuscript.
+  \label{fig:males_posterior_cors}
+  }
+\end{figure}
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics{../females/posterior-correlations}
+  \end{center}
+  \caption{
+  \textbf{As observed for males (Figure \ref{fig:males_posterior_cors} and figure 3 of manuscript), the marginal posterior
 distributions of correlations between changes in female pelvic bone size was significantly
 correlated with shifts towards larger testis size.} Under a phylogenetic model of correlated trait
 evolution (supplementary methods), the size of the pelvic bone is positively correlated with shifts
 towards larger testes after accounting for body size evolution (red), while rib bone size does not show
 this correlation (gray). Only sexually mature females were included in this analysis.
-}
+  between changes in rib size, pelvic bone size, and testes size.
+  \label{fig:female_posterior_cors}
+  }
 \end{figure}
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics{../males-complete/posterior-correlations}
+  \end{center}
+  \caption{
+  \textbf{The marginal posterior distributions of correlation coefficients} 
+  do not change when restricting to bones from adult male cetaceans for which we have both data for both ribs and pelvic bones,
+  which excludes baleen whales.  (compare to figure \ref{fig:males_posterior_cors}).
+  \label{fig:males_complete_posterior_cors}
+  }
+\end{figure}
+
+
+
 
 \bibliography{correlated-traits}
 
