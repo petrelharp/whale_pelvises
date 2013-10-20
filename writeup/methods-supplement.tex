@@ -5,7 +5,10 @@
 \usepackage[sort&compress,numbers,round]{natbib}
 \usepackage{titlesec} % adjust section heading style
 \usepackage[nolists,nomarkers]{endfloat} % put floats at end
-% \usepackage{pdflscape}  % make pages landscape
+\usepackage{lscape}  % make pages landscape
+\usepackage{longtable} % long, er, tables
+
+\DeclareDelayedFloatFlavour*{longtable}{table}
 
 \titleformat{\section}
   {\normalfont\bf\large}{\thesection}{1em}{}
@@ -46,16 +49,9 @@
 \renewcommand{\thefigure}{S\arabic{figure}}
 \setcounter{figure}{0}
 \renewcommand{\thetable}{S\arabic{table}}
-\setcounter{table}{2}
+\setcounter{table}{0}
 
-\begin{table}
-  placeholder for table S1
-\end{table}
-
-\begin{table}
-  placeholder for table S2
-\end{table}
-
+\input{supplementary-tables}
 
 \noindent
 \textbf{Supplementary Materials:}
@@ -822,7 +818,12 @@ at the posterior mean parameter values is
 %%%%%%
 \clearpage
 
-\section*{Supplementary figures}
+\section*{Supplementary figures and tables}
+
+\begin{table}
+  placeholder for table S2
+\end{table}
+
 
 \begin{figure}
 \begin{center}
