@@ -1,19 +1,134 @@
-\documentclass{article}
+\documentclass[12pt]{article}
 \usepackage{fullpage}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
-\usepackage{natbib}
+\usepackage[sort&compress,numbers,round]{natbib}
+\usepackage{titlesec} % adjust section heading style
+\usepackage[nolists,nomarkers]{endfloat} % put floats at end
+% \usepackage{pdflscape}  % make pages landscape
+
+\titleformat{\section}
+  {\normalfont\bf\large}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\slshape}{\thesection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalfont\slshape}{\thesection}{1em}{}
 
 \renewcommand{\P}{\mathbb{P}}
 \newcommand{\E}{\mathbb{E}}
 \DeclareMathOperator{\cov}{cov}
 \DeclareMathOperator{\var}{var}
 
-\bibliographystyle{plainnat}
+\bibliographystyle{unsrtnat}
+
+\topmargin 0.0cm
+\oddsidemargin 0.2cm
+\textwidth 16cm 
+\textheight 21cm
+\footskip 1.0cm
+
+
+% Bold the 'Figure #' in the caption and separate it with a period
+% Captions will be left justified
+\usepackage[labelfont=bf,labelsep=period,justification=raggedright]{caption}
+
+% \usepackage{hyperref}
+\newcommand{\url}[1]{\texttt{#1}}
+\newcommand{\href}[2]{#2 (\texttt{#1})}
+
+
+\usepackage{times}
+
 
 \begin{document}
 
-\section{Correlated trait evolution}
+\appendix
+\renewcommand{\thefigure}{S\arabic{figure}}
+\setcounter{figure}{0}
+\renewcommand{\thetable}{S\arabic{table}}
+\setcounter{table}{2}
+
+\begin{table}
+  placeholder for table S1
+\end{table}
+
+\begin{table}
+  placeholder for table S2
+\end{table}
+
+
+\noindent
+\textbf{Supplementary Materials:}
+
+% \nocite{adams2012,baker1985,best2001,best1989,bloodworth2008,bookstein1997,brownell1986,burns1993,caldwell1971,desportes1993,goodall1994,harrison1972,hohn1985,jefferson2008,kasuya1999,mcgowen2009,mead1982,mitteroecker2009,miyazaki1977,miyazaki1994,omura1955,pagel1999,paradis2004,perrin1994,perrin1984,perry1999,read1999,ross1979,ruiz1993,tomilin1967,wells1999,zelditch2004}
+\nocite{uhen2010,perrin2013,schulte1918,pabst1998,meek1918,mate2005,brownell1986,fitzpatrick2012,ramm2005,firman2008,kenagy1986,moller1989,harcourt1981,moller1991,stockley1997,gage1994,hosken2001,danilewicz2004,heyning1994,adams2012,vanbree1973,andersen1992,perrin1975,eberhard1985,arnqvist1998}
+
+\section*{Materials and Methods}
+
+All original data and analytical code have been deposited in the Dryad Digital
+Repository. \href{http://dx.doi.org/10.5061/dryad.[NNNN]}
+
+\subsection*{Re-analysis of penis length data}
+
+Brownell and Ralls \citep{brownell1986} published data on penis length, body length, and testis size from
+10 baleen whale species. We reanalyzed those data in a generalized-least squares,
+using the GLS procedure in the R package NLME, with a correlation structure that
+accounts for phylogenetic relatedness \citep{pagel1999}, using the CORPAGEL procedure in the R
+package APE \citep{paradis2004}. We first calculated the phylogenetic residuals of log penis length and
+log testis weight each regressed onto the log of body length. Under the same
+phylogenetically controlled generalized least-square model, residual penis length was
+significantly correlated to residual testis weight ($P<10^{-10}$). A generalized correlation
+coefficient was then calculated (Dryad Digital Repository
+\href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
+
+\subsection*{Specimens}
+
+All bones were scanned with a NextEngine 3-dimensional Laser Scanner, returning tens
+of thousands of x,y,z points per bone. A pipeline was developed to sub-sample 962
+evenly spaced and ordered points. The pipeline is graphically illustrated for pelvic
+bones (Fig. S1) and ribs (Fig. S2). All original laser scans and the associated code for
+imposing landmarks has been made available on the Dryad Digital Repository
+\href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
+
+\subsection*{Size and Shape variation}
+
+Centroid size, the square root of the sum of squared distances of a set of the 962
+landmarks from their centroid, was taken as the measurement of size \citep{zelditch2004}.
+
+Shape variation was assessed using a Generalized Procrustes Analysis modified
+from algorithms previously developed in Geometric Morphometrics \citep{bookstein1997,mitteroecker2009}. All shape
+analyses were performed using the GPAGEN routine in the R package GEOMORPH \citep{adams2012},
+allowing corresponding points to “slide” for improved fitting. This method translates all
+specimens to the origin, scales them to unit-centroid size, and optimally rotates them
+using a least-squares criterion until the coordinates of corresponding landmarks align as
+closely as possible. To improve alignment and correct for the lack of true landmarks,
+we allowed our semi-landmarks to “slide” along their tangent directions during this
+superimposition (routine GPAGEN in R package GEOMORPH 20). The sum of the
+distances between corresponding landmarks is then taken as the shape distance
+between two bones. Approximately 50 replicate scans of 20 different bones were
+analyzed: in all cases, the shape differences calculated between replicate scans was
+less than 5\% of the average pairwise shape difference among all bones. Pelvic and rib
+bones were analyzed separately.
+
+\subsection*{Phylogenetic modeling}
+
+We used a phylogenetic model to test for correlated evolution of testis size and bone
+centroid size. The sample-specific morphological data (body length, left and right
+centroid size for both ribs and pelvic bones) were placed on a cetacean phylogeny
+constructed from 45 nuclear loci, transposons, and mitochondrial genomes \citep{mcgowen2009} (supplementary tables S1-S2).  The procedure is described in detail in the next section.
+
+To test whether bone shape evolution was correlated with differences in testis
+size, we first identified 9 independent species pairs for which both ribs and pelvic bones
+were sampled from adult males. We tested whether the average pairwise distance
+between bones of each species was correlated with the absolute value of the difference
+in testis residuals calculated as above. All code for running these analyses have been
+made available on the Dryad Digital Repository
+\href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
+
+
+
+%%%%%%%%%%%
+\subsection*{Correlated trait evolution}
 
 It is clear that cetacean testes size, rib bone size, and pelvic bone size
 should evolve in a correlated manner over evolutionary time
@@ -82,7 +197,7 @@ We write these four traits as
 \end{align}
 and now need to specify our parameterization of the covariance across each type of branch.
 
-\subsection{Species differences}
+\subsubsection*{Species differences}
 
 First consider the difference of two species means across an internal (species) edge of length $t$ in the phylogeny.
 Writing $X_0=(L_0,T_0,R^R_0,R^L_0,P^R_0,P^L_0)$ for the mean trait values of the ancestor,
@@ -118,7 +233,7 @@ the condition that $\Sigma_t$ be nonnegative definate;
 the constraints on $A_t$ are only that the diagonal elements are positive \citep{pourahmadi1999joint}.
 
 %
-\subsection{Individual variation}
+\subsubsection*{Individual variation}
 
 We use a similar parameterization for within-species and within-individual variation.
 If the species mean trait values are $X_S = (L_S,T_S,R^R_S,R^L_S,P^R_S,P^L_S)$ 
@@ -169,7 +284,7 @@ but we did not see evidence that this was necessary.
 
 
 %%
-\section{Mean-centering the data}
+\subsubsection*{Mean-centering the data}
 
 Above we have given a complete model for correlated trait evolution along a phylogeny,
 including within-species variation,
@@ -205,7 +320,7 @@ as that should be fairly close to the minimum-variance estimator of the root val
 Note that the columns of $M$ are \emph{not} identical,
 due to the irregular pattern of missing data.
 
-\section{Likelihood computation}
+\subsubsection*{Likelihood computation}
 
 So far, we have given the covariance matrices for differences in trait values across each edge ($dX_e$ in the notation above),
 have assumed that these values are independent for each edge,
@@ -245,7 +360,7 @@ The first step is simplified by precomputation of appropriate matrices to place 
 
 
 %%
-\section{Priors and Bayesian methods}
+\subsubsection*{Priors and Bayesian methods}
 
 Now that we have an easily computible likelihood function,
 we put priors on each of the parameters,
@@ -281,7 +396,7 @@ and the prior standard deviations of $\zeta_R$, $\omega_R$, $\zeta_P$, $\omega_P
 
 %%%%%
 
-\section{Results of the MCMC sampler}
+\subsubsection*{Results of the MCMC sampler}
 
 To carefully check that our results were not affected by patterns of missing data,
 we ran an MCMC sampler to estimate the posterior distribution of the above parameters
@@ -301,7 +416,12 @@ In each case, the MCMC sampler was run for a total of 500,000 iterations,
 the first 20,000 of which were discarded as burn-in,
 at which point it was apparent from trace plots that convergence had been reached.
 
-\subsection{Full dataset for males}
+
+\section*{Results}
+
+Here we present additional results from the analysis of correlation trait evolution on the cetacean phylogeny described above.
+
+\subsection*{Full dataset for males}
 
 The summary statistics of the estimated posterior distributions 
 for the parameters
@@ -380,15 +500,15 @@ to obtain marginal posterior distributions for the three correlations.
 These are shown in figure \ref{fig:males_posterior_cors} (and in the main text);
 and summary statistics are shown in table \ref{tab:posterior_cors}.
 
-\begin{figure}[ht]
-  \begin{center}
-    \includegraphics{males/posterior-correlations}
-  \end{center}
-  \caption{Marginal posterior distributions of correlations, with length fixed,
-  between changes in rib size, pelvic bone size, and testes size.
-  \label{fig:males_posterior_cors}
-  }
-\end{figure}
+% \begin{figure}[ht]
+%   \begin{center}
+%     \includegraphics{../males/posterior-correlations}
+%   \end{center}
+%   \caption{Marginal posterior distributions of correlations, with length fixed,
+%   between changes in rib size, pelvic bone size, and testes size.
+%   \label{fig:males_posterior_cors}
+%   }
+% \end{figure}
 
 
 
@@ -440,7 +560,7 @@ It is interesting to note that there is more intraspecific variation in pelvic b
 despite ribs being typically larger,
 but that the two pelvic bones of an individual tend to be more similar to eachother (relative to the species mean) than are the two ribs.
 
-\subsection{Full dataset for females}
+\subsection*{Full dataset for females}
 
 As above, the summary statistics of the estimated posterior distributions 
 for the parameters
@@ -508,19 +628,19 @@ As above, removing the effects of length changes results in following posterior 
 
 We can furthermore postprocess the MCMC samples from posterior distribution
 to obtain marginal posterior distributions for the three correlations.
-These are shown in figure \ref{fig:fig:female_posterior_cors},
+These are shown in figure \ref{fig:female_posterior_cors},
 and summary statistics are shown in table \ref{tab:females_posterior_cors}.
 
 
-\begin{figure}[ht]
-  \begin{center}
-    \includegraphics{females/posterior-correlations}
-  \end{center}
-  \caption{\textbf{Females:} Marginal posterior distributions of correlations, with length fixed,
-  between changes in rib size, pelvic bone size, and testes size.
-  \label{fig:female_posterior_cors}
-  }
-\end{figure}
+% \begin{figure}[ht]
+%   \begin{center}
+%     \includegraphics{../females/posterior-correlations}
+%   \end{center}
+%   \caption{\textbf{Females:} Marginal posterior distributions of correlations, with length fixed,
+%   between changes in rib size, pelvic bone size, and testes size.
+%   \label{fig:female_posterior_cors}
+%   }
+% \end{figure}
 
 
 % Wed Oct  9 07:22:41 2013
@@ -570,7 +690,7 @@ at the posterior mean parameter values is
 
 
 %%
-\subsection{Full dataset for males}
+\subsection*{Males, complete data only}
 
 The summary statistics of the estimated posterior distributions 
 for the parameters
@@ -636,19 +756,19 @@ As above, removing the effects of length changes results in following posterior 
 \end{align}
 
 As above, we obtain marginal posterior distributions for the three correlations.
-Summary statistics are shown in table \ref{complete_males_tab:posterior_cors},
+Summary statistics are shown in table \ref{tab:complete_males_posterior_cors},
 and distributions are shown in figure \ref{fig:males_complete_posterior_cors}.
 
 
-\begin{figure}[ht]
-  \begin{center}
-    \includegraphics{males-complete/posterior-correlations}
-  \end{center}
-  \caption{\textbf{Males, complete obs:} Marginal posterior distributions of correlations, with length fixed,
-  between changes in rib size, pelvic bone size, and testes size.
-  \label{fig:males_complete_posterior_cors}
-  }
-\end{figure}
+% \begin{figure}[ht]
+%   \begin{center}
+%     \includegraphics{../males-complete/posterior-correlations}
+%   \end{center}
+%   \caption{\textbf{Males, complete observations:} Marginal posterior distributions of correlations, with length fixed,
+%   between changes in rib size, pelvic bone size, and testes size.
+%   \label{fig:males_complete_posterior_cors}
+%   }
+% \end{figure}
 
 
 % Wed Oct  9 07:22:41 2013
@@ -698,7 +818,168 @@ at the posterior mean parameter values is
 \end{align}
 
 
+
 %%%%%%
+\clearpage
+
+\section*{Supplementary figures}
+
+\begin{figure}
+\begin{center}
+  \includegraphics[width=\textwidth]{S1}
+\end{center}
+\caption{
+\textbf{Whale species with relatively large testes have
+relatively long penises.} Two separate regression, each drawn using the GLS
+procedure in the R package NLME and a correlation structure accounting for
+phylogenetic relatedness \citep{pagel1999} using the CORPAGEL procedure in the R package APE \citep{paradis2004},
+were drawn to derive the residuals of penis length onto body mass, and testis mass
+onto body mass. A third phylogenetic regression (pictured here) was used to test the
+correlation of residual penis length with residual testis mass. Raw data taken from
+Table 2 of \citep{brownell1986}, and analyzed in the phylogenetic framework of \citep{mcgowen2009}
+}
+\end{figure}
+
+
+% \begin{landscape}
+
+\begin{figure}
+\begin{center}
+  \includegraphics[width=\textwidth]{S2}
+\end{center}
+\caption{
+\small
+\textbf{Method for transforming and defining landmarks on pelvic bones.} Left panel: the two furthest points apart (red spheres 1 and 3) 
+are found from the convex hull, and a $z$-axis is drawn (red line). The point furthest away from that $z$‐axis is found (red sphere 2). All points are then transformed 
+so that point 1=0,0,0, point 2=$+x,0,+z$, and point 3=$0,0,+z$. 60 evenly-‐spaced slices of points are sampled along the z axis, where each slice thickness is 0.5\% the 
+length of the $z$‐axis. Right panel: The 30th slice of points (black spheres). The midpoint of the convex hull is calculated (green point in middle). Then, moving in 
+increments of 22.5 degrees from the $x$‐axis (only the first increment shown in detail), we find the two closest points straddling the line connecting the midpoint 
+(two points shown in blue, one slightly obscured) and draw a line connecting them (blue line). A landmark is defined as the intersection of the black and blue 
+lines (green point) and is named according to its slice (i.e., P30) and its angle (i.e., 22.5). Only P30\_22.5 is shown in detail: the other green points are shown for 
+completeness. All green points correspond to the green points shown in Figure 1 of the manuscript. All other points are discarded. 
+}
+\end{figure}
+% \end{landscape}
+
+ 
+% \begin{landscape}
+\begin{figure}
+\begin{center}
+  \includegraphics[width=\textwidth]{S3}
+\end{center}
+\caption{
+\textbf{Method for transforming and defining landmarks on rib bones.} Left panel: All points are transformed according to three points, as 
+defined in Supplementary Figure 1. A fulcrum (black sphere) is placed at 1/3 the length of the $z$‐axis, and the bone scan is divided into 60 slices of equal angle 
+from that fulcrum. The 30th slice (black lines and black points) is shown as an example. Right panel: The 30th slice of points in detail. Small black points are from 
+the original scan. The centroid of the convex hull of the 20\% most lateral points (blue sphere to left) and 20\% most medial points (blue sphere to right) points is 
+used to draw a line. We identify the lateral/medial point closest to that line (via shortest distance), then project the point to fall exactly on the line 
+(lateral/medial green spheres). The line connecting the lateral and medial green spheres is divided evenly (black spheres) and lines perpendicular to the black 
+spheres computed. All points from the original scan within a certain distance to the perpendicular lines are found, projected onto the perpendicular line (not 
+shown) and the midpoint computed (orange spheres on perpendicular lines). The orange sphere is then projected onto the plane parallel to the figure to find a 
+third point with which to draw a plane (indicated by orange triangles). Those orange triangles allow us to divide the bone into anterior and posterior halves and 
+account for complex curvatures. The corresponding green spheres on the perpidinicular lines are determined exactly like the lateral and medial green spheres. 
+All green spheres are named as described in Supplementary Figure 1, and correspond to the green spheres shown in Figure 1 of the manuscript. Only the green 
+spheres are included in downstream analyses. 
+}
+\end{figure}
+% \end{landscape}
+
+ 
+\begin{figure}
+\begin{center}
+  \includegraphics[width=\textwidth]{S4}
+\end{center}
+\caption{
+\textbf{The regression of maximal recorded testis size onto maximal
+recorded body mass.} The regression was drawn using the GLS procedure in the R package NLME,
+with a correlation structure that accounts for phylogenetic relatedness \citep{pagel1999}, using the CORPAGEL
+procedure in the R package APE \citep{paradis2004}. The phylogenetic residuals were used as a measure of relative
+testis size.
+}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+  \includegraphics[width=\textwidth]{S5}
+\end{center}
+\caption{
+\textbf{Centroid size onto max body mass.} For each species (sexually mature
+males only), an average centroid size was calculated, then regressed onto body mass using the GLS
+procedure in the R package NLME, with a correlation structure that accounts for phylogenetic
+relatedness \citep{pagel1999}, using the CORPAGEL procedure in the R package APE \citep{paradis2004}. The phylogenetic residuals
+of centroid size were correlated with the phylogenetic residuals of testis size (supplementary Fig. S6).
+}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+  \includegraphics[width=\textwidth]{S6}
+\end{center}
+\caption{
+\textbf{The residuals of centroid size were positively correlated with the
+residuals of testis size.} The regression was drawn using the GLS procedure in the R package NLME,
+with a correlation structure that accounts for phylogenetic relatedness \citep{pagel1999}, using the CORPAGEL
+procedure in the R package APE \citep{paradis2004}.
+}
+\end{figure}
+
+
+% \begin{figure}
+% \begin{center}
+%   \includegraphics[width=\textwidth]{S7}
+% \end{center}
+% \caption{
+% \textbf{As observed for males (Figure 3 of manuscript), the marginal posterior
+% distributions of correlations between changes in female pelvic bone size was significantly
+% correlated with shifts towards larger testis size.} Under a phylogenetic model of correlated trait
+% evolution (supplementary methods), the size of the pelvic bone is positively correlated with shifts
+% towards larger testes after accounting for body size evolution (red), while rib bone size does not show
+% this correlation (gray). Only sexually mature females were included in this analysis.
+% }
+% \end{figure}
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics{../males/posterior-correlations}
+  \end{center}
+  \caption{\textbf{Marginal posterior distributions of correlations}, 
+  with length fixed, between changes in rib size, pelvic bone size, and testes size.
+  Rib-testes and pelvis-testes correlations were also displayed in figure 3 of the manuscript.
+  \label{fig:males_posterior_cors}
+  }
+\end{figure}
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics{../females/posterior-correlations}
+  \end{center}
+  \caption{
+  \textbf{As observed for males (Figure \ref{fig:males_posterior_cors} and figure 3 of manuscript), the marginal posterior
+distributions of correlations between changes in female pelvic bone size was significantly
+correlated with shifts towards larger testis size.} Under a phylogenetic model of correlated trait
+evolution (supplementary methods), the size of the pelvic bone is positively correlated with shifts
+towards larger testes after accounting for body size evolution (red), while rib bone size does not show
+this correlation (gray). Only sexually mature females were included in this analysis.
+  between changes in rib size, pelvic bone size, and testes size.
+  \label{fig:female_posterior_cors}
+  }
+\end{figure}
+
+\begin{figure}[ht]
+  \begin{center}
+    \includegraphics{../males-complete/posterior-correlations}
+  \end{center}
+  \caption{
+  \textbf{The marginal posterior distributions of correlation coefficients} 
+  do not change when restricting to bones from adult male cetaceans for which we have both data for both ribs and pelvic bones,
+  which excludes baleen whales.  (compare to figure \ref{fig:males_posterior_cors}).
+  \label{fig:males_complete_posterior_cors}
+  }
+\end{figure}
+
+
+
+\processdelayedfloats
 
 \bibliography{correlated-traits}
 
