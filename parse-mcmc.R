@@ -145,6 +145,13 @@ hist( posterior.cors[2,3,], breaks=30, col=adjustcolor('blue',.5), add=TRUE, fre
 legend("topright", fill=adjustcolor(c('black','red','blue'),.5), legend=c("testes-ribs", "testes-pelvis", "ribs-pelvis"), title="correlations" )
 dev.off()
 
+pdf(file="posterior-correlations-separate.pdf", width=3.5, height=2.5, pointsize=10)
+par(mar=c(2,4,1,1)+.1)
+hist( posterior.cors[1,2,], breaks=30, xlim=c(-1,1), ylim=c(0, 3.5), col=adjustcolor('black',.5), main='testes-ribs correlation', ylab="posterior density", freq=FALSE )
+hist( posterior.cors[1,3,], breaks=30, xlim=c(-1,1), ylim=c(0, 3.5), col=adjustcolor('black',.5), main='testes-pelvis correlation', ylab="posterior density", freq=FALSE )
+hist( posterior.cors[2,3,], breaks=30, xlim=c(-1,1), ylim=c(0, 3.5), col=adjustcolor('black',.5), main='ribs-pelvis correlation', ylab="posterior density", freq=FALSE )
+dev.off()
+
 cors.df <-  data.frame( 'testes-ribs'=posterior.cors[1,2,], 'testes-pelvis'=posterior.cors[1,3,], 'ribs-pelvis'=posterior.cors[2,3,] )
 
 # posterior distribution of correlations
