@@ -114,7 +114,7 @@ pdf(file="figures/shapediff-by-phylodist.pdf",width=10,height=8,pointsize=10)
 
 layout(matrix(c(1,2,3,3),nrow=2),widths=c(5,1))
 for (thisbone in c("pelvic","rib")) {
-    with( subset(shapediff,bone1==bone2&bone1==thisbone), plot( shape_difference ~ phylodist, col=genuscolors[genus1], main=thisbone ) )
+    with( subset(shapediff,bone1==bone2&bone1==thisbone), plot( shape_difference ~ phylodist, col=genuscolors[genus1], main=thisbone, xlim=c(0,75) ) )
 }
 opar <- par(mar=c(5,0,4,0)+.1)
 plot(0,type='n',xaxt='n',yaxt='n',xlab='',ylab='')
@@ -123,7 +123,7 @@ par(opar)
 
 layout(matrix(c(1,2,3,3),nrow=2),widths=c(5,1))
 for (thisbone in c("pelvic","rib")) {
-    with( subset(shapediff,bone1==bone2&bone1==thisbone), plot( shape_difference ~ phylodist, col=genuscolors[genus1], xlim=c(0,.14), main=paste(thisbone,"zoomed in") ) )
+    with( subset(shapediff,bone1==bone2&bone1==thisbone), plot( shape_difference ~ phylodist, col=genuscolors[genus1], main=paste(thisbone,"zoomed in"), xlim=c(0,20) ) )
 }
 opar <- par(mar=c(5,0,4,0)+.1)
 plot(0,type='n',xaxt='n',yaxt='n',xlab='',ylab='')
