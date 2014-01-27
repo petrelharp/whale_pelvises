@@ -6,6 +6,19 @@ species <- read.table("52_sexual_dimorphism.out", header=TRUE)
 # cat morphology_table_2013_June_27.txt | cut -f 1-7 -d '    ' > morphology_table_2013_June_27-plr.txt
 morphology <- read.table("morphology_table_2013_June_27-plr.txt", sep='\t', header=TRUE)
 
+# EXCLUDE PROBLEM BONE:
+problems <- list( list(specimen='USNM_504107', bone='rib', side='right') )
+for (x in problems) {
+    bones <- subset( bones, ! ( (specimen == x$specimen) & (bone == x$bone) & (side == x$side) ) )
+}
+tmp.bones <- with( bones, paste( specimen, bone, side ) )
+tmp.shape1 <- with( shapediff, paste( specimen1, bone1, side1 ) )
+tmp.shape2 <- with( shapediff, paste( specimen2, bone2, side2 ) )
+# setdiff( tmp.bones, c(tmp.shape1,tmp.shape2) )
+grep( "REP", setdiff( c(tmp.shape1,tmp.shape2), tmp.bones ), invert=TRUE, value=TRUE )
+shapediff <- subset( shapediff, ( tmp.shape1 %in% tmp.bones) & ( tmp.shape2 %in% tmp.bones) )
+
+
 allspecies <- sort( unique( c( levels(bones$species), levels(species$species) ) ) )
 bones$species <- factor( bones$species, levels=allspecies )
 tmp <- data.frame( 
@@ -92,13 +105,15 @@ dev.off()
 if (FALSE) {
     shapediff$genusadj <- genusadj
 
-    problems <- c("LACM_97405","USNM_572775")
+    layout(t(1:2))
+    for (thisbone in c("rib","pelvic")) {
+        problems <- c("LACM_97405","USNM_572775")
 
-    plot( shape_difference ~ I(genusadj + as.numeric(comparison)), pch=20, col=adjustcolor(c("red","black"),.4)[1+(side1==side2)], data=shapediff, subset=(bone1==bone2 & bone1==thisbone) )
-    points( shape_difference ~ I(genusadj + as.numeric(comparison)), pch=20, col='green', data=shapediff, subset=(bone1==bone2 & bone1==thisbone & (specimen1%in%problems | specimen2%in%problems) ) )
-    with( subset(shapediff, (bone1==bone2 & bone1==thisbone)), identify( genusadj + as.numeric(comparison), shape_difference, labels=paste(specimen1,specimen2) ) )
+        plot( shape_difference ~ I(genusadj + as.numeric(comparison)), pch=20, col=adjustcolor(c("black",'red'),.4)[1+(specimen1%in%problems | specimen2%in%problems)], data=shapediff, subset=(bone1==bone2 & bone1==thisbone) )
+        with( subset(shapediff, (bone1==bone2 & bone1==thisbone)), identify( genusadj + as.numeric(comparison), shape_difference, labels=paste(specimen1,side1,specimen2,side2) ) )
+    }
 
-    # without problems
+    # without problem bones
     plot( shape_difference ~ I(genusadj + as.numeric(comparison)), pch=20, col=adjustcolor(c("red","black"),.4)[1+(side1==side2)], data=shapediff, subset=(bone1==bone2 & bone1==thisbone & ! ( specimen1 %in% problems | specimen2 %in% problems ) ) )
 
     # who tends to have the most diffs with others?
