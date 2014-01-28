@@ -71,6 +71,15 @@ genuscolors <- adjustcolor( rainbow(nlevels(bones$genus)+5)[1:nlevels(bones$genu
 genusadj <- (-.5) + (1/(nlevels(bones$genus)+4))*as.numeric(shapediff$genus1)
 genusadj2 <- (-.5) + (1/(nlevels(bones$genus)+4))*as.numeric(shapediff$genus2)
 
+layout(t(1:2))
+for (thisbone in c("pelvic","rib")) {
+    with( subset( shapediff, (bone1==bone2) & (bone1==thisbone) & (species1==species2) ), {
+                # plot( as.numeric(species1)+(as.numeric(comparison)-2.5)/10, shape_difference, col=comparison )
+                dotchart( shape_difference, groups=paste(as.character(species1),as.character(comparison)) )
+            } )
+}
+
+
 pdf(file="figures/species-genus-comparisons.pdf",width=10,height=8,pointsize=10)
 layout(matrix(c(1,2,3,3),nrow=2),widths=c(5,1))
 for (thisbone in c("pelvic","rib")) {
