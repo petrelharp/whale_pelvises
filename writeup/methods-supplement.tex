@@ -59,67 +59,67 @@
 % \nocite{adams2012,baker1985,best2001,best1989,bloodworth2008,bookstein1997,brownell1986,burns1993,caldwell1971,desportes1993,goodall1994,harrison1972,hohn1985,jefferson2008,kasuya1999,mcgowen2009,mead1982,mitteroecker2009,miyazaki1977,miyazaki1994,omura1955,pagel1999,paradis2004,perrin1994,perrin1984,perry1999,read1999,ross1979,ruiz1993,tomilin1967,wells1999,zelditch2004}
 \nocite{uhen2010,perrin2013,schulte1918,pabst1998,meek1918,mate2005,brownell1986,fitzpatrick2012,ramm2005,firman2008,kenagy1986,moller1989,harcourt1981,moller1991,stockley1997,gage1994,hosken2001,danilewicz2004,heyning1994,adams2012,vanbree1973,andersen1992,perrin1975,eberhard1985,arnqvist1998}
 
-\section*{Materials and Methods}
-
-All original data and analytical code have been deposited in the Dryad Digital
-Repository. \href{http://dx.doi.org/10.5061/dryad.[NNNN]}
-
-\subsection*{Re-analysis of penis length data}
-
-Brownell and Ralls \citep{brownell1986} published data on penis length, body length, and testis size from
-10 baleen whale species. We reanalyzed those data in a generalized-least squares,
-using the GLS procedure in the R package NLME, with a correlation structure that
-accounts for phylogenetic relatedness \citep{pagel1999}, using the CORPAGEL procedure in the R
-package APE \citep{paradis2004}. We first calculated the phylogenetic residuals of log penis length and
-log testis weight each regressed onto the log of body length. Under the same
-phylogenetically controlled generalized least-square model, residual penis length was
-significantly correlated to residual testis weight ($P<10^{-10}$). A generalized correlation
-coefficient was then calculated (Dryad Digital Repository
-\href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
-
-\subsection*{Specimens}
-
-All bones were scanned with a NextEngine 3-dimensional Laser Scanner HD Model 2020i (Santa Monica), returning tens
-of thousands of x,y,z points per bone. A pipeline was developed to sub-sample 962
-evenly spaced and ordered points. The pipeline is graphically illustrated for pelvic
-bones (Fig. S1) and ribs (Fig. S2). All original laser scans and the associated code for
-imposing landmarks has been made available on the Dryad Digital Repository
-\href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
-
-\subsection*{Size and Shape variation}
-
-Centroid size, the square root of the sum of squared distances of a set of the 962
-landmarks from their centroid, was taken as the measurement of size \citep{zelditch2004}.
-
-Shape variation was assessed using a Generalized Procrustes Analysis modified
-from algorithms previously developed in Geometric Morphometrics \citep{bookstein1997,mitteroecker2009}. All shape
-analyses were performed using the GPAGEN routine in the R package GEOMORPH \citep{adams2012},
-allowing corresponding points to “slide” for improved fitting. This method translates all
-specimens to the origin, scales them to unit-centroid size, and optimally rotates them
-using a least-squares criterion until the coordinates of corresponding landmarks align as
-closely as possible. To improve alignment and correct for the lack of true landmarks,
-we allowed our semi-landmarks to “slide” along their tangent directions during this
-superimposition (routine GPAGEN in R package GEOMORPH 20). The sum of the
-distances between corresponding landmarks is then taken as the shape distance
-between two bones. Approximately 50 replicate scans of 20 different bones were
-analyzed: in all cases, the shape differences calculated between replicate scans was
-less than 5\% of the average pairwise shape difference among all bones. Pelvic and rib
-bones were analyzed separately.
-
-\subsection*{Phylogenetic modeling}
-
-We used a phylogenetic model to test for correlated evolution of testis size and bone
-centroid size. The sample-specific morphological data (body length, left and right
-centroid size for both ribs and pelvic bones) were placed on a cetacean phylogeny
-constructed from 45 nuclear loci, transposons, and mitochondrial genomes \citep{mcgowen2009} (supplementary tables S1-S2).  The procedure is described in detail in the next section.
-
-To test whether bone shape evolution was correlated with differences in testis
-size, we first identified 9 independent species pairs for which both ribs and pelvic bones
-were sampled from adult males. We tested whether the average pairwise distance
-between bones of each species was correlated with the absolute value of the difference
-in testis residuals calculated as above. All code for running these analyses have been
-made available on the Dryad Digital Repository
-\href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
+% \section*{Materials and Methods}
+% 
+% All original data and analytical code have been deposited in the Dryad Digital
+% Repository. \href{http://dx.doi.org/10.5061/dryad.[NNNN]}
+% 
+% \subsection*{Re-analysis of penis length data}
+% 
+% Brownell and Ralls \citep{brownell1986} published data on penis length, body length, and testis size from
+% 10 baleen whale species. We reanalyzed those data in a generalized-least squares,
+% using the GLS procedure in the R package NLME, with a correlation structure that
+% accounts for phylogenetic relatedness \citep{pagel1999}, using the CORPAGEL procedure in the R
+% package APE \citep{paradis2004}. We first calculated the phylogenetic residuals of log penis length and
+% log testis weight each regressed onto the log of body length. Under the same
+% phylogenetically controlled generalized least-square model, residual penis length was
+% significantly correlated to residual testis weight ($P<10^{-10}$). A generalized correlation
+% coefficient was then calculated (Dryad Digital Repository
+% \href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
+% 
+% \subsection*{Specimens}
+% 
+% All bones were scanned with a NextEngine 3-dimensional Laser Scanner HD Model 2020i (Santa Monica), returning tens
+% of thousands of x,y,z points per bone. A pipeline was developed to sub-sample 962
+% evenly spaced and ordered points. The pipeline is graphically illustrated for pelvic
+% bones (Fig. S1) and ribs (Fig. S2). All original laser scans and the associated code for
+% imposing landmarks has been made available on the Dryad Digital Repository
+% \href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
+% 
+% \subsection*{Size and Shape variation}
+% 
+% Centroid size, the square root of the sum of squared distances of a set of the 962
+% landmarks from their centroid, was taken as the measurement of size \citep{zelditch2004}.
+% 
+% Shape variation was assessed using a Generalized Procrustes Analysis modified
+% from algorithms previously developed in Geometric Morphometrics \citep{bookstein1997,mitteroecker2009}. All shape
+% analyses were performed using the GPAGEN routine in the R package GEOMORPH \citep{adams2012},
+% allowing corresponding points to “slide” for improved fitting. This method translates all
+% specimens to the origin, scales them to unit-centroid size, and optimally rotates them
+% using a least-squares criterion until the coordinates of corresponding landmarks align as
+% closely as possible. To improve alignment and correct for the lack of true landmarks,
+% we allowed our semi-landmarks to “slide” along their tangent directions during this
+% superimposition (routine GPAGEN in R package GEOMORPH 20). The sum of the
+% distances between corresponding landmarks is then taken as the shape distance
+% between two bones. Approximately 50 replicate scans of 20 different bones were
+% analyzed: in all cases, the shape differences calculated between replicate scans was
+% less than 5\% of the average pairwise shape difference among all bones. Pelvic and rib
+% bones were analyzed separately.
+% 
+% \subsection*{Phylogenetic modeling}
+% 
+% We used a phylogenetic model to test for correlated evolution of testis size and bone
+% centroid size. The sample-specific morphological data (body length, left and right
+% centroid size for both ribs and pelvic bones) were placed on a cetacean phylogeny
+% constructed from 45 nuclear loci, transposons, and mitochondrial genomes \citep{mcgowen2009} (supplementary tables S1-S2).  The procedure is described in detail in the next section.
+% 
+% To test whether bone shape evolution was correlated with differences in testis
+% size, we first identified 9 independent species pairs for which both ribs and pelvic bones
+% were sampled from adult males. We tested whether the average pairwise distance
+% between bones of each species was correlated with the absolute value of the difference
+% in testis residuals calculated as above. All code for running these analyses have been
+% made available on the Dryad Digital Repository
+% \href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
 
 
 
