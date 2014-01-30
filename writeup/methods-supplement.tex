@@ -210,7 +210,7 @@ our model is that $X_t = X_0 + \sqrt{t} A Z$, with $Z$ independent standard Gaus
 +
 \sqrt{t}
 \begin{bmatrix}
-    \sigma_L \sqrt{t} &  0  & 0  & 0  \\
+    \sigma_L &  0  & 0  & 0  \\
     \delta_T   &  \beta_T   & 0  &   0 \\
     \delta_R   &  \beta_R   & \sigma_R   &   0 \\
     \delta_R   &  \beta_R   & \sigma_R   &   0 \\
@@ -391,7 +391,28 @@ and the prior standard deviations of $\zeta_R$, $\omega_R$, $\zeta_P$, $\omega_P
 
 
 %%%%%
+\subsubsection*{Proportion of changes explained by mating ecology}
 
+It is of interest to estimate what proportion of changes in pelvic bone size are due to shifts in mating ecology,
+relative to other causes, e.g.\ changes in species mean body length or random drift.
+Under the model described above (equation \eqref{eqn:species_matrix}):
+\begin{align}
+   dP &= \delta_P dZ_1 + \beta_P dZ_2 + \sigma_P dZ_4 ,
+ \end{align}
+where each $dZ$ are independent white noise terms, each having the same variance.
+$dZ_1$ corresponds to normalized changes in body length,
+$dZ_2$ corresponds to normalized changes in testes size after accounting for changes in body length,
+and $dZ_4$ is pelvic-specific noise.
+Therefore, 
+\begin{align}
+  \frac{ \beta_P }{ \delta_P + \beta_P  + \sigma_P }
+\end{align}
+is a measure of the proportion of changes in pelvic bone size changes that are accounted for by changes in testes size.
+There is an analogous measure for ribs.
+
+
+
+%%%%%
 \subsubsection*{Running the MCMC sampler}
 
 To carefully check that our results were not affected by patterns of missing data,
@@ -422,6 +443,10 @@ Here we present additional results from the analysis of correlation trait evolut
 The summary statistics of the estimated posterior distributions 
 for the parameters
 are given in table~\ref{tab:posterior_distrns}.
+Taking posterior mean values, we see that $0.07/(0.47+0.07+0.07)=0.11$ of the changes in pelvic bone size 
+is derivable from shifts in testes size after removing the effects of length shifts,
+an equal quantity is pelvic-specific noise,
+and only $0.78$ comes from changes in body length.
 
 % latex table generated in R 3.0.2 by xtable 1.7-1 package
 % Wed Oct 16 16:35:12 2013
@@ -439,7 +464,7 @@ mean    &  0.55        &  0.55       &  0.07       &  0.00       &  0.04        
 95\%    &  2.28        &  0.88       &  0.11       &  0.03       &  0.06        &  0.09        &  0.05       &  0.08       &  0.05        &  0.14       &  0.02        &  4.27        &  2.00        &  1.99        &  0.05      &  0.04      \\
    \hline
 \end{tabular}
-\caption{ \label{tab:posterior_distrns} Posterior means and quantiles of the parameters.  }
+\caption{ \label{tab:posterior_distrns} Posterior means and quantiles of the parameters of the model presented in equations \eqref{eqn:species_matrix} and \eqref{eqn:sample_matrix}, estimated using only bones from adult males.  }
 \end{table}
 
 The correlation matrix for changes along a branch at the posterior mean parameter values is 
@@ -526,7 +551,8 @@ and summary statistics are shown in table \ref{tab:posterior_cors}.
    \hline
 \end{tabular}
   \caption{Marginal posterior distributions of correlations, with length fixed,
-  between changes in rib size, pelvic bone size, and testes size.
+  between changes in rib size, pelvic bone size, and testes size,
+  estimated using only bones from adult males.
   \label{tab:posterior_cors}
 }
 \end{table}
@@ -646,14 +672,14 @@ and distributions are shown in figure \ref{fig:males_complete_posterior_cors}.
   \hline
         &  testes--ribs & testes--pelvis & ribs--pelvis \\
   \hline
- Min. &     -0.8087000  &   0.0594300 & -0.7689000   \\
- 2.5\% &    -0.5075804  &   0.2476295 & -0.3776489   \\
- 1st Qu. &  -0.1367000  &   0.5748000 & -0.0833000   \\
- Median &    0.0759300  &   0.7001000 &  0.0432000   \\
- Mean &      0.0665400  &   0.6682000 &  0.0461500   \\
- 3rd Qu. &   0.2769000  &   0.7872000 &  0.1720000   \\
- 97.5\%  &   0.6225153  &   0.9025416 &  0.4816755   \\
- Max. &      0.8719000  &   0.9694000 &  0.8116000   \\
+Min.    & -0.7011000  & -0.34740000  &-0.5741000 \\
+2.5\%   &  -0.5280824 &  -0.04632722 & -0.3928919 \\
+1st Qu. & -0.1584000  &  0.42580000  &-0.0787800 \\
+Median  &  0.0371700  &  0.63120000  & 0.0126700 \\
+Mean    &  0.0605700  &  0.58490000  & 0.0372300 \\
+3rd Qu. &  0.2918000  &  0.78740000  & 0.1450000 \\
+97.5\%  &   0.6390835 &   0.92448522 &  0.4975437 \\
+Max.    &  0.8554000  &  0.96980000  & 0.7611000 \\
    \hline
 \end{tabular}
   \caption{Marginal posterior distributions of correlations, with length fixed,
