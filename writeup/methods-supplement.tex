@@ -8,6 +8,11 @@
 \usepackage{lscape}  % make pages landscape
 % \usepackage{rotating}
 \usepackage{longtable} % long, er, tables
+\usepackage{listings}
+\lstset{ %
+language=R,                % choose the language of the code
+}
+
 
 \DeclareDelayedFloatFlavour*{longtable}{table}
 
@@ -76,7 +81,7 @@ Dines, J. P.*, E. Ot\'arola-Castillo, P. Ralph, J. Alas, T. Daley, A. D. Smith, 
 \pagebreak
 
 % \nocite{adams2012,baker1985,best2001,best1989,bloodworth2008,bookstein1997,brownell1986,burns1993,caldwell1971,desportes1993,goodall1994,harrison1972,hohn1985,jefferson2008,kasuya1999,mcgowen2009,mead1982,mitteroecker2009,miyazaki1977,miyazaki1994,omura1955,pagel1999,paradis2004,perrin1994,perrin1984,perry1999,read1999,ross1979,ruiz1993,tomilin1967,wells1999,zelditch2004}
-\nocite{uhen2010,perrin2013,schulte1918,pabst1998,meek1918,mate2005,brownell1986,fitzpatrick2012,ramm2005,firman2008,kenagy1986,moller1989,harcourt1981,moller1991,stockley1997,gage1994,hosken2001,suppmat,danilewicz2004,mcgowen2009,revell2009,heyning1994,rohlf1990,slice2007,adams2012,bookstein1997,bookstein1996,mitteroecker2009,gunz2005,mcardle2001,vanbree1973,andersen1992,perrin1975,eberhard1985,arnqvist1998,hosken2004,ramm2007}
+\nocite{uhen2010,perrin2013,schulte1918,pabst1998,meek1918,mate2005,brownell1986,fitzpatrick2012,ramm2005,firman2008,kenagy1986,moller1989,harcourt1981,stockley1997,gage1994,hosken2001,suppmat,danilewicz2004,mcgowen2009,revell2009,heyning1994,rohlf1990,slice2007,adams2012,bookstein1997,bookstein1996,mitteroecker2009,gunz2005,mcardle2001,vanbree1973,andersen1992,perrin1975,eberhard1985,arnqvist1998,hosken2004,ramm2007}
 
 \section*{Materials and Methods}
 All original data and analytical code have been deposited in the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.[NNNN]}). 
@@ -501,7 +506,7 @@ This results in following posterior mean correlation matrix:
 
 We can furthermore postprocess the MCMC samples from posterior distribution
 to obtain marginal posterior distributions for the three correlations.
-These are shown in figure \ref{fig:males_posterior_cors} (and in the main text);
+These are shown in figure 3 in the main text;
 and summary statistics are shown in table \ref{tab:posterior_cors}.
 
 % \begin{figure}[ht]
@@ -679,6 +684,11 @@ Max.    &  0.8554000  &  0.96980000  & 0.7611000 \\
   \label{tab:complete_males_posterior_cors}
 }
 \end{table}
+
+
+%% ADONIS TABLES HERE
+\input{supplementary-tables-2}
+
 
 The correlation matrix for intraspecific variation 
 (i.e.\ for differences of individuals to the species mean)
@@ -955,7 +965,7 @@ The regression between testis mass residuals (taken from Fig. S4) and centroid s
   \caption{
   \textbf{The marginal posterior distributions of correlation coefficients} 
   do not change when restricting to bones from adult male cetaceans for which we have both data for both ribs and pelvic bones,
-  which excludes baleen whales.  (compare to figure \ref{fig:males_posterior_cors}).
+  which excludes baleen whales.  (compare to figure 3 of the main text).
   \label{fig:males_complete_posterior_cors}
   }
 \end{figure}
@@ -965,7 +975,7 @@ The regression between testis mass residuals (taken from Fig. S4) and centroid s
     \includegraphics{../females/posterior-correlations}
   \end{center}
   \caption{
-  \textbf{As observed for males (Figure \ref{fig:males_posterior_cors} and figure 3 of manuscript), the marginal posterior
+  \textbf{As observed for males (figure 3 of manuscript), the marginal posterior
 distributions of correlations between changes in female pelvic bone size was significantly
 correlated with shifts towards larger testis size.} Under a phylogenetic model of correlated trait
 evolution (supplementary methods), the size of the pelvic bone is positively correlated with shifts
