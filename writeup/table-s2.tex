@@ -1,105 +1,15 @@
-\small
-
-% tmp <- read.table("table-s1.csv",header=TRUE,sep='\t')
-% tmp$references <- paste("cite{", tolower( sapply( lapply( strsplit(gsub("[{}]","",tmp$references),";"), function (z) gsub(", *", "", gsub( " #.*", "", z ) ) ), paste, collapse="," ) ), "}", sep='' )
-% tmptab <- xtable(tmp)
-% print(tmp,sanitize.text.function=identity)
 % latex table generated in R 3.0.2 by xtable 1.7-1 package
-% Sat Oct 19 20:51:35 2013
-\begin{longtable}{|p{1in}rrrp{1.5in}|}
-  \caption{Morphological data gathered from literature for sexually mature males.}\\
+% Thu Jan 30 15:01:48 2014
+\begin{table}[ht]
+\centering
+\begin{tabular}{lllrrrrr}
   \hline
-  \textbf{species} & \textbf{max body length} & \textbf{max body mass} & \textbf{max testes mass} & \textbf{references} \\ 
-\hline
-\endfirsthead
-\multicolumn{5}{c}%
-{\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
-\hline
-  \textbf{species} & \textbf{max body length} & \textbf{max body mass} & \textbf{max testes mass} & \textbf{references} \\ 
-\hline
-\endhead
-\hline \multicolumn{5}{r}{\textit{Continued on next page}} \\
-\endfoot
-\hline
-\endlastfoot
-  \hline
-          Balaena mysticetus  &         1800 &    90000000  &     163000.0   &                                    \citet{burns1993}   \\
-  Balaenoptera acutorostrata  &          880 &     9200000  &       8800.0   &                                  \citet{tomilin1967} \\
-       Balaenoptera borealis  &         1520 &          NA  &      16400.0   &                                    \citet{perry1999} \\
-          Balaenoptera edeni  &         1500 &    40000000  &      20000.0   &                                  \citet{tomilin1967} \\
-       Balaenoptera musculus  &         2700 &   150000000  &      70000.0   &                                  \citet{tomilin1967} \\
-       Balaenoptera physalus  &         2400 &    90000000  &      58300.0   &                                \citet{jefferson2008} \\
-           Caperea marginata  &          550 &          NA  &       1900.0   &                                    \citet{baker1985} \\
- Cephalorhynchus commersonii  &          174 &       86000  &        930.0   &                                  \citet{goodall1994} \\
-          Delphinus capensis  &          250 &      235000  &       3785.0   &                       \citet{jefferson2008,ross1979} \\
-           Delphinus delphis  &          270 &      200000  &       5000.0   &                                \citet{jefferson2008} \\
-       Eschrichtius robustus  &         1500 &    45000000  &      67500.0   &                                  \citet{tomilin1967} \\
-         Eubalaena australis  &         1700 &    90000000  &     972000.0   &                                     \citet{best2001} \\
-         Eubalaena glacialis  &         1700 &    90000000  &     972000.0   &                                     \citet{best2001} \\
-            Feresa attenuata  &          264 &      225000  &        754.0   &                                \citet{jefferson2008} \\
-  Globicephala macrorhynchus  &          700 &     3600000  &       7000.0   &                                \citet{jefferson2008} \\
-          Globicephala melas  &          670 &     2320000  &      12300.0   &                  \citet{jefferson2008,desportes1993} \\
-             Grampus griseus  &          383 &      500000  &      10600.0   &                     \citet{jefferson2008,perrin1984} \\
-            Inia geoffrensis  &          255 &      207000  &       1600.0   &                       \citet{jefferson2008,best1989} \\
-             Kogia breviceps  &          425 &      417000  &      10000.0   &   \citet{bloodworth2008,caldwell1971,tomilin1967,ruiz1993} \\
-                  Kogia sima  &          270 &      280000  &       2618.0   &                                     \citet{ross1979} \\
-       Lagenorhynchus acutus  &          280 &      235000  &        740.0   &                                \citet{jefferson2008} \\
-  Lagenorhynchus obliquidens  &          250 &      200000  &       1118.0   &                                 \citet{harrison1972} \\
-       Lissodelphis borealis  &          307 &      115000  &       1410.0   &                                 \citet{harrison1972} \\
-      Megaptera novaeangliae  &         1700 &    40000000  &       4000.0   &                                \citet{jefferson2008} \\
-       Mesoplodon carlhubbsi  &          540 &     1500000  &        510.0   &                       \citet{jefferson2008,mead1982} \\
-           Monodon monoceros  &          480 &     1600000  &           NA   &                                \citet{jefferson2008} \\
-    Neophocaena phocaenoides  &          200 &       55000  &        863.0   &                                   \citet{kasuya1999} \\
-                Orcinus orca  &          975 &    10000000  &      23100.0   &                       \citet{jefferson2008,ross1979} \\
-       Peponocephala electra  &          278 &      275000  &       4500.0   &                                \citet{jefferson2008} \\
-           Phocoena phocoena  &          180 &       61000  &       3515.0   &                                     \citet{read1999} \\
-          Phocoenoides dalli  &          240 &      200000  &        560.0   &                                \citet{jefferson2008} \\
-            Physeter catodon  &         1800 &    57000000  &      12000.0   &                                \citet{jefferson2008} \\
-      Pontoporia blainvillei  &          160 &       50000  &         10.8   &                                \citet{jefferson2008} \\
-        Pseudorca crassidens  &          600 &     2000000  &      14800.0   &                                \citet{jefferson2008} \\
-          Stenella attenuata  &          257 &      120000  &       2896.0   &                       \citet{jefferson2008,hohn1985} \\
-       Stenella coeruleoalba  &          256 &      160000  &        500.0   &                                 \citet{miyazaki1977} \\
-          Stenella frontalis  &          230 &      140000  &       1210.0   &                                   \citet{perrin1994} \\
-       Stenella longirostris  &          235 &       82000  &       2708.0   &                                \citet{jefferson2008} \\
-           Steno bredanensis  &          265 &      160000  &       2660.0   &                                 \citet{miyazaki1994} \\
-            Tursiops aduncus  &          270 &      230000  &           NA   &                                    \citet{wells1999} \\
-          Tursiops truncatus  &          381 &      650000  &       1966.0   &                                   \citet{perrin1984} \\
-         Ziphius cavirostris  &          700 &     3000000  &       4200.0   &                                    \citet{omura1955} \\
-  \hline
-\end{longtable}
-
-\scriptsize
-
-% tmp <- read.csv("table-s2.csv", header=TRUE, sep=",")
-% levels(tmp$species) <- tolower(gsub("_"," ",levels(tmp$species)))
-% substr(levels(tmp$species),1,1) <- toupper(substr(levels(tmp$species),1,1) )
-% bold.these <- c( "LACM_84071", "LACM_86004", "LACM_91779", "LACM_84254", "LACM_84252", "LACM_88951", "LACM_88987", "LACM_84072", "LACM_84251", "LACM_84267" )
-% tmpfn <- function (x) { gsub("_", "\\_", ifelse( x %in% bold.these, paste("\\textbf{",x,"}"), x ), fixed=TRUE ) }
-% tmptable <- xtable(tmp,digits=0)
-%  sink("table-s2.tex")
-%  print.xtable(tmptable,include.rownames=FALSE,sanitize.text.function=tmpfn)
-%  sink(NULL)
-\begin{longtable}{|p{1in}p{1in}p{.15in}p{.4in}p{.4in}p{.5in}p{.5in}p{.75in}|}
-  \caption{ Individual level data from bone scans.  NA indicates absence of sample in museum collection.  Numbers presented for bones are centroid sizes.  Museum source indicated in specimen column (BMNH=British Museum of Natural History, CCSN=Cape Cod Stranding Network, LACM=Los Angeles County Natural History Museum, MAL=Marine Animal Life, MH=New England Aquarium, MJM=Michael J. Moore, UMA=University of Massachusetts Amherst, USNM=United States Natural History Museum (Smithsonian), UWBM=University of Washington Burke Museum).  Specimens in bold were scanned multiple times to assess technical replication (one juvenile not shown).  }\\
-  \hline
- \textbf{species} & \textbf{specimen} & \textbf{sex} & \textbf{body length} & \textbf{pelvic left} & \textbf{pelvic right} & \textbf{rib left} & \textbf{rib right} \\ 
-\hline
-\endfirsthead
-\multicolumn{8}{c}%
-{\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
-\hline
- \textbf{species} & \textbf{specimen} & \textbf{sex} & \textbf{body length} & \textbf{pelvic left} & \textbf{pelvic right} & \textbf{rib left} & \textbf{rib right} \\ 
-\hline
-\endhead
-\hline \multicolumn{8}{r}{\textit{Continued on next page}} \\
-\endfoot
-\hline
-\endlastfoot
+species & specimen & sex & body\_length & pelvic\_left & pelvic\_right & rib\_left & rib\_right \\ 
   \hline
 Balaenoptera acutorostrata & MAL\_03-282 & F & 730 & 2300 & 2246 &  &  \\ 
   Balaenoptera acutorostrata & MH\_03-621 & M & 700 & 1898 & 1868 &  &  \\ 
-  Balaenoptera musculus & BMNH\_1953-12.1.18 & F & 2350 & 3863 & 3771 &  &  \\ 
-  Balaenoptera musculus & BMNH\_1953-12.1.19 & M & 2360 & 3765 &  &  &  \\ 
+  Balaenoptera musculus & BMNH\_1953.12.1.18 & F & 2350 & 3863 & 3771 &  &  \\ 
+  Balaenoptera musculus & BMNH\_1953.12.1.19 & M & 2360 & 3765 &  &  &  \\ 
   Balaenoptera physalus & LACM\_31144 & U & 2135 & 3648 & 3649 &  &  \\ 
   Balaenoptera physalus & UMA\_4820 & F & 2075 & 2377 & 2405 &  &  \\ 
   Delphinus capensis & \textbf{ LACM\_84071 } & M & 209 & 860 & 859 & 1221 & 1265 \\ 
@@ -231,6 +141,5 @@ Balaenoptera acutorostrata & MAL\_03-282 & F & 730 & 2300 & 2246 &  &  \\
   Ziphius cavirostris & USNM\_A20971 & F & 589 & 854 & 828 & 3676 & 3580 \\ 
   Ziphius cavirostris & USNM\_A49599 & M & 564 & 979 & 1067 & 4095 & 3973 \\ 
    \hline
-\end{longtable}
-
-\normalfont
+\end{tabular}
+\end{table}

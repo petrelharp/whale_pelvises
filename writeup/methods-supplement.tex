@@ -6,6 +6,7 @@
 \usepackage{titlesec} % adjust section heading style
 \usepackage[nolists,nomarkers]{endfloat} % put floats at end
 \usepackage{lscape}  % make pages landscape
+% \usepackage{rotating}
 \usepackage{longtable} % long, er, tables
 
 \DeclareDelayedFloatFlavour*{longtable}{table}
@@ -37,6 +38,7 @@
 
 % \usepackage{hyperref}
 \newcommand{\url}[1]{\texttt{#1}}
+\newcommand{\email}[1]{\texttt{#1}}
 \newcommand{\href}[2]{#2 (\texttt{#1})}
 
 
@@ -54,72 +56,44 @@
 \input{supplementary-tables}
 
 \noindent
-\textbf{Supplementary Materials:}
+\begin{center}
+\textbf{Supplementary Materials for}\\
+Cetacean pelvic bones are targets of sexual selection
+
+Dines, J. P.*, E. Ot\'arola-Castillo, P. Ralph, J. Alas, T. Daley, A. D. Smith, M. D. Dean*\\
+*Correspondence: \email{jdines$@$nhm.org}, \email{matthew.dean$@$usc.edu}
+\end{center}
+
+\noindent
+\textbf{This file includes:}
+\begin{enumerate}
+    \item Materials and Methods
+    \item Figures S1--S7
+    \item Tables S1--S12
+    \item Full Reference List
+\end{enumerate}
+
+\pagebreak
 
 % \nocite{adams2012,baker1985,best2001,best1989,bloodworth2008,bookstein1997,brownell1986,burns1993,caldwell1971,desportes1993,goodall1994,harrison1972,hohn1985,jefferson2008,kasuya1999,mcgowen2009,mead1982,mitteroecker2009,miyazaki1977,miyazaki1994,omura1955,pagel1999,paradis2004,perrin1994,perrin1984,perry1999,read1999,ross1979,ruiz1993,tomilin1967,wells1999,zelditch2004}
-\nocite{uhen2010,perrin2013,schulte1918,pabst1998,meek1918,mate2005,brownell1986,fitzpatrick2012,ramm2005,firman2008,kenagy1986,moller1989,harcourt1981,moller1991,stockley1997,gage1994,hosken2001,danilewicz2004,heyning1994,adams2012,vanbree1973,andersen1992,perrin1975,eberhard1985,arnqvist1998}
+\nocite{uhen2010,perrin2013,schulte1918,pabst1998,meek1918,mate2005,brownell1986,fitzpatrick2012,ramm2005,firman2008,kenagy1986,moller1989,harcourt1981,moller1991,stockley1997,gage1994,hosken2001,suppmat,danilewicz2004,mcgowen2009,revell2009,heyning1994,rohlf1990,slice2007,adams2012,bookstein1997,bookstein1996,mitteroecker2009,gunz2005,mcardle2001,vanbree1973,andersen1992,perrin1975,eberhard1985,arnqvist1998,hosken2004,ramm2007}
 
-% \section*{Materials and Methods}
-% 
-% All original data and analytical code have been deposited in the Dryad Digital
-% Repository. \href{http://dx.doi.org/10.5061/dryad.[NNNN]}
-% 
-% \subsection*{Re-analysis of penis length data}
-% 
-% Brownell and Ralls \citep{brownell1986} published data on penis length, body length, and testis size from
-% 10 baleen whale species. We reanalyzed those data in a generalized-least squares,
-% using the GLS procedure in the R package NLME, with a correlation structure that
-% accounts for phylogenetic relatedness \citep{pagel1999}, using the CORPAGEL procedure in the R
-% package APE \citep{paradis2004}. We first calculated the phylogenetic residuals of log penis length and
-% log testis weight each regressed onto the log of body length. Under the same
-% phylogenetically controlled generalized least-square model, residual penis length was
-% significantly correlated to residual testis weight ($P<10^{-10}$). A generalized correlation
-% coefficient was then calculated (Dryad Digital Repository
-% \href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
-% 
-% \subsection*{Specimens}
-% 
-% All bones were scanned with a NextEngine 3-dimensional Laser Scanner HD Model 2020i (Santa Monica), returning tens
-% of thousands of x,y,z points per bone. A pipeline was developed to sub-sample 962
-% evenly spaced and ordered points. The pipeline is graphically illustrated for pelvic
-% bones (Fig. S1) and ribs (Fig. S2). All original laser scans and the associated code for
-% imposing landmarks has been made available on the Dryad Digital Repository
-% \href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
-% 
-% \subsection*{Size and Shape variation}
-% 
-% Centroid size, the square root of the sum of squared distances of a set of the 962
-% landmarks from their centroid, was taken as the measurement of size \citep{zelditch2004}.
-% 
-% Shape variation was assessed using a Generalized Procrustes Analysis modified
-% from algorithms previously developed in Geometric Morphometrics \citep{bookstein1997,mitteroecker2009}. All shape
-% analyses were performed using the GPAGEN routine in the R package GEOMORPH \citep{adams2012},
-% allowing corresponding points to “slide” for improved fitting. This method translates all
-% specimens to the origin, scales them to unit-centroid size, and optimally rotates them
-% using a least-squares criterion until the coordinates of corresponding landmarks align as
-% closely as possible. To improve alignment and correct for the lack of true landmarks,
-% we allowed our semi-landmarks to “slide” along their tangent directions during this
-% superimposition (routine GPAGEN in R package GEOMORPH 20). The sum of the
-% distances between corresponding landmarks is then taken as the shape distance
-% between two bones. Approximately 50 replicate scans of 20 different bones were
-% analyzed: in all cases, the shape differences calculated between replicate scans was
-% less than 5\% of the average pairwise shape difference among all bones. Pelvic and rib
-% bones were analyzed separately.
-% 
-% \subsection*{Phylogenetic modeling}
-% 
-% We used a phylogenetic model to test for correlated evolution of testis size and bone
-% centroid size. The sample-specific morphological data (body length, left and right
-% centroid size for both ribs and pelvic bones) were placed on a cetacean phylogeny
-% constructed from 45 nuclear loci, transposons, and mitochondrial genomes \citep{mcgowen2009} (supplementary tables S1-S2).  The procedure is described in detail in the next section.
-% 
-% To test whether bone shape evolution was correlated with differences in testis
-% size, we first identified 9 independent species pairs for which both ribs and pelvic bones
-% were sampled from adult males. We tested whether the average pairwise distance
-% between bones of each species was correlated with the absolute value of the difference
-% in testis residuals calculated as above. All code for running these analyses have been
-% made available on the Dryad Digital Repository
-% \href{http://dx.doi.org/10.5061/dryad.[NNNN]}.
+\section*{Materials and Methods}
+All original data and analytical code have been deposited in the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.[NNNN]}). 
+
+\subsection*{Re-analysis of penis length data}
+\citet{brownell1986} published data on penis length, body length, and testis size from 10 baleen whale species.  We reanalyzed those data in a phylogenetically controlled, generalized least-squares model, using the gls procedure in the R package nlme, with a correlation structure that accounts for phylogenetic relatedness \citep{pagel1999}, using the corPagel procedure in the R package ape \citep{paradis2004}.  We first calculated the phylogenetic residuals of log penis length and log testis weight each regressed onto the log of body length.  Under the same phylogenetically controlled generalized least-squares model, residual penis length was significantly correlated to residual testis weight (P<10-10, Fig. S1).  A generalized correlation coefficient was then calculated. 
+
+\subsection*{Scanning bones and identifying landmarks}
+All bones were scanned with a NextEngine 3-dimensional Laser Scanner, returning tens of thousands of $x,y,z$ points per bone.  A pipeline was developed to sub-sample 962 evenly spaced and ordered points.  The pipeline is graphically illustrated for pelvic bones (Fig. S2) and ribs (Fig. S3) separately.  All original laser scans and the associated code for imposing landmarks has been made available on the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.[NNNN]}). 
+
+\subsection*{Technical replication}
+We quantified technical replication by randomly choosing 41 bones (21 pelvic bones, 20 ribs) to scan more than once.  One bone was scanned 11 times, the rest scanned twice, each time removing the bone from the scanner and reloading it.  The median coefficient of variation (unbiased standard deviation/mean) for centroid size was 0.0094 for pelvic bones, 0.0090 for ribs.  The median coefficient of variation for shape variation was .0194 for pelvic bones, .0342 for ribs.  In sum, digitizing bones with the NextEngine Laser Scanner and our analytical pipeline (Fig. S2 and S3) produced highly repeatable results.  
+
+\subsection*{Phylogenetic modeling}
+We built a customized phylogenetic model to test for correlated evolution of testes size and bone centroid size.  The sample-specific morphological data (Table S1-S2) were placed on a cetacean phylogeny constructed from 45 nuclear loci, transposons, and mitochondrial genomes \citep{mcgowen2009}.  The logarithms of all values were then modeled as evolving on the tree as correlated Gaussian traits, accounting for intraspecific and intraindividual variation and missing data.  Priors were placed on the 16 covariances of this model (including separate parameters for within-species variation), and the posterior distribution was evaluated using Markov chain Monte Carlo.  All associated code for running these analyses have been made available on the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.[NNNN]}).
+To test whether bone shape evolution was correlated with differences in testis size, we first identified 9 independent species pairs for which both ribs and pelvic bones were sampled from adult males.  We tested whether the average pairwise distance between bones of each species was correlated with the absolute value of the difference in testis residuals calculated as above.  All code for running these analyses have been made available on the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.[NNNN]}).
+ 
 
 
 
@@ -455,13 +429,22 @@ and only $0.78$ comes from changes in body length.
 \centering
 \begin{tabular}{rrrrrrrrrrrrrrrrr}
   \hline
-        &  $\sigma_L$  &  $\beta_T$  &  $\beta_P$  &  $\beta_R$  &  $\sigma_R$  &  $\sigma_P$  &  $\zeta_L$  &  $\zeta_R$  &  $\omega_R$  &  $\zeta_P$  &  $\omega_P$  &  $\delta_T$  &  $\delta_R$  &  $\delta_P$  &  $\eta_R$  &  $\eta_P$  \\
+        &  $\sigma_L$  &  $\beta_T$  &  $\beta_P$  &  $\beta_R$  &  $\sigma_R$  &  $\sigma_P$  &  $\zeta_L$  &  $\zeta_R$   \\
 \hline
-5\%     &  0.11        &  0.38       &  0.03       &  -0.02      &  0.03        &  0.05        &  0.04       &  0.06       &  0.04        &  0.10       &  0.01        &  0.08        &  0.09        &  0.05        &  0.02      &  -0.00     \\
-25\%    &  0.14        &  0.44       &  0.05       &  -0.01      &  0.03        &  0.06        &  0.04       &  0.07       &  0.04        &  0.11       &  0.02        &  0.27        &  0.11        &  0.08        &  0.03      &  0.01      \\
-mean    &  0.55        &  0.55       &  0.07       &  0.00       &  0.04        &  0.07        &  0.04       &  0.07       &  0.04        &  0.12       &  0.02        &  1.60        &  0.51        &  0.47        &  0.03      &  0.02      \\
-75\%    &  0.51        &  0.61       &  0.08       &  0.01       &  0.05        &  0.07        &  0.05       &  0.07       &  0.04        &  0.13       &  0.02        &  3.29        &  0.43        &  0.54        &  0.04      &  0.02      \\
-95\%    &  2.28        &  0.88       &  0.11       &  0.03       &  0.06        &  0.09        &  0.05       &  0.08       &  0.05        &  0.14       &  0.02        &  4.27        &  2.00        &  1.99        &  0.05      &  0.04      \\
+5\%     &  0.11        &  0.38       &  0.03       &  -0.02      &  0.03        &  0.05        &  0.04       &  0.06        \\
+25\%    &  0.14        &  0.44       &  0.05       &  -0.01      &  0.03        &  0.06        &  0.04       &  0.07        \\
+mean    &  0.55        &  0.55       &  0.07       &  0.00       &  0.04        &  0.07        &  0.04       &  0.07        \\
+75\%    &  0.51        &  0.61       &  0.08       &  0.01       &  0.05        &  0.07        &  0.05       &  0.07        \\
+95\%    &  2.28        &  0.88       &  0.11       &  0.03       &  0.06        &  0.09        &  0.05       &  0.08        \\
+   \hline
+  \hline
+        &    $\omega_R$  &  $\zeta_P$  &  $\omega_P$  &  $\delta_T$  &  $\delta_R$  &  $\delta_P$  &  $\eta_R$  &  $\eta_P$  \\
+\hline
+5\%     &    0.04        &  0.10       &  0.01        &  0.08        &  0.09        &  0.05        &  0.02      &  -0.00     \\
+25\%    &    0.04        &  0.11       &  0.02        &  0.27        &  0.11        &  0.08        &  0.03      &  0.01      \\
+mean    &    0.04        &  0.12       &  0.02        &  1.60        &  0.51        &  0.47        &  0.03      &  0.02      \\
+75\%    &    0.04        &  0.13       &  0.02        &  3.29        &  0.43        &  0.54        &  0.04      &  0.02      \\
+95\%    &    0.05        &  0.14       &  0.02        &  4.27        &  2.00        &  1.99        &  0.05      &  0.04      \\
    \hline
 \end{tabular}
 \caption{ \label{tab:posterior_distrns} Posterior means and quantiles of the parameters of the model presented in equations \eqref{eqn:species_matrix} and \eqref{eqn:sample_matrix}, estimated using only bones from adult males.  }
@@ -597,12 +580,20 @@ are given in table~\ref{tab:complete_males_posterior_distrns}.
 \centering
 \begin{tabular}{rrrrrrrrrrrrrrrrr}
   \hline
-        &  $\sigma_L$  &  $\beta_T$  &  $\beta_P$  &  $\beta_R$  &  $\sigma_R$  &  $\sigma_P$  &  $\zeta_L$  &  $\zeta_R$  &  $\omega_R$  &  $\zeta_P$  &  $\omega_P$  &  $\delta_T$  &  $\delta_R$  &  $\delta_P$  &  $\eta_R$  &  $\eta_P$  \\
-5\%     &  0.22    &  0.42   &  0.01   &  -0.02  &  0.03    &  0.05    &  0.04   &  0.06   &  0.04    &  0.10   &  0.01    &  1.59     &  0.66     &    0.80     & 0.55     & -0.04    \\
-25\%    &  0.42    &  0.50   &  0.05   &  -0.01  &  0.03    &  0.07    &  0.04   &  0.07   &  0.04    &  0.11   &  0.02    &  1.88     &  0.77     &    1.09     & 0.70     & 0.15     \\
-mean  &  1.08    &  0.63   &  0.08   &  0.00   &  0.04    &  0.10    &  0.04   &  0.07   &  0.04    &  0.12   &  0.02    &  2.50     &  0.86     &    1.32     & 0.82     & 0.30     \\
-75\%    &  1.74    &  0.71   &  0.11   &  0.01   &  0.05    &  0.12    &  0.05   &  0.07   &  0.04    &  0.13   &  0.02    &  5.55     &  0.93     &    1.51     & 0.93     & 0.45     \\
-95\%    &  2.07    &  0.98   &  0.17   &  0.03   &  0.06    &  0.16    &  0.05   &  0.08   &  0.05    &  0.14   &  0.02    &  7.95     &  1.03     &    1.87     & 1.10     & 0.64     \\
+       &  $\sigma_L$  &  $\beta_T$  &  $\beta_P$  &  $\beta_R$  &  $\sigma_R$  &  $\sigma_P$  &  $\zeta_L$  &  $\zeta_R$  \\
+5\%     &  0.22        &  0.42       &  0.01       &  -0.02      &  0.03        &  0.05        &  0.04       &  0.06       \\
+25\%    &  0.42        &  0.50       &  0.05       &  -0.01      &  0.03        &  0.07        &  0.04       &  0.07       \\
+mean    &  1.08        &  0.63       &  0.08       &  0.00       &  0.04        &  0.10        &  0.04       &  0.07       \\
+75\%    &  1.74        &  0.71       &  0.11       &  0.01       &  0.05        &  0.12        &  0.05       &  0.07       \\
+95\%    &  2.07        &  0.98       &  0.17       &  0.03       &  0.06        &  0.16        &  0.05       &  0.08       \\
+\hline
+\hline
+        &  $\omega_R$  &  $\zeta_P$  &  $\omega_P$  &  $\delta_T$  &  $\delta_R$  &  $\delta_P$  &  $\eta_R$  &  $\eta_P$  \\
+5\%      &  0.04        &  0.10       &  0.01        &  1.59        &  0.66        &  0.80        &  0.55      &  -0.04     \\
+25\%     &  0.04        &  0.11       &  0.02        &  1.88        &  0.77        &  1.09        &  0.70      &  0.15      \\
+mean     &  0.04        &  0.12       &  0.02        &  2.50        &  0.86        &  1.32        &  0.82      &  0.30      \\
+75\%     &  0.04        &  0.13       &  0.02        &  5.55        &  0.93        &  1.51        &  0.93      &  0.45      \\
+95\%     &  0.05        &  0.14       &  0.02        &  7.95        &  1.03        &  1.87        &  1.10      &  0.64      \\
    \hline
 \end{tabular}
 \caption{ \label{tab:complete_males_posterior_distrns} Posterior means and quantiles of the parameters given the dataset consisting only of bones from males for which we have both ribs and pelvic bones.}
@@ -726,13 +717,22 @@ are given in table~\ref{tab:females_posterior_distrns}.
 \centering
 \begin{tabular}{rrrrrrrrrrrrrrrrr}
   \hline
-        &  $\sigma_L$  &  $\beta_T$  &  $\beta_P$  &  $\beta_R$  &  $\sigma_R$  &  $\sigma_P$  &  $\zeta_L$  &  $\zeta_R$  &  $\omega_R$  &  $\zeta_P$  &  $\omega_P$  &  $\delta_T$  &  $\delta_R$  &  $\delta_P$  &  $\eta_R$  &  $\eta_P$  \\
+        &  $\sigma_L$  &  $\beta_T$  &  $\beta_P$  &  $\beta_R$  &  $\sigma_R$  &  $\sigma_P$  &  $\zeta_L$  &  $\zeta_R$   \\
 \hline
-5\%     &  0.13        &  0.39       &  0.02       &  -0.02      &  0.02        &  0.01        &  0.02       &  0.04       &  0.01        &  0.11       &  0.03        &  0.07        &  0.74        &  0.30        &  -0.16     &  -0.55     \\
-25\%    &  0.15        &  0.46       &  0.04       &  -0.00      &  0.02        &  0.03        &  0.03       &  0.05       &  0.01        &  0.13       &  0.03        &  0.98        &  0.88        &  0.47        &  0.26      &  0.28      \\
-mean    &  0.18        &  0.54       &  0.06       &  0.01       &  0.03        &  0.04        &  0.03       &  0.06       &  0.01        &  0.15       &  0.03        &  1.76        &  0.97        &  0.57        &  0.49      &  1.04      \\
-75\%    &  0.20        &  0.60       &  0.07       &  0.02       &  0.04        &  0.05        &  0.03       &  0.06       &  0.01        &  0.16       &  0.04        &  2.49        &  1.05        &  0.68        &  0.76      &  1.73      \\
-95\%    &  0.25        &  0.76       &  0.10       &  0.03       &  0.06        &  0.07        &  0.04       &  0.08       &  0.02        &  0.18       &  0.04        &  3.46        &  1.20        &  0.84        &  1.08      &  2.84      \\
+5\%     &  0.13        &  0.39       &  0.02       &  -0.02      &  0.02        &  0.01        &  0.02       &  0.04        \\
+25\%    &  0.15        &  0.46       &  0.04       &  -0.00      &  0.02        &  0.03        &  0.03       &  0.05        \\
+mean    &  0.18        &  0.54       &  0.06       &  0.01       &  0.03        &  0.04        &  0.03       &  0.06        \\
+75\%    &  0.20        &  0.60       &  0.07       &  0.02       &  0.04        &  0.05        &  0.03       &  0.06        \\
+95\%    &  0.25        &  0.76       &  0.10       &  0.03       &  0.06        &  0.07        &  0.04       &  0.08        \\
+   \hline
+  \hline
+        &  $\omega_R$  &  $\zeta_P$  &  $\omega_P$  &  $\delta_T$  &  $\delta_R$  &  $\delta_P$  &  $\eta_R$  &  $\eta_P$  \\
+\hline
+5\%     &  0.01        &  0.11       &  0.03        &  0.07        &  0.74        &  0.30        &  -0.16     &  -0.55     \\
+25\%    &  0.01        &  0.13       &  0.03        &  0.98        &  0.88        &  0.47        &  0.26      &  0.28      \\
+mean    &  0.01        &  0.15       &  0.03        &  1.76        &  0.97        &  0.57        &  0.49      &  1.04      \\
+75\%    &  0.01        &  0.16       &  0.04        &  2.49        &  1.05        &  0.68        &  0.76      &  1.73      \\
+95\%    &  0.02        &  0.18       &  0.04        &  3.46        &  1.20        &  0.84        &  1.08      &  2.84      \\
    \hline
 \end{tabular}
 \caption{ \label{tab:females_posterior_distrns} Posterior means and quantiles of the parameters, for full dataset of bones from females only.  
@@ -851,24 +851,14 @@ at the posterior mean parameter values is
 
 \section*{Supplementary figures and tables}
 
-\begin{table}
-  placeholder for table S2
-\end{table}
-
 
 \begin{figure}
 \begin{center}
   \includegraphics[width=\textwidth]{S1}
 \end{center}
 \caption{
-\textbf{Whale species with relatively large testes have
-relatively long penises.} Two separate regression, each drawn using the GLS
-procedure in the R package NLME and a correlation structure accounting for
-phylogenetic relatedness \citep{pagel1999} using the CORPAGEL procedure in the R package APE \citep{paradis2004},
-were drawn to derive the residuals of penis length onto body mass, and testis mass
-onto body mass. A third phylogenetic regression (pictured here) was used to test the
-correlation of residual penis length with residual testis mass. Raw data taken from
-Table 2 of \citep{brownell1986}, and analyzed in the phylogenetic framework of \citep{mcgowen2009}
+\textbf{Whale species with relatively large testes have relatively long penises.} 
+Two separate regression, each drawn using the GLS procedure in the R package NLME and a correlation structure accounting for phylogenetic relatedness \citep{pagel1999} using the corPagel procedure in the R package APE \citep{paradis2004}, were drawn to derive the residuals of penis length onto body mass, and testes mass onto body mass. A third phylogenetic regression (pictured here) was used to test the correlation of residual penis length with residual testis mass. Raw data taken from Table 2 of \citep{brownell1986}, and analyzed in the phylogenetic framework of \citep{mcgowen2009}
 }
 \end{figure}
 
@@ -880,15 +870,7 @@ Table 2 of \citep{brownell1986}, and analyzed in the phylogenetic framework of \
   \includegraphics[width=\textwidth]{S2}
 \end{center}
 \caption{
-\small
-\textbf{Method for transforming and defining landmarks on pelvic bones.} Left panel: the two furthest points apart (red spheres 1 and 3) 
-are found from the convex hull, and a $z$-axis is drawn (red line). The point furthest away from that $z$‐axis is found (red sphere 2). All points are then transformed 
-so that point 1=0,0,0, point 2=$+x,0,+z$, and point 3=$0,0,+z$. 60 evenly-‐spaced slices of points are sampled along the z axis, where each slice thickness is 0.5\% the 
-length of the $z$‐axis. Right panel: The 30th slice of points (black spheres). The midpoint of the convex hull is calculated (green point in middle). Then, moving in 
-increments of 22.5 degrees from the $x$‐axis (only the first increment shown in detail), we find the two closest points straddling the line connecting the midpoint 
-(two points shown in blue, one slightly obscured) and draw a line connecting them (blue line). A landmark is defined as the intersection of the black and blue 
-lines (green point) and is named according to its slice (i.e., P30) and its angle (i.e., 22.5). Only P30\_22.5 is shown in detail: the other green points are shown for 
-completeness. All green points correspond to the green points shown in Figure 1 of the manuscript. All other points are discarded. 
+A series of tools in computational geometry were deployed to define landmarks from pelvic bone scans.  First, the two furthest points apart were found to represent the most posterior and most anterior points (point 1 and 3).  The entire point cloud was transformed so that point 1 was x=0, y=0, z=0, and point 3 was x=0, y=0, with some positive value of z.  A new z-axis was drawn between point 1 and 3 (red line), and the point furthest from this point found (point 2), and the entire point cloud transformed so that point 2 was x=some positive value, y=0, z=some positive value.  After this initial transformation, we sampled points that fell within the most posterior 0.5\% of the z axis, the most anterior 0.5\% of the z axis, or the middle 0.5\% of the z axis (typically, several hundred points sampled each region), and calculated the centroid of their respective convex hulls.  This second transformation accounted for variation in the placement of the first three points.  Then, 60 evenly-spaced slices of points were sampled along the z axis, where each slice thickness was 0.5\% the length of the z-axis.  One slice appears in the right panel as an example.  For each slice, the midpoint of the convex hull was calculated (green point in middle of right panel).  Then, moving in increments of 22.5 degrees from the x-axis (only the first increment shown in detail), we determined the two points straddling the line extending from the centroid (two points shown in blue, one slightly obscured, with connecting line drawn in blue).  A landmark was defined as the intersection of the black and blue lines (green point) and named according to its slice (i.e., P30) and its angle from the x-axis (i.e., 22.5).  Only P30\_22.5 is shown in detail: the other green points are shown for completeness.  All green points correspond to the green points shown in Fig. 1C of the manuscript.  Only the green points were included in downstream analyses; all other points were discarded.
 }
 \end{figure}
 % \end{landscape}
@@ -900,18 +882,7 @@ completeness. All green points correspond to the green points shown in Figure 1 
   \includegraphics[width=\textwidth]{S3}
 \end{center}
 \caption{
-\textbf{Method for transforming and defining landmarks on rib bones.} Left panel: All points are transformed according to three points, as 
-defined in Supplementary Figure 1. A fulcrum (black sphere) is placed at 1/3 the length of the $z$‐axis, and the bone scan is divided into 60 slices of equal angle 
-from that fulcrum. The 30th slice (black lines and black points) is shown as an example. Right panel: The 30th slice of points in detail. Small black points are from 
-the original scan. The centroid of the convex hull of the 20\% most lateral points (blue sphere to left) and 20\% most medial points (blue sphere to right) points is 
-used to draw a line. We identify the lateral/medial point closest to that line (via shortest distance), then project the point to fall exactly on the line 
-(lateral/medial green spheres). The line connecting the lateral and medial green spheres is divided evenly (black spheres) and lines perpendicular to the black 
-spheres computed. All points from the original scan within a certain distance to the perpendicular lines are found, projected onto the perpendicular line (not 
-shown) and the midpoint computed (orange spheres on perpendicular lines). The orange sphere is then projected onto the plane parallel to the figure to find a 
-third point with which to draw a plane (indicated by orange triangles). Those orange triangles allow us to divide the bone into anterior and posterior halves and 
-account for complex curvatures. The corresponding green spheres on the perpidinicular lines are determined exactly like the lateral and medial green spheres. 
-All green spheres are named as described in Supplementary Figure 1, and correspond to the green spheres shown in Figure 1 of the manuscript. Only the green 
-spheres are included in downstream analyses. 
+A series of tools in computational geometry were deployed to define landmarks from rib bone scans.  First, all points were initially transformed according to the same three initial points described above for pelvic bones.  Then, a fulcrum (black sphere) was placed 1/3 up the length of the z-axis, and the bone scan divided into 60 slices of equal angle from that fulcrum.  For each slice (the 30th slice shown as an example in right panel), the centroid of the convex hull of the 20\% most medial points (leftmost blue sphere) and 20\% most lateral points (rightmost blue sphere) points was used to draw a line.  We identified the point on that line which was closest to a point in the original scan (rightmost/leftmost green spheres, right panel).  This line was then divided evenly (black spheres) and lines perpendicular to the black spheres computed.  All points from the original scan within a certain distance to the perpendicular lines were found, projected onto the perpendicular line and the midpoint computed (orange spheres on perpendicular lines, right panel).  The orange sphere was projected onto the plane parallel to the figure to find a third point with which to draw a plane (indicated by orange triangles, right panel).  Those orange triangles allowed us to divide the bone into anterior and posterior halves and to account for complex curvatures.  The corresponding green spheres on the perpendicular lines were determined as done for the medial and lateral green spheres.  All green spheres are named as described in Fig. S2, and correspond to the green spheres shown in Fig. 1D of the manuscript.  Only the green spheres were included in downstream analyses; all other points were discarded. 
 }
 \end{figure}
 % \end{landscape}
@@ -922,11 +893,11 @@ spheres are included in downstream analyses.
   \includegraphics[width=\textwidth]{S4}
 \end{center}
 \caption{
-\textbf{The regression of maximal recorded testis size onto maximal
-recorded body mass.} The regression was drawn using the GLS procedure in the R package NLME,
-with a correlation structure that accounts for phylogenetic relatedness \citep{pagel1999}, using the CORPAGEL
+\textbf{The regression of maximal recorded testis size onto maximal recorded body mass.} 
+The regression was drawn using the GLS procedure in the R package NLME,
+with a correlation structure that accounted for phylogenetic relatedness \citep{pagel1999}, using the corPagel
 procedure in the R package APE \citep{paradis2004}. The phylogenetic residuals were used as a measure of relative
-testis size.
+testes size.
 }
 \end{figure}
 
@@ -935,11 +906,8 @@ testis size.
   \includegraphics[width=\textwidth]{S5}
 \end{center}
 \caption{
-\textbf{Centroid size onto max body mass.} For each species (sexually mature
-males only), an average centroid size was calculated, then regressed onto body mass using the GLS
-procedure in the R package NLME, with a correlation structure that accounts for phylogenetic
-relatedness \citep{pagel1999}, using the CORPAGEL procedure in the R package APE \citep{paradis2004}. The phylogenetic residuals
-of centroid size were correlated with the phylogenetic residuals of testis size (supplementary Fig. S6).
+\textbf{Centroid size onto max body length.} 
+For each species (sexually mature males only), an average centroid size was calculated, then regressed onto body length using the gls procedure in the R package nlme, with a correlation structure that accounted for phylogenetic relatedness \citep{pagel1999}, using the corPagel procedure in the R package ape \citep{paradis2004}.  The phylogenetic residuals of centroid size were correlated with the phylogenetic residuals of testis size (supplementary Fig. S6). 
 }
 \end{figure}
 
@@ -949,13 +917,12 @@ of centroid size were correlated with the phylogenetic residuals of testis size 
 \end{center}
 \caption{
 \textbf{The residuals of centroid size were positively correlated with the
-residuals of testis size.} The regression was drawn using the GLS procedure in the R package NLME,
-with a correlation structure that accounts for phylogenetic relatedness \citep{pagel1999}, using the CORPAGEL
-procedure in the R package APE \citep{paradis2004}.
+residuals of testis size.}
+The regression between testis mass residuals (taken from Fig. S4) and centroid size residuals (taken from Fig. S5) was assessed using the gls procedure in the R package nlme, with a correlation structure that accounts for phylogenetic relatedness \citep{pagel1999}, using the corPagel procedure in the R package ape \citep{paradis2004}.  Centroid size residuals were significantly positively correlated with testis mass residuals (p=0.0012).  Such analyses are standard but do not account for intraspecific variation.  In the main text, we built a customized phylogenetic model in order to account for intraspecific variation.
 }
 \end{figure}
 
-
+% 
 % \begin{figure}
 % \begin{center}
 %   \includegraphics[width=\textwidth]{S7}
