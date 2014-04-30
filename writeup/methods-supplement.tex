@@ -62,32 +62,32 @@ language=R,                % choose the language of the code
 
 \noindent
 \begin{center}
-\textbf{Supplementary Materials for}\\
-Cetacean pelvic bones are targets of sexual selection
+  \textbf{Supporting Information} 
+% Cetacean pelvic bones are targets of sexual selection
 
 Dines, J. P.*, E. Ot\'arola-Castillo, P. Ralph, J. Alas, T. Daley, A. D. Smith, M. D. Dean*\\
 *Correspondence: \email{jdines$@$nhm.org}, \email{matthew.dean$@$usc.edu}
 \end{center}
 
-\noindent
-\textbf{This file includes:}
-\begin{enumerate}
-    \item Materials and Methods
-    \item Figures S1--S8
-    \item Tables S1--S12
-    \item Full Reference List
-\end{enumerate}
+% \noindent
+% \textbf{This file includes:}
+% \begin{enumerate}
+%     \item Materials and Methods
+%     \item Figures S1--S8
+%     \item Tables S1--S12
+%     \item Full Reference List
+% \end{enumerate}
 
 \pagebreak
 
 % \nocite{adams2012,baker1985,best2001,best1989,bloodworth2008,bookstein1997,brownell1986,burns1993,caldwell1971,desportes1993,goodall1994,harrison1972,hohn1985,jefferson2008,kasuya1999,mcgowen2009,mead1982,mitteroecker2009,miyazaki1977,miyazaki1994,omura1955,pagel1999,paradis2004,perrin1994,perrin1984,perry1999,read1999,ross1979,ruiz1993,tomilin1967,wells1999,zelditch2004}
 \nocite{uhen2010,perrin2013,schulte1918,pabst1998,meek1918,mate2005,brownell1986,fitzpatrick2012,ramm2005,firman2008,kenagy1986,moller1989,harcourt1981,stockley1997,gage1994,hosken2001,suppmat,danilewicz2004,mcgowen2009,revell2009,heyning1994,rohlf1990,slice2007,adams2012,bookstein1997,bookstein1996,mitteroecker2009,gunz2005,mcardle2001,vanbree1973,andersen1992,perrin1975,eberhard1985,arnqvist1998,hosken2004,ramm2007}
 
-\section*{Materials and Methods}
+\section{Materials and Methods}
 All original data and analytical code have been deposited in the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.[NNNN]}). 
 
-\subsection*{Re-analysis of penis length data}
-\citet{brownell1986} published data on penis length, body length, and testis size from 10 baleen whale species.  We reanalyzed those data in a phylogenetically controlled, generalized least-squares model, using the gls procedure in the R package nlme, with a correlation structure that accounts for phylogenetic relatedness \citep{pagel1999}, using the corPagel procedure in the R package ape \citep{paradis2004}.  We first calculated the phylogenetic residuals of log penis length and log testis weight each regressed onto the log of body length.  Under the same phylogenetically controlled generalized least-squares model, residual penis length was significantly correlated to residual testis weight (P<10-10, Fig. S1).  A generalized correlation coefficient was then calculated. 
+% \subsection*{Re-analysis of penis length data}
+% \citet{brownell1986} published data on penis length, body length, and testis size from 10 baleen whale species.  We reanalyzed those data in a phylogenetically controlled, generalized least-squares model, using the gls procedure in the R package nlme, with a correlation structure that accounts for phylogenetic relatedness \citep{pagel1999}, using the corPagel procedure in the R package ape \citep{paradis2004}.  We first calculated the phylogenetic residuals of log penis length and log testis weight each regressed onto the log of body length.  Under the same phylogenetically controlled generalized least-squares model, residual penis length was significantly correlated to residual testis weight (P<10-10, Fig. S1).  A generalized correlation coefficient was then calculated. 
 
 \subsection*{Scanning bones and identifying landmarks}
 All bones were scanned with a NextEngine 3-dimensional Laser Scanner, returning tens of thousands of $x,y,z$ points per bone.  A pipeline was developed to sub-sample 962 evenly spaced and ordered points.  The pipeline is graphically illustrated for pelvic bones (Fig. S2) and ribs (Fig. S3) separately.  All original laser scans and the associated code for imposing landmarks has been made available on the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.[NNNN]}). 
@@ -931,7 +931,7 @@ For each species (sexually mature males only), an average centroid size was calc
   \includegraphics[width=\textwidth]{S6}
 \end{center}
 \caption{
-XXX
+For each species (sexually mature males only), an average rib centroid size was calculated, then regressed onto body length using the gls procedure in the R package nlme, with a correlation structure that accounted for phylogenetic relatedness \citep{pagel1999}, using the corPagel procedure in the R package ape \citep{paradis2004}.
 }
 \end{figure}
 
@@ -954,7 +954,7 @@ XXX
     \includegraphics[width=\textwidth]{S8}
   \end{center}
   \caption{
-  XXX
+  As in males (see Fig.\ 3 of manuscript), among sexually mature females, residual centroid size (species-average centroid size regressed onto body length) was positively correlated with residual testes mass of males from their species (maximum species testes mass regressed onto maximum body length) in (A) pelvic bones, but not (B) ribs. 1--\textit{Balaenoptera acutorostrata}, 2--\textit{Balaenoptera musculus}, 3--\textit{Balaenoptera physalus}, 4--\textit{Delphinus capensis}, 5--\textit{Delphinus delphis}, 6--\textit{Eubalaena glacialis}, 7--\textit{Globicephala melas}, 8--\textit{Lagenorhynchus acutus}, 9--\textit{Lagenorhynchus obliquidens}, 10--\textit{Mesoplodon carlhubbsi}, 11--\textit{Peponocephala electra}, 12--\textit{Phocoena phocoena}, 13--\textit{Phocoenoides dalli}, 14--\textit{Pontoporia blainvillei}, 15--\textit{Stenella attenuata}, 16--\textit{Tursiops truncatus}, 17--\textit{Ziphius cavirostris}.
   }
 \end{figure}
 
