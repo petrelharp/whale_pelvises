@@ -8,6 +8,7 @@
 \usepackage{lscape}  % make pages landscape
 % \usepackage{rotating}
 \usepackage{longtable} % long, er, tables
+\usepackage{hyperref}
 \usepackage{listings}
 \lstset{ %
 language=R,                % choose the language of the code
@@ -65,8 +66,8 @@ language=R,                % choose the language of the code
   \textbf{Supplemental Information} 
 % Cetacean pelvic bones are targets of sexual selection
 
-Dines, J. P.*, E. Ot\'arola-Castillo, P. Ralph, J. Alas, T. Daley, A. D. Smith, M. D. Dean*\\
-*Correspondence: \email{jdines$@$nhm.org}, \email{matthew.dean$@$usc.edu}
+Dines, J. P., E. Ot\'arola-Castillo, P. Ralph, J. Alas, T. Daley, A. D. Smith, M. D. Dean*\\
+*Correspondence: \email{matthew.dean$@$usc.edu}
 \end{center}
 
 % \noindent
@@ -84,20 +85,20 @@ Dines, J. P.*, E. Ot\'arola-Castillo, P. Ralph, J. Alas, T. Daley, A. D. Smith, 
 \nocite{uhen2010,perrin2013,schulte1918,pabst1998,meek1918,mate2005,brownell1986,fitzpatrick2012,ramm2005,firman2008,kenagy1986,moller1989,harcourt1981,stockley1997,gage1994,hosken2001,suppmat,danilewicz2004,mcgowen2009,revell2009,heyning1994,rohlf1990,slice2007,adams2012,bookstein1997,bookstein1996,mitteroecker2009,gunz2005,mcardle2001,vanbree1973,andersen1992,perrin1975,eberhard1985,arnqvist1998,hosken2004,ramm2007}
 
 \section{Supplemental Experimental Procedures}
-All original data and analytical code have been deposited in the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.[NNNN]}). 
+All original data and analytical code have been deposited in the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.ss7kp}).
 
 % \subsection*{Re-analysis of penis length data}
 % \citet{brownell1986} published data on penis length, body length, and testis size from 10 baleen whale species.  We reanalyzed those data in a phylogenetically controlled, generalized least-squares model, using the gls procedure in the R package nlme, with a correlation structure that accounts for phylogenetic relatedness \citep{pagel1999}, using the corPagel procedure in the R package ape \citep{paradis2004}.  We first calculated the phylogenetic residuals of log penis length and log testis weight each regressed onto the log of body length.  Under the same phylogenetically controlled generalized least-squares model, residual penis length was significantly correlated to residual testis weight (P<10-10, Fig. S1).  A generalized correlation coefficient was then calculated. 
 
 \subsection*{Scanning bones and identifying landmarks}
-All bones were scanned with a NextEngine 3-dimensional Laser Scanner, returning tens of thousands of $x,y,z$ points per bone.  A pipeline was developed to sub-sample 962 evenly spaced and ordered points.  The pipeline is graphically illustrated for pelvic bones (Fig. S2) and ribs (Fig. S3) separately.  All original laser scans and the associated code for imposing landmarks has been made available on the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.[NNNN]}). 
+All bones were scanned with a NextEngine 3-dimensional Laser Scanner, returning tens of thousands of $x,y,z$ points per bone.  A pipeline was developed to sub-sample 962 evenly spaced and ordered points.  The pipeline is graphically illustrated for pelvic bones (Fig. S2) and ribs (Fig. S3) separately.  All original laser scans and the associated code for imposing landmarks has been made available on the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.ss7kp}). 
 
 % \subsection*{Technical replication}
 % We quantified technical replication by randomly choosing 41 bones (21 pelvic bones, 20 ribs) to scan more than once.  One bone was scanned 11 times, the rest scanned twice, each time removing the bone from the scanner and reloading it.  The median coefficient of variation (unbiased standard deviation/mean) for centroid size was 0.0094 for pelvic bones, 0.0090 for ribs.  The median coefficient of variation for shape variation was .0194 for pelvic bones, .0342 for ribs.  In sum, digitizing bones with the NextEngine Laser Scanner and our analytical pipeline (Fig. S2 and S3) produced highly repeatable results.  
 
 \subsection*{Phylogenetic modeling}
-We built a customized phylogenetic model to test for correlated evolution of testes size and bone centroid size.  The sample-specific morphological data (Table S1-S2) were placed on a cetacean phylogeny constructed from 45 nuclear loci, transposons, and mitochondrial genomes \citep{mcgowen2009}.  The logarithms of all values were then modeled as evolving on the tree as correlated Gaussian traits, accounting for intraspecific and intraindividual variation and missing data.  Priors were placed on the 16 covariances of this model (including separate parameters for within-species variation), and the posterior distribution was evaluated using Markov chain Monte Carlo.  All associated code for running these analyses have been made available on the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.[NNNN]}).
-To test whether bone shape evolution was correlated with differences in testis size, we first identified 9 independent species pairs for which both ribs and pelvic bones were sampled from adult males.  We tested whether the average pairwise distance between bones of each species was correlated with the absolute value of the difference in testis residuals calculated as above.  All code for running these analyses have been made available on the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.[NNNN]}).
+We built a customized phylogenetic model to test for correlated evolution of testes size and bone centroid size.  The sample-specific morphological data (Table S1-S2) were placed on a cetacean phylogeny constructed from 45 nuclear loci, transposons, and mitochondrial genomes \citep{mcgowen2009}.  The logarithms of all values were then modeled as evolving on the tree as correlated Gaussian traits, accounting for intraspecific and intraindividual variation and missing data.  Priors were placed on the 16 covariances of this model (including separate parameters for within-species variation), and the posterior distribution was evaluated using Markov chain Monte Carlo.  All associated code for running these analyses have been made available on the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.ss7kp}).
+To test whether bone shape evolution was correlated with differences in testis size, we first identified 9 independent species pairs for which both ribs and pelvic bones were sampled from adult males.  We tested whether the average pairwise distance between bones of each species was correlated with the absolute value of the difference in testis residuals calculated as above.  All code for running these analyses have been made available on the Dryad Digital Repository (\url{http://dx.doi.org/10.5061/dryad.ss7kp}).
  
 
 
@@ -868,7 +869,7 @@ at the posterior mean parameter values is
   \includegraphics[width=\textwidth]{S1}
 \end{center}
 \caption{
-\textbf{The regression of maximal recorded testis size onto maximal recorded body mass.} 
+\textbf{The regression of maximal recorded testis size onto maximal recorded body length.} 
 The regression was drawn using the GLS procedure in the R package NLME,
 with a correlation structure that accounted for phylogenetic relatedness \citep{pagel1999}, using the corPagel
 procedure in the R package APE \citep{paradis2004}. The phylogenetic residuals were used as a measure of relative
@@ -897,6 +898,7 @@ Two separate regression, each drawn using the GLS procedure in the R package NLM
 \end{center}
 \caption{
 A series of tools in computational geometry were deployed to define landmarks from pelvic bone scans.  First, the two furthest points apart were found to represent the most posterior and most anterior points (point 1 and 3).  The entire point cloud was transformed so that point 1 was x=0, y=0, z=0, and point 3 was x=0, y=0, with some positive value of z.  A new z-axis was drawn between point 1 and 3 (red line), and the point furthest from this point found (point 2), and the entire point cloud transformed so that point 2 was x=some positive value, y=0, z=some positive value.  After this initial transformation, we sampled points that fell within the most posterior 0.5\% of the z axis, the most anterior 0.5\% of the z axis, or the middle 0.5\% of the z axis (typically, several hundred points sampled each region), and calculated the centroid of their respective convex hulls.  This second transformation accounted for variation in the placement of the first three points.  Then, 60 evenly-spaced slices of points were sampled along the z axis, where each slice thickness was 0.5\% the length of the z-axis.  One slice appears in the right panel as an example.  For each slice, the midpoint of the convex hull was calculated (green point in middle of right panel).  Then, moving in increments of 22.5 degrees from the x-axis (only the first increment shown in detail), we determined the two points straddling the line extending from the centroid (two points shown in blue, one slightly obscured, with connecting line drawn in blue).  A landmark was defined as the intersection of the black and blue lines (green point) and named according to its slice (i.e., P30) and its angle from the x-axis (i.e., 22.5).  Only P30\_22.5 is shown in detail: the other green points are shown for completeness.  All green points correspond to the green points shown in Fig. 1C of the manuscript.  Only the green points were included in downstream analyses; all other points were discarded.
+All code is available at \url{http://dx.doi.org/10.5061/dryad.ss7kp}.
 }
 \end{figure}
 % \end{landscape}
@@ -910,6 +912,7 @@ A series of tools in computational geometry were deployed to define landmarks fr
 \end{center}
 \caption{
 A series of tools in computational geometry were deployed to define landmarks from rib bone scans.  First, all points were initially transformed according to the same three initial points described above for pelvic bones.  Then, a fulcrum (black sphere) was placed 1/3 up the length of the z-axis, and the bone scan divided into 60 slices of equal angle from that fulcrum.  For each slice (the 30th slice shown as an example in right panel), the centroid of the convex hull of the 20\% most medial points (leftmost blue sphere) and 20\% most lateral points (rightmost blue sphere) points was used to draw a line.  We identified the point on that line which was closest to a point in the original scan (rightmost/leftmost green spheres, right panel).  This line was then divided evenly (black spheres) and lines perpendicular to the black spheres computed.  All points from the original scan within a certain distance to the perpendicular lines were found, projected onto the perpendicular line and the midpoint computed (orange spheres on perpendicular lines, right panel).  The orange sphere was projected onto the plane parallel to the figure to find a third point with which to draw a plane (indicated by orange triangles, right panel).  Those orange triangles allowed us to divide the bone into anterior and posterior halves and to account for complex curvatures.  The corresponding green spheres on the perpendicular lines were determined as done for the medial and lateral green spheres.  All green spheres are named as described in Fig. S2, and correspond to the green spheres shown in Fig. 1D of the manuscript.  Only the green spheres were included in downstream analyses; all other points were discarded. 
+All code is available at \url{http://dx.doi.org/10.5061/dryad.ss7kp}.
 }
 \end{figure}
 % \end{landscape}
@@ -920,8 +923,8 @@ A series of tools in computational geometry were deployed to define landmarks fr
   \includegraphics[width=\textwidth]{S5}
 \end{center}
 \caption{
-\textbf{Centroid size onto max body length.} 
-For each species (sexually mature males only), an average centroid size was calculated, then regressed onto body length using the gls procedure in the R package nlme, with a correlation structure that accounted for phylogenetic relatedness \citep{pagel1999}, using the corPagel procedure in the R package ape \citep{paradis2004}.  The phylogenetic residuals of centroid size were correlated with the phylogenetic residuals of testis size (supplementary Fig. S6). 
+    \textbf{Phylogenetic regression of species-average centroid size onto species-average body length.}
+For each species (sexually mature males only), an average centroid size was calculated, then regressed onto average body length using the gls procedure in the R package nlme, with a correlation structure that accounted for phylogenetic relatedness \citep{pagel1999}, using the corPagel procedure in the R package ape \citep{paradis2004}.  The phylogenetic residuals of centroid size were correlated with the phylogenetic residuals of testis size (supplementary Fig. S6). 
 }
 \end{figure}
 
@@ -931,7 +934,7 @@ For each species (sexually mature males only), an average centroid size was calc
   \includegraphics[width=\textwidth]{S6}
 \end{center}
 \caption{
-For each species (sexually mature males only), an average rib centroid size was calculated, then regressed onto body length using the gls procedure in the R package nlme, with a correlation structure that accounted for phylogenetic relatedness \citep{pagel1999}, using the corPagel procedure in the R package ape \citep{paradis2004}.
+For each species (sexually mature males only), an average rib centroid size was calculated, then regressed onto average body length using the gls procedure in the R package nlme, with a correlation structure that accounted for phylogenetic relatedness \citep{pagel1999}, using the corPagel procedure in the R package ape \citep{paradis2004}.
 }
 \end{figure}
 
